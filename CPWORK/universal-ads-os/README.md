@@ -40,6 +40,16 @@ See [`AGENTS.md`](AGENTS.md) §1 and [`SECURITY.md`](SECURITY.md).
 
 No keys required for the no-code path — start with CSV exports.
 
+### Or run the engine directly (proves the numbers)
+```bash
+cd CPWORK/universal-ads-os/tools
+python3 -m adpilot selftest                                   # 44/44 QA checks pass
+python3 -m adpilot analyze adpilot/tests/fixtures/universal_sample.csv \
+        --business "Example Co" --avg-sale 200 --margin 0.6   # metrics + health + safe proposals
+```
+The engine (`tools/adpilot/`) is dependency-free and **self-verifying** — see
+[`tools/README.md`](tools/README.md) and [`product/competitive-moat.md`](product/competitive-moat.md).
+
 ## Repository map
 ```
 universal-ads-os/

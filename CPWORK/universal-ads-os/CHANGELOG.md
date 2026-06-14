@@ -4,6 +4,26 @@ All notable changes to the AdPilot OS package. Format: reverse-chronological.
 
 ---
 
+## [1.1.0] — 2026-06-14 — Executable engine + reconciliation
+Added the differentiating, hard-to-replicate layer: a working, tested engine.
+
+**New — executable engine (`tools/adpilot/`, stdlib only)**
+- `metrics.py` (all formulas, zero-division safe), `health.py` (canonical 13-factor
+  score + bands + N/A redistribution), `schema.py` (universal schema + Meta/TikTok
+  column mapping), `decisions.py` (safe verdict engine — proposals only, no live
+  edits, no delete), `ingest.py`, `report.py`, CLI (`analyze` / `health` / `selftest`).
+- **Self-verifying QA:** `python3 -m adpilot selftest` runs the documented
+  `qa/metric-calculation-tests.md` cases against the live engine — **44/44 checks pass.**
+- `tools/tiktok_ads_api.py` — read-only TikTok reporting client (token from env).
+- `automations/blueprints/make-daily-pull.blueprint.json` — importable, read-only Make scenario.
+- `product/competitive-moat.md` — the demonstrable differentiators.
+
+**Reconciled**
+- Health score: the **13-factor** model (`universal-defaults.yaml` + `health.py`) is
+  now the **single source of truth**. Added a reconciliation note to
+  `qa/metric-calculation-tests.md` (its illustrative 10-factor worked example may
+  differ by a few points; the engine is authoritative).
+
 ## [1.0.0] — 2026-06-14 — Initial universal build
 Built from the current-state audit (`/CPWORK_AD_SYSTEM_CURRENT_STATE.md`) of
 Elie Dagher's existing Meta Ads skill + multi-agent workspace.

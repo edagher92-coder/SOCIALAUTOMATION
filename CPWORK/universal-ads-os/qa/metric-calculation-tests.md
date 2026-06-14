@@ -284,6 +284,15 @@ Variance = −30.0%
 
 ## 2. Worked Health Score Calculation
 
+> **Authoritative model note (reconciliation, v1.1.0).** The **canonical** health
+> score is the **13-factor** weighted model in `config/universal-defaults.yaml`
+> and implemented in `tools/adpilot/health.py` — that engine is the **executable
+> source of truth** (run `python3 -m adpilot selftest`). The worked narrative below
+> uses an illustrative 10-factor grouping with N/A-weight redistribution for an
+> ecommerce account, so its total may differ by a few points from the canonical
+> computation. When in doubt, trust the engine. The QA pass criterion (band +
+> flagged issues) still holds.
+
 ### Test Case HS-01: Full Health Score — Fatigued Account
 
 This is the reference calculation for the Fatigued Account (Dataset 2). Run this to verify the health score formula is producing correct weighted output.
