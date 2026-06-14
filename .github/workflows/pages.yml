@@ -26,6 +26,8 @@ jobs:
       - name: Engine parity test (browser engine == Python engine)
         run: node docs/engine.test.js
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true   # auto-enable GitHub Pages on first run (no manual toggle)
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs
