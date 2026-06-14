@@ -23,6 +23,14 @@
 
 ---
 
+**[TRUST BAR]**
+- No API access required — works from CSV export only
+- No subscription — one-time purchase
+- No live ad edits — all changes are proposals you approve
+- Australian-made. AUD pricing. No USD surprise at checkout.
+
+---
+
 ### [SOCIAL PROOF BAR — placeholder]
 
 > Used by [XX] business owners and operators across Australia, managing $X million in combined ad spend.
@@ -103,35 +111,51 @@ Run the reporting skill in Claude. It turns your audit findings into a clean, pr
 ## What's inside AdPilot OS Starter
 
 **The audit skills**
-- `meta-ads-audit` Claude skill — analyses campaigns, ad sets, and ads for a Meta account
-- `tiktok-ads-audit` Claude skill — same structured analysis for TikTok
-- Campaign health score from 0–100 with a plain-English breakdown (what's good, what's broken, what to fix first)
+- `meta-ads-audit` Claude skill — analyses campaigns, ad sets, and ads for a Meta account across 14 structured audit steps
+- `tiktok-ads-audit` Claude skill — same structured analysis for TikTok, including hook rate and hold rate (metrics Meta doesn't have)
+- Campaign health score from 0–100 with a plain-English breakdown (what's good, what's broken, what to fix first) — based on 13 weighted factors, not vibes
+- `campaign-health-monitor` skill — scores every campaign individually so you know which ones to cut, keep, or scale
+- `creative-fatigue-detector` skill — flags when frequency is above 3.0 and CTR is dropping 25%+ from peak, before you've wasted another $500
+- `tracking-attribution-review` skill — checks whether your pixel is actually firing, whether UTMs are set, and whether the numbers in Ads Manager can be trusted
+- `lead-quality-analyser` skill — compares leads generated to qualified leads and sales; tells you whether a cheap CPL is actually cheap or just noise
+- `paid-ads-data-analysis` skill — computes every metric from your raw export (CTR, CPC, CPM, CPL, CPA, ROAS, MER, hook rate, hold rate, frequency, break-even CPA, break-even ROAS) so you're not doing it in a calculator
+- `offer-funnel-review` skill — checks whether the landing page, CTA, and offer match what the ad promised — the most overlooked conversion killer
 
 **The dashboard**
-- Pre-built Google Sheets dashboard — no formulas to set up
-- Calculates CTR, CPC, CPM, CPA, ROAS, hook rate, hold rate, creative fatigue score automatically
-- Manual CSV import tab — paste your export, the dashboard does the maths
+- Pre-built Google Sheets dashboard — no formulas to set up; paste in your CSV data and everything calculates automatically
+- Calculates all 13 core metrics (CTR, CPC, CPM, CPL, CPA, ROAS, MER, hook rate, hold rate, frequency, break-even CPA, break-even ROAS, lead-to-sale rate) from raw export data
+- Manual CSV import tab — paste your Meta or TikTok export, the dashboard does the maths
+- Creative matrix tracker tab — 5×5 grid mapping 5 creative angles across 5 formats; tracks which combinations have been tested, which are live, which are fatigued
+- Lead tracker tab — log leads by source, qualification status, and sale outcome; automatically calculates CPL and lead-to-sale rate
 
 **The report system**
-- `ads-reporting-builder` Claude skill — generates a structured, professional report from your audit findings
-- Client report template in Google Doc format — pre-formatted, logo-ready, just fill in the gaps
-- Designed to be presentable to a client or business partner without reformatting
+- `client-report-generator` skill — generates a structured, professional report from your audit findings in the tone and format you set
+- Weekly report template — pre-formatted; includes headline summary, key numbers table, platform breakdown, creative performance, budget pacing, and 3 prioritised recommendations
+- Monthly report template — same structure, extended to include trend analysis and period-over-period comparison
+- Reports are written in plain English with AUD figures — designed to be sent to a client or a business owner without reformatting
 
 **The supporting tools**
-- UTM naming builder skill — generate consistent tracking parameters across every campaign
-- Creative matrix tracker — log your tests, flag fatigue, know when to rotate
-- Lead/conversion tracker — calculate your CPL and CPA trends manually without a SaaS tool
+- `utm-naming-builder` skill — generates correct, consistent UTM strings for every ad in the format `source=meta / medium=paid_social / campaign=[business]_[offer]_[objective]_[location]_[date]` — no more manually typing UTMs and getting them wrong
+- Business onboarding form — a structured questionnaire that outputs a completed `client-config.yaml` for your business; fill this in once and the whole system personalises itself
 
 **The process**
-- SOP library (SOP-01 to SOP-05) — step-by-step guides for export, import, audit, report, and UTM setup
-- Onboarding checklist — a self-guided setup that works without a support call
-- `client-config.yaml` setup guide — configure the system for your business (name, currency, KPIs, benchmarks)
-- Glossary of metrics — plain-English definitions for every metric the system uses
+- SOP library (SOP-01 to SOP-05) — step-by-step guides for: CSV export from Meta, CSV export from TikTok, data import to Sheets, running an audit in Claude, and generating a report
+- Onboarding checklist — a self-guided setup that works without a support call; most people complete it in 30 minutes
+- `client-config.yaml` — one configuration file that captures your business name, offer, average sale value, gross margin, monthly budget, platforms, CRM, conversion events, and risk tolerance; every agent and skill reads from this file so you never repeat yourself
 
 **The safety model**
-- AdPilot OS never edits live ads — all recommendations are proposals you implement manually
-- No API connections at Starter tier — your account credentials are never touched
-- No platform logins required — works entirely from CSV exports
+- AdPilot OS never edits live ads — all recommendations are proposals you implement manually after reviewing
+- No API connections at Starter tier — your Meta or TikTok credentials are never entered anywhere in this system
+- No platform logins required — works entirely from CSV exports you download yourself
+- Every recommendation is labelled as a proposal requiring human approval before action
+- Changes are always proposed as paused duplicates — never edits to the running ad
+
+---
+
+**[MID-PAGE CTA]**
+> Ready to see your health score?
+> **[GET ADPILOT STARTER — $197 AUD]**
+> Instant download. Takes 45 minutes. No code required.
 
 ---
 
@@ -238,6 +262,18 @@ No. AdPilot OS is a structured analytical framework — it surfaces information 
 
 **What's the refund policy?**
 Digital products are generally non-refundable once downloaded. If you have a genuine issue (the files don't open, the skills don't run, a critical error in the dashboard formulas), contact us and we will make it right. We are not in the business of selling broken products.
+
+**How is AdPilot OS different from a SaaS reporting tool like Databox or Triple Whale?**
+SaaS tools show you dashboards. AdPilot OS tells you what the data means and what to do about it. A dashboard with a 3.2 ROAS number tells you nothing without context — is that above or below break-even? Is it trending up or down? Which creative is driving it? AdPilot OS answers those questions. It also costs a one-time $197, not $150–$500/month.
+
+**I already pay an agency. Why would I need this?**
+Two reasons. First, most agencies don't share their full methodology with clients — you can't audit their work if you don't have the framework. AdPilot OS gives you the framework so you can have an informed conversation with your agency about what they're doing and why. Second, if you ever want to move on from the agency, you'll already have the system in place to manage it yourself or hand to a freelancer.
+
+**What does "no live ad edits" mean in practice?**
+It means AdPilot OS operates as an advisory layer only. When an audit recommends pausing an underperforming ad set and testing a new creative, you do that work inside Meta or TikTok Ads Manager yourself — manually — as a paused duplicate. The system never connects to your ad account, never pushes changes through an API, and never touches a live spending ad. You are in control at all times.
+
+**Can I use this for both Meta and TikTok in the same session?**
+Yes. The Starter pack includes audit skills for both Meta and TikTok. The Google Sheets dashboard has separate import tabs for each platform and a combined summary view. You can run both audits in one sitting and get a cross-platform report.
 
 ---
 
