@@ -204,7 +204,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/" or self.path.startswith("/index"):
             return self._send(200, PAGE, "text/html; charset=utf-8")
         if self.path == "/health":
-            return self._send(200, json.dumps({"status": "ok", "version": "1.2"}))
+            return self._send(200, json.dumps({"status": "ok", "version": "1.5"}))
         if self.path == "/api/selftest":
             from adpilot.tests import run_tests
             import io as _io
