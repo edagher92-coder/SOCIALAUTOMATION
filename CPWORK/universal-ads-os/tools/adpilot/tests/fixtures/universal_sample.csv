@@ -1,0 +1,6 @@
+platform,campaign_name,ad_name,date,spend,impressions,reach,clicks,leads,purchases,revenue,tracking_status
+meta,examples_winter_leads_meta_20260613,pain-point_UGC_v3,2026-06-13,600,30000,15000,300,30,6,1800,ok
+meta,examples_winter_leads_meta_20260613,discount_static_v1,2026-06-13,400,20000,12000,200,5,1,150,ok
+meta,examples_winter_leads_meta_20260613,broken_promo_v2,2026-06-13,300,15000,10000,0,0,0,0,broken
+tiktok,examples_winter_leads_tiktok_20260613,new_test_v1,2026-06-13,22,1000,900,18,0,0,0,ok
+tiktok,examples_winter_leads_tiktok_20260613,cheap-lead_UGC_v4,2026-06-13,300,20000,12000,120,30,0,0,ok

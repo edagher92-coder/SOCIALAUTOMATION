@@ -1,0 +1,67 @@
+# =============================================================================
+# AdPilot OS — CLIENT CONFIG
+# One file per business. Copy this file, fill it in, and the whole system
+# (agents, skills, templates, reports) adapts without changing any core logic.
+#
+# RULE: This is the ONLY place client-specific values live.
+#       NEVER hardcode an ad-account ID, API key, or business name into a
+#       skill, agent, or template. Reference {{client.<field>}} instead.
+#
+# SECRETS: Do NOT paste API keys/tokens here. Keep them in a separate,
+#          git-ignored secrets file or environment variables. See SECURITY.md.
+# =============================================================================
+
+client:
+  # ---- Identity -------------------------------------------------------------
+  business_name: "Example Business Pty Ltd"      # {{client.business_name}}
+  brand_type: "local_service"                    # local_service | ecommerce | b2b_lead_gen | franchise_multi_location | agency | content_brand
+  industry: "Home services"                      # {{client.industry}}
+  location: "Sydney, NSW, Australia"             # {{client.location}}
+  currency: "AUD"                                # {{client.currency}} — ISO code
+  service_area: "Sydney + Greater Sydney (35 LGAs)"
+
+  # ---- Offer & economics ----------------------------------------------------
+  main_offer: "Pre-summer maintenance plan"      # {{client.main_offer}}
+  average_sale_value: 325                         # in {{client.currency}}
+  gross_margin: 0.60                              # 0.00–1.00 (60% here)
+  # Derived helpers (the data analyst computes these; shown for reference):
+  #   break_even_cpa  = average_sale_value * gross_margin
+  #   break_even_roas = 1 / gross_margin
+  target_audience: "Venue owners running slush/soft-serve machines"
+  primary_goal: "leads"                          # leads | purchases | calls | bookings | messages
+
+  # ---- Platforms ------------------------------------------------------------
+  platform_focus: ["meta", "tiktok"]            # any of: meta, tiktok
+  monthly_budget: 3000                           # in {{client.currency}}
+  meta_account_id: ""                            # e.g. act_XXXXXXXX — leave blank in shared/universal copies
+  tiktok_account_id: ""                          # leave blank in shared/universal copies
+  conversion_events: ["Lead", "Contact", "Purchase"]
+  landing_pages:
+    - url: "https://example.com/offer"
+      purpose: "Lead capture for main offer"
+
+  # ---- Sources, CRM, reporting ---------------------------------------------
+  crm: "HubSpot"                                 # {{client.crm}} — HubSpot | Pipedrive | GoHighLevel | Sheets | none
+  lead_sources: ["meta_lead_form", "website_form", "whatsapp", "messenger", "phone_call"]
+  reporting_frequency: "weekly"                   # daily | weekly | monthly
+
+  # ---- Voice & compliance ---------------------------------------------------
+  brand_voice: "Plain English, numbers-first, no hype, Australian spelling"
+  compliance_notes: "No earnings/results guarantees. No 'best/cheapest' absolute claims."
+  qualification_rules:
+    - "Must be within service area for service jobs"
+    - "Budget-qualified above average_sale_value"
+
+  # ---- Risk & approval ------------------------------------------------------
+  approval_required: true                         # human signs off proposed changes
+  risk_tolerance: "low"                           # low | medium | high
+
+# =============================================================================
+# SAFETY SWITCHES — DO NOT DISABLE WITHOUT EXPLICIT OWNER SIGN-OFF
+# =============================================================================
+safety:
+  live_edit_block: true                # never push edits to a live, spending ad
+  use_paused_duplicates_only: true     # changes ship as paused duplicates / drafts / proposals only
+  never_delete_archive_instead: true   # archive (reversible); never delete campaigns
+  confirm_before_money_moves: true     # any budget/spend change needs typed confirmation
+  scale_requires_clean_tracking: true  # do not scale if tracking is unclear

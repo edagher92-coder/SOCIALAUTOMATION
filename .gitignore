@@ -1,0 +1,37 @@
+# ── Secrets: never commit credentials (see CPWORK/universal-ads-os/SECURITY.md) ──
+.env
+.env.*
+*.pem
+*.key
+secrets/
+**/secrets/
+*token*.txt
+*_token.txt
+meta_token.txt
+tiktok_token.txt
+*.token
+credentials.json
+client_secret*.json
+service-account*.json
+
+# ── Client-specific configs (ship the template, not real client data) ──
+# The committed config/client-config.yaml is the neutral TEMPLATE only.
+# Real, filled client configs live outside the repo or in an ignored path:
+config/clients/
+*.client.yaml
+
+# ── Generated client data / exports / reports (keep out of the product repo) ──
+exports/
+data/raw/
+**/*.local.csv
+
+# ── OS / editor / tooling noise ──
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+__pycache__/
+*.pyc
+.venv/
+venv/
+node_modules/

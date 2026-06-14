@@ -1,0 +1,15 @@
+factor,weight,score_0_100,weighted_score,status,notes
+Tracking (pixel / events API / UTM),15,,0.00,pending,weighted_score = (score_0_100 / 100) * weight; e.g. score 80 → (80/100)*15 = 12.00
+CPA vs break-even CPA,15,,0.00,pending,Score 100 if CPA < break-even; scale down proportionally as CPA rises above break-even
+Spend efficiency (budget pacing + waste),12,,0.00,pending,Consider wasted spend on underperforming ad sets and budget pacing accuracy
+Conversion rate (landing page + form),10,,0.00,pending,Benchmark vs industry; score 100 if > 2x industry average
+CTR (click-through rate),8,,0.00,pending,> 2% = 100; 1-2% = 70; 0.5-1% = 40; < 0.5% = 10
+Lead quality score,8,,0.00,pending,Pull average from lead-quality-scorecard; direct map 0-100
+Creative freshness (fatigue / recency),8,,0.00,pending,Score based on frequency and CTR/hook rate trend; freq > 5 and declining trend = low score
+CPC (cost per click),7,,0.00,pending,Score 100 if CPC < $0.50; scale down as CPC rises; adjust for industry
+Naming convention compliance,5,,0.00,pending,Audit all active campaigns/adsets/ads; score = % compliant × 100
+Offer strength,5,,0.00,pending,From offer-review-template overall score; direct map /10 → /100
+Landing page alignment to ad,4,,0.00,pending,From landing-page-review-template; headline match + tracking + mobile score
+Budget pacing,2,,0.00,pending,Score 100 if within 5% of target; deduct for over/under
+Data confidence (sample size),1,,0.00,pending,Score 100 if > 50 conversion events in period; lower scores for smaller samples
+TOTAL,100,,0.00,,Sum of all weighted_scores; Green 80-100 / Yellow 60-79 / Orange 40-59 / Red 0-39

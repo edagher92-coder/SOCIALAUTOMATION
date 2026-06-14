@@ -1,0 +1,98 @@
+{
+  "name": "AdPilot OS — Daily Metrics Pull + Threshold Alert",
+  "description": "READ-ONLY daily pull of Meta + TikTok insights into the Sheets Raw Data tab, then fire an alert when a threshold is breached. No write-backs to ad accounts. Import via Make > Create a new scenario > ... > Import Blueprint. Set connections + the {{vars}} after import; keep tokens in Make connections, never in this file.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "util:SetVariables",
+      "label": "Config (edit after import — no secrets here)",
+      "mapper": {
+        "business_id": "example_co",
+        "currency": "AUD",
+        "break_even_cpa": "120",
+        "alert_email": "{{owner_email}}",
+        "sheet_id": "{{google_sheet_id}}",
+        "date_preset": "yesterday"
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "label": "Meta insights (GET, read-only)",
+      "mapper": {
+        "method": "GET",
+        "url": "https://graph.facebook.com/v21.0/{{meta_ad_account}}/insights",
+        "qs": [
+          {"name": "level", "value": "ad"},
+          {"name": "time_increment", "value": "1"},
+          {"name": "date_preset", "value": "{{1.date_preset}}"},
+          {"name": "fields", "value": "campaign_name,adset_name,ad_name,spend,impressions,reach,frequency,clicks,ctr,cpc,cpm,actions,action_values"}
+        ],
+        "note": "Access token supplied by the Make connection, NOT stored in the blueprint."
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "label": "TikTok reporting (GET, read-only)",
+      "mapper": {
+        "method": "GET",
+        "url": "https://business-api.tiktok.com/open_api/v1.3/report/integrated/get/",
+        "qs": [
+          {"name": "advertiser_id", "value": "{{tiktok_advertiser_id}}"},
+          {"name": "report_type", "value": "BASIC"},
+          {"name": "data_level", "value": "AUCTION_AD"},
+          {"name": "dimensions", "value": "[\"ad_id\",\"stat_time_day\"]"},
+          {"name": "metrics", "value": "[\"spend\",\"impressions\",\"reach\",\"clicks\",\"ctr\",\"cpc\",\"cpm\",\"conversion\"]"}
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "module": "google-sheets:addRow",
+      "label": "Append normalised rows to Raw Data",
+      "mapper": {
+        "spreadsheetId": "{{1.sheet_id}}",
+        "sheetName": "RAW_DATA",
+        "note": "Map each insight field to the universal schema column (see api/data-schema.md). One row per ad per day."
+      }
+    },
+    {
+      "id": 5,
+      "module": "builtin:BasicRouter",
+      "label": "Threshold check",
+      "routes": [
+        {
+          "label": "CPA above break-even",
+          "filter": {
+            "name": "cpa_breach",
+            "conditions": [[{"a": "{{calc.cpa}}", "o": "number:greater", "b": "{{1.break_even_cpa}}"}]]
+          },
+          "flow": [
+            {
+              "id": 6,
+              "module": "email:ActionSendEmail",
+              "label": "Alert owner (proposal only)",
+              "mapper": {
+                "to": "{{1.alert_email}}",
+                "subject": "AdPilot OS alert — CPA above break-even",
+                "text": "CPA {{calc.cpa}} exceeded break-even {{1.break_even_cpa}}. This is an ALERT only — no ad changes were made. Review and approve any action manually."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "version": 1,
+    "scenario": {"roundtrips": 1, "maxErrors": 3, "autoCommit": true},
+    "safety": {
+      "live_edit_block": true,
+      "use_paused_duplicates_only": true,
+      "writes_to_ad_accounts": false,
+      "notes": "This scenario only READS ad platforms and WRITES to Google Sheets + email. It never changes campaigns, budgets, or creatives."
+    },
+    "designer": {"orphans": []}
+  }
+}
