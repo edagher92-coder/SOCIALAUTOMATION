@@ -16,4 +16,4 @@ Modules:
 
 from . import metrics, health, schema, decisions, audit, ingest, report  # noqa: F401
 
-__version__ = "1.1.0"
+__version__ = "1.5.0"
