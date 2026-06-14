@@ -1,0 +1,599 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AdPilot OS Webhook Payload Schemas",
+  "description": "Defines the payload structure for all AdPilot OS inbound and outbound webhook events. No API keys, tokens, or account IDs are included in payloads — use display-safe identifiers and hashed PII only.",
+  "version": "1.0.0",
+  "events": {
+    "lead.created": {
+      "description": "Fired when a new lead is received from Meta Lead Ads, TikTok Lead Gen, CTWA, Messenger, or call tracking. This is the normalised internal event after platform-specific parsing.",
+      "direction": "inbound (from ad platform) then internal",
+      "http_method": "POST",
+      "endpoint": "/webhooks/leads/inbound",
+      "security": "HMAC-SHA256 signature in X-AdPilot-Signature header",
+      "schema": {
+        "type": "object",
+        "required": ["event", "timestamp", "business_id", "platform", "lead_id"],
+        "properties": {
+          "event": {
+            "type": "string",
+            "const": "lead.created",
+            "description": "Event type identifier"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 UTC timestamp of when the lead was received"
+          },
+          "business_id": {
+            "type": "string",
+            "description": "Internal AdPilot OS business identifier for this client. Not an ad account ID."
+          },
+          "platform": {
+            "type": "string",
+            "enum": ["meta", "tiktok"],
+            "description": "Ad platform that generated the lead"
+          },
+          "lead_id": {
+            "type": "string",
+            "description": "Platform-native lead ID (Meta leadgen_id or TikTok lead_id). Unique per platform."
+          },
+          "form_id": {
+            "type": "string",
+            "description": "Lead form ID from the ad platform"
+          },
+          "campaign_id": {
+            "type": "string",
+            "description": "Campaign ID from the ad platform"
+          },
+          "campaign_name": {
+            "type": "string",
+            "description": "Campaign name from the ad platform"
+          },
+          "adset_id": {
+            "type": "string",
+            "description": "Ad set (Meta) or ad group (TikTok) ID"
+          },
+          "ad_id": {
+            "type": "string",
+            "description": "Ad ID from the ad platform"
+          },
+          "lead_source": {
+            "type": "string",
+            "enum": ["meta_lead_ad", "tiktok_lead_gen", "ctwa", "messenger", "call", "form"],
+            "description": "Specific lead capture channel"
+          },
+          "attribution": {
+            "type": "object",
+            "description": "UTM and source attribution fields",
+            "properties": {
+              "utm_source": {
+                "type": "string",
+                "description": "e.g. meta, tiktok",
+                "examples": ["meta", "tiktok"]
+              },
+              "utm_medium": {
+                "type": "string",
+                "description": "e.g. paid_social, ctwa, messenger, call",
+                "examples": ["paid_social", "ctwa", "messenger", "call"]
+              },
+              "utm_campaign": {
+                "type": "string",
+                "description": "Campaign name or ID"
+              },
+              "utm_content": {
+                "type": "string",
+                "description": "Ad name or ID"
+              },
+              "utm_term": {
+                "type": "string",
+                "description": "Keyword, targeting description, or click ID"
+              }
+            }
+          },
+          "contact": {
+            "type": "object",
+            "description": "Lead contact details. Email and phone are SHA-256 hashed in this payload.",
+            "properties": {
+              "first_name": {
+                "type": "string",
+                "description": "First name — not hashed"
+              },
+              "email_hash": {
+                "type": "string",
+                "description": "SHA-256 hash of lowercased trimmed email. Never include raw email.",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "phone_hash": {
+                "type": "string",
+                "description": "SHA-256 hash of E.164 normalised phone number.",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "example": {
+        "event": "lead.created",
+        "timestamp": "2025-06-13T07:32:00Z",
+        "business_id": "biz_001",
+        "platform": "meta",
+        "lead_id": "1234567890123456",
+        "form_id": "9876543210987654",
+        "campaign_id": "23456789012345678",
+        "campaign_name": "Roofing — Lead Gen — June",
+        "adset_id": "34567890123456789",
+        "ad_id": "45678901234567890",
+        "lead_source": "meta_lead_ad",
+        "attribution": {
+          "utm_source": "meta",
+          "utm_medium": "paid_social",
+          "utm_campaign": "Roofing — Lead Gen — June",
+          "utm_content": "Testimonial Video V3",
+          "utm_term": ""
+        },
+        "contact": {
+          "first_name": "Jane",
+          "email_hash": "b94d27b9934d3e08a52e52d7da7dabfac484efe04294e576f0b8db4f7e5a5c38",
+          "phone_hash": "3f0e7c3c2b9e4a6f8d1e2b7f4a5e8c3d9b0a1f6c2d5e8b3a4c7f0e9d2b5a8c1"
+        }
+      }
+    },
+    "lead.status_changed": {
+      "description": "Fired by the CRM when a deal or contact changes stage. Used by the feedback loop to update lead_quality_score in the Lead Quality tab.",
+      "direction": "inbound (from CRM)",
+      "http_method": "POST",
+      "endpoint": "/webhooks/crm/status",
+      "security": "HMAC-SHA256 signature in X-AdPilot-Signature header",
+      "schema": {
+        "type": "object",
+        "required": ["event", "timestamp", "business_id", "crm", "deal_id", "new_stage"],
+        "properties": {
+          "event": {
+            "type": "string",
+            "const": "lead.status_changed"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "business_id": {
+            "type": "string"
+          },
+          "crm": {
+            "type": "string",
+            "enum": ["hubspot", "pipedrive", "gohighlevel", "sheets"],
+            "description": "CRM system that sent this event"
+          },
+          "contact_id": {
+            "type": "string",
+            "description": "CRM-native contact ID"
+          },
+          "deal_id": {
+            "type": "string",
+            "description": "CRM-native deal/opportunity ID"
+          },
+          "platform_lead_id": {
+            "type": "string",
+            "description": "Original ad platform lead ID — used to match back to Lead Quality tab"
+          },
+          "previous_stage": {
+            "type": "string",
+            "description": "Stage before this change"
+          },
+          "new_stage": {
+            "type": "string",
+            "enum": ["new", "contacted", "engaged", "proposal_sent", "negotiating", "closed_won", "closed_lost", "not_qualified", "no_response"],
+            "description": "Normalised stage name"
+          },
+          "deal_value_aud": {
+            "type": ["number", "null"],
+            "description": "Deal value in AUD. Null if not yet set.",
+            "minimum": 0
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Additional context from CRM",
+            "properties": {
+              "utm_source": {"type": "string"},
+              "utm_campaign": {"type": "string"},
+              "owner_email": {"type": "string", "description": "Sales owner — internal only, not client-facing"}
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "example": {
+        "event": "lead.status_changed",
+        "timestamp": "2025-06-15T14:22:00Z",
+        "business_id": "biz_001",
+        "crm": "hubspot",
+        "contact_id": "hs_contact_78901234",
+        "deal_id": "hs_deal_56789012",
+        "platform_lead_id": "1234567890123456",
+        "previous_stage": "proposal_sent",
+        "new_stage": "closed_won",
+        "deal_value_aud": 3500.00,
+        "metadata": {
+          "utm_source": "meta",
+          "utm_campaign": "Roofing — Lead Gen — June",
+          "owner_email": "sales@agency.com.au"
+        }
+      }
+    },
+    "sale.recorded": {
+      "description": "Fired when a deal is confirmed closed-won with a sale value. Triggers lead_quality_score computation and true CPA/ROAS update.",
+      "direction": "inbound (from CRM or payment gateway)",
+      "http_method": "POST",
+      "endpoint": "/webhooks/crm/sale",
+      "security": "HMAC-SHA256 signature in X-AdPilot-Signature header",
+      "schema": {
+        "type": "object",
+        "required": ["event", "timestamp", "business_id", "deal_id", "sale_value_aud"],
+        "properties": {
+          "event": {
+            "type": "string",
+            "const": "sale.recorded"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "business_id": {
+            "type": "string"
+          },
+          "crm": {
+            "type": "string",
+            "enum": ["hubspot", "pipedrive", "gohighlevel", "sheets"]
+          },
+          "contact_id": {
+            "type": "string"
+          },
+          "deal_id": {
+            "type": "string"
+          },
+          "platform_lead_id": {
+            "type": "string",
+            "description": "Original ad platform lead ID — used to match Raw Data rows"
+          },
+          "sale_value_aud": {
+            "type": "number",
+            "description": "Confirmed sale value in AUD",
+            "minimum": 0
+          },
+          "sale_type": {
+            "type": "string",
+            "enum": ["new_customer", "upsell", "renewal"],
+            "description": "Type of sale — used for lifetime value calculations"
+          },
+          "payment_confirmed": {
+            "type": "boolean",
+            "description": "True if payment has been received (not just deal marked won)"
+          },
+          "invoice_id": {
+            "type": ["string", "null"],
+            "description": "Invoice reference — for reconciliation only, not stored in Sheets"
+          },
+          "attribution": {
+            "type": "object",
+            "properties": {
+              "utm_source": {"type": "string"},
+              "utm_campaign": {"type": "string"},
+              "campaign_id": {"type": "string"},
+              "ad_id": {"type": "string"}
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "example": {
+        "event": "sale.recorded",
+        "timestamp": "2025-06-15T16:00:00Z",
+        "business_id": "biz_001",
+        "crm": "gohighlevel",
+        "contact_id": "ghl_contact_abc123",
+        "deal_id": "ghl_opp_def456",
+        "platform_lead_id": "1234567890123456",
+        "sale_value_aud": 3500.00,
+        "sale_type": "new_customer",
+        "payment_confirmed": true,
+        "invoice_id": null,
+        "attribution": {
+          "utm_source": "meta",
+          "utm_campaign": "Roofing — Lead Gen — June",
+          "campaign_id": "23456789012345678",
+          "ad_id": "45678901234567890"
+        }
+      }
+    },
+    "alert.fired": {
+      "description": "Fired by AdPilot OS when an alert rule is triggered. Sent to Slack, email relay, or configured outbound webhook endpoint.",
+      "direction": "outbound (from AdPilot OS)",
+      "http_method": "POST",
+      "endpoint": "Configured per client — operator Slack, email relay, or custom webhook",
+      "security": "HMAC-SHA256 signature in X-AdPilot-Signature header (for custom endpoints)",
+      "schema": {
+        "type": "object",
+        "required": ["event", "timestamp", "business_id", "alert_id", "rule_id", "severity"],
+        "properties": {
+          "event": {
+            "type": "string",
+            "const": "alert.fired"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "business_id": {
+            "type": "string"
+          },
+          "business_name": {
+            "type": "string",
+            "description": "Display-safe business name for alert messages"
+          },
+          "alert_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique ID for this alert event — used for deduplication"
+          },
+          "rule_id": {
+            "type": "string",
+            "pattern": "^ALT-[0-9]{3}$",
+            "description": "Alert rule ID from the rules engine (ALT-001 to ALT-013)",
+            "examples": ["ALT-003", "ALT-008"]
+          },
+          "rule_name": {
+            "type": "string",
+            "description": "Human-readable rule name",
+            "examples": ["CPA Above Break-Even CPA", "Zero Conversions on Spend"]
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["Low", "Medium", "High", "Critical"]
+          },
+          "platform": {
+            "type": "string",
+            "enum": ["meta", "tiktok", "both"]
+          },
+          "affected": {
+            "type": "object",
+            "description": "Which campaign/adset/ad triggered the alert",
+            "properties": {
+              "campaign_id": {"type": "string"},
+              "campaign_name": {"type": "string"},
+              "adset_id": {"type": "string"},
+              "adset_name": {"type": "string"},
+              "ad_id": {"type": ["string", "null"]},
+              "ad_name": {"type": ["string", "null"]}
+            }
+          },
+          "metrics": {
+            "type": "object",
+            "description": "The metric values that triggered the alert",
+            "properties": {
+              "metric_name": {"type": "string"},
+              "metric_value": {"type": "number"},
+              "threshold_value": {"type": "number"},
+              "lookback_days": {"type": "integer"}
+            }
+          },
+          "alert_message": {
+            "type": "string",
+            "description": "Plain English alert message suitable for email/Slack"
+          },
+          "proposal": {
+            "type": "string",
+            "description": "Recommended action — PROPOSAL ONLY. Requires human YES to execute. No live ad changes have been made."
+          },
+          "sheet_link": {
+            "type": "string",
+            "format": "uri",
+            "description": "Link to the client's AdPilot OS Google Sheet for full context"
+          }
+        },
+        "additionalProperties": false
+      },
+      "example": {
+        "event": "alert.fired",
+        "timestamp": "2025-06-13T08:05:00Z",
+        "business_id": "biz_001",
+        "business_name": "Acme Roofing",
+        "alert_id": "550e8400-e29b-41d4-a716-446655440000",
+        "rule_id": "ALT-003",
+        "rule_name": "CPA Above Break-Even CPA",
+        "severity": "High",
+        "platform": "meta",
+        "affected": {
+          "campaign_id": "23456789012345678",
+          "campaign_name": "Roofing — Retargeting — Conversions",
+          "adset_id": "34567890123456789",
+          "adset_name": "Website Visitors 30d — Aged 35–60",
+          "ad_id": "45678901234567890",
+          "ad_name": "Testimonial Video V3"
+        },
+        "metrics": {
+          "metric_name": "cost_per_purchase",
+          "metric_value": 312.50,
+          "threshold_value": 245.00,
+          "lookback_days": 3
+        },
+        "alert_message": "CPA AUD 312.50 exceeds break-even AUD 245.00 (3-day avg). Every purchase at this cost is generating a loss.",
+        "proposal": "Review creative performance and landing page conversion rate. Consider pausing this ad set and testing a refreshed creative as a PAUSED duplicate. No live changes have been made.",
+        "sheet_link": "https://docs.google.com/spreadsheets/d/example_sheet_id/edit"
+      }
+    },
+    "report.ready": {
+      "description": "Fired by AdPilot OS when the weekly (or monthly) report has been generated and is ready for review.",
+      "direction": "outbound (from AdPilot OS)",
+      "http_method": "POST",
+      "endpoint": "Configured per client — operator email relay or custom webhook",
+      "security": "HMAC-SHA256 signature in X-AdPilot-Signature header",
+      "schema": {
+        "type": "object",
+        "required": ["event", "timestamp", "business_id", "report_id", "period"],
+        "properties": {
+          "event": {
+            "type": "string",
+            "const": "report.ready"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When report generation completed"
+          },
+          "business_id": {
+            "type": "string"
+          },
+          "business_name": {
+            "type": "string"
+          },
+          "report_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "report_type": {
+            "type": "string",
+            "enum": ["weekly", "monthly", "adhoc"],
+            "description": "Type of report generated"
+          },
+          "period": {
+            "type": "object",
+            "required": ["date_from", "date_to"],
+            "properties": {
+              "date_from": {
+                "type": "string",
+                "format": "date",
+                "description": "Report period start date (YYYY-MM-DD)"
+              },
+              "date_to": {
+                "type": "string",
+                "format": "date",
+                "description": "Report period end date (YYYY-MM-DD)"
+              }
+            }
+          },
+          "summary": {
+            "type": "object",
+            "description": "High-level KPI summary for the report period",
+            "properties": {
+              "spend_aud": {
+                "type": "number",
+                "description": "Total ad spend in AUD",
+                "minimum": 0
+              },
+              "leads": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cpl_aud": {
+                "type": ["number", "null"],
+                "description": "Cost per lead in AUD. Null if no leads."
+              },
+              "purchases": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cpa_aud": {
+                "type": ["number", "null"],
+                "description": "Cost per purchase in AUD. Null if no purchases."
+              },
+              "revenue_aud": {
+                "type": "number",
+                "minimum": 0
+              },
+              "roas": {
+                "type": ["number", "null"],
+                "description": "Return on ad spend ratio. Null if no revenue data."
+              },
+              "alert_count": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Number of alert rules fired during the report period"
+              },
+              "wow_spend_change_pct": {
+                "type": ["number", "null"],
+                "description": "Week-on-week spend change as a percentage. Positive = more spend."
+              }
+            }
+          },
+          "outputs": {
+            "type": "object",
+            "description": "Links to report outputs. Access requires authentication.",
+            "properties": {
+              "pdf_url": {
+                "type": ["string", "null"],
+                "format": "uri",
+                "description": "Google Drive or hosted PDF URL"
+              },
+              "sheet_url": {
+                "type": ["string", "null"],
+                "format": "uri",
+                "description": "Google Sheets Weekly Report tab URL"
+              }
+            }
+          },
+          "generated_by": {
+            "type": "string",
+            "description": "Which skill/agent generated the report",
+            "examples": ["riley", "adpilot_os_v1"]
+          }
+        },
+        "additionalProperties": false
+      },
+      "example": {
+        "event": "report.ready",
+        "timestamp": "2025-06-16T09:17:00Z",
+        "business_id": "biz_001",
+        "business_name": "Acme Roofing",
+        "report_id": "7c9e4b2a-1f3d-4e8a-9b0c-2d5e8f1a3c7b",
+        "report_type": "weekly",
+        "period": {
+          "date_from": "2025-06-09",
+          "date_to": "2025-06-15"
+        },
+        "summary": {
+          "spend_aud": 4823.10,
+          "leads": 62,
+          "cpl_aud": 77.79,
+          "purchases": 8,
+          "cpa_aud": 602.89,
+          "revenue_aud": 22400.00,
+          "roas": 4.64,
+          "alert_count": 2,
+          "wow_spend_change_pct": 12.5
+        },
+        "outputs": {
+          "pdf_url": "https://drive.google.com/file/d/example_file_id/view",
+          "sheet_url": "https://docs.google.com/spreadsheets/d/example_sheet_id/edit#gid=0"
+        },
+        "generated_by": "riley"
+      }
+    }
+  },
+  "security": {
+    "signing": {
+      "algorithm": "HMAC-SHA256",
+      "header": "X-AdPilot-Signature",
+      "format": "sha256={{hex_digest}}",
+      "secret_storage": "Environment variable WEBHOOK_SECRET — never in URL, never in payload",
+      "verification": "Use hmac.compare_digest for constant-time comparison — never string == for security checks",
+      "rotation": "Rotate WEBHOOK_SECRET quarterly or immediately on suspected breach"
+    },
+    "transport": "HTTPS only — TLS 1.2 minimum",
+    "no_secrets_in_urls": "Webhook URLs must not contain API keys, tokens, or account IDs",
+    "per_client_secrets": "Each client gets a unique WEBHOOK_SECRET — secrets are not shared across clients"
+  },
+  "retry_policy": {
+    "inbound": {
+      "response_timeout_seconds": 5,
+      "on_non_200": "Platform will retry — respond 202 immediately, process async",
+      "idempotency": "Use lead_id / alert_id / report_id as deduplication key before processing"
+    },
+    "outbound": {
+      "max_retries": 3,
+      "backoff_seconds": [30, 120, 600],
+      "on_410_gone": "Do not retry — endpoint removed",
+      "on_max_retries_exceeded": "Log to Audit Log, send email fallback"
+    }
+  }
+}
