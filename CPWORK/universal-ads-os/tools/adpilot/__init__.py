@@ -14,6 +14,6 @@ Modules:
     report     - numbers-first text report builder
 """
 
-from . import metrics, health, schema, decisions, ingest, report  # noqa: F401
+from . import metrics, health, schema, decisions, audit, ingest, report  # noqa: F401
 
 __version__ = "1.1.0"

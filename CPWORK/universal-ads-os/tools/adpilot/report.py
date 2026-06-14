@@ -5,7 +5,7 @@ decision proposals. Output is plain text (no deps) — riley/dashboards can reus
 """
 
 from __future__ import annotations
-from . import metrics, decisions
+from . import metrics, decisions, audit
 from .health import compute_health, render_block
 
 
@@ -61,11 +61,12 @@ def summarise(rows: list[dict], cfg: dict, health_factors: dict | None = None) -
                 f"  {p:7} spend {metrics.fmt(pt['spend'])} | "
                 f"CPA {metrics.fmt(pt['cpa'])} | ROAS {metrics.fmt(pt['roas'])}")
 
-    # Health score (if factor scores supplied).
+    # Health score: use supplied factor scores, else auto-derive from the data.
+    lines.append("-" * 60)
     if health_factors:
-        res = compute_health(health_factors)
-        lines.append("-" * 60)
-        lines.append(render_block(res))
+        lines.append(render_block(compute_health(health_factors)))
+    else:
+        lines.append(audit.render(audit.score_account(rows, cfg)))
 
     # Per-ad decisions.
     lines.append("-" * 60)

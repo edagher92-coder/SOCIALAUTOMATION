@@ -11,7 +11,7 @@ Run:  python3 -m adpilot selftest      (exit 0 = all pass)
 
 from __future__ import annotations
 import os
-from .. import metrics, health, ingest, decisions
+from .. import metrics, health, ingest, decisions, audit
 
 _FIX = os.path.join(os.path.dirname(__file__), "fixtures")
 _results = []
@@ -107,8 +107,40 @@ def test_decisions():
         check_true(f"Safety: {r['ad_name']} verdict is a proposal", d["safe"] is True)
 
 
+def test_audit():
+    cfg = {"average_sale_value": 200.0, "gross_margin": 0.6}
+    load = lambda f: ingest.load_csv(os.path.join(_FIX, f))
+
+    clean = audit.score_account(load("clean_account.csv"), cfg)
+    check_true("Clean account -> Green", clean["band"] == "Green",
+               f"{clean['total']} {clean['band']}")
+    check_true("Clean total >= 80", clean["total"] >= 80, clean["total"])
+
+    fat = audit.score_account(load("fatigued_account.csv"), cfg)
+    check_true("Fatigued account -> Orange (40-59)", 40 <= fat["total"] < 60,
+               f"{fat['total']} {fat['band']}")
+    check_true("Fatigued flags creative fatigue",
+               any(f["factor"] == "creative_freshness" for f in fat["findings"]))
+    check_true("Fatigued flags CPA overshoot",
+               any(f["factor"] == "cpa" for f in fat["findings"]))
+
+    broken = audit.score_account(load("broken_tracking.csv"), cfg)
+    check_true("Broken tracking -> Red (<40)", broken["total"] < 40,
+               f"{broken['total']} {broken['band']}")
+    check_true("Broken flags tracking CRITICAL",
+               any(f["factor"] == "tracking_quality" and f["severity"] == "CRITICAL"
+                   for f in broken["findings"]))
+    check_true("Broken tracking factor < 25",
+               broken["breakdown"]["tracking_quality"]["score"] < 25,
+               broken["breakdown"]["tracking_quality"]["score"])
+
+    # Extra metric coverage.
+    check("conversion_rate %", (metrics.conversion_rate(12, 600) or 0) * 100, 2.0)
+    check("frequency", metrics.frequency(30000, 16000), 1.875, dp=3)
+
+
 def main() -> int:
-    for t in (test_metrics, test_health, test_ingest_mapping, test_decisions):
+    for t in (test_metrics, test_health, test_ingest_mapping, test_decisions, test_audit):
         t()
     passed = sum(1 for ok, *_ in _results if ok)
     total = len(_results)

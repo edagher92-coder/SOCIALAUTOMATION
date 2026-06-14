@@ -83,18 +83,18 @@ Each test case follows this structure:
 
 ---
 
-### PT-R-05: Budget Query Routing
+### PT-R-05: Budget / Scaling Query Routing
 
 **Input prompt:** "Should I increase the budget on my prospecting campaign?"
 
-**Expected routing:** `start-ads-command-centre` → `titan` (budget and scaling agent)
+**Expected routing:** `start-ads-command-centre` → `dana` (data analyst — scaling decisions). Note: scaling is a numbers decision (CPA vs break-even, health ≥70, clean tracking). `titan` owns offer/funnel, not budget; `mira`/`travis` advise platform tactics.
 
 **Expected output shape:**
-- Titan invoked
-- Requests data to evaluate (spend, CPA vs. target, frequency, trend) before making a recommendation
-- Does NOT give a budget recommendation without data
+- Dana invoked
+- Requests data to evaluate (spend, CPA vs. break-even, frequency, trend, tracking) before making a recommendation
+- Does NOT give a budget recommendation without data; never proposes a live budget change (typed YES + manual action required)
 
-**Pass criterion:** Titan invoked. Response requests data before recommending. No live budget change proposed.
+**Pass criterion:** Dana invoked. Response requests data before recommending. No live budget change proposed; scaling gated on health ≥70 and clean tracking.
 
 ---
 
