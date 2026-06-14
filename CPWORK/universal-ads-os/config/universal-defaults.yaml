@@ -1,0 +1,98 @@
+# =============================================================================
+# AdPilot OS — UNIVERSAL DEFAULTS
+# System-wide defaults that apply to EVERY client unless their client-config.yaml
+# overrides a value. These encode the product's opinions: safety, naming, metrics,
+# thresholds, and decision rules. No client-specific data lives here.
+# =============================================================================
+
+defaults:
+  currency: "AUD"
+  spelling: "en-AU"            # Australian English everywhere
+  tone: "numbers-first, plain English, anti-hype"
+  date_format: "YYYY-MM-DD"
+  timezone: "Australia/Sydney"
+
+# ---- Safety (mirrors client.safety; client config can tighten, never loosen) -
+safety:
+  live_edit_block: true
+  use_paused_duplicates_only: true
+  never_delete_archive_instead: true
+  confirm_before_money_moves: true
+  scale_requires_clean_tracking: true
+  block_high_risk_browser_automation: true   # use platform APIs, not Ads Manager browser automation
+
+# ---- Metric definitions (single source of truth) ----------------------------
+metrics:
+  ctr: "clicks / impressions"
+  cpc: "spend / clicks"
+  cpm: "spend / impressions * 1000"
+  cpl: "spend / leads"
+  cpa: "spend / purchases (or primary conversions)"
+  roas: "revenue / spend"
+  mer: "total_revenue / total_ad_spend  (media efficiency ratio, account-wide)"
+  hook_rate: "three_second_views / impressions"
+  hold_rate: "thruplays / three_second_views"
+  lead_to_sale_rate: "sales_count / leads"
+  break_even_cpa: "average_sale_value * gross_margin"
+  break_even_roas: "1 / gross_margin"
+  frequency: "impressions / reach"
+
+# ---- Campaign Health Score weights (sum = 100) ------------------------------
+health_score_weights:
+  tracking_quality: 15
+  naming_quality: 5
+  spend_efficiency: 12
+  ctr: 8
+  cpc: 7
+  cpa: 15
+  conversion_rate: 10
+  lead_quality: 8
+  creative_freshness: 8
+  offer_strength: 5
+  landing_page_alignment: 4
+  budget_pacing: 2
+  data_confidence: 1
+health_score_bands:
+  green:  "80-100"
+  yellow: "60-79"
+  orange: "40-59"
+  red:    "0-39"
+
+# ---- Decision-rule thresholds (tune per niche) ------------------------------
+thresholds:
+  high_frequency_warn: 3.0          # creative fatigue watch
+  high_frequency_act: 4.0           # refresh creative / broaden audience
+  low_ctr_warn_pct: 1.0             # below this on feed placements → hook/creative problem
+  fatigue_ctr_drop_pct: 25          # CTR fell this % from 7-day peak → fatigue
+  min_results_before_decision: 50   # min clicks (or 15 conversions) before judging an ad
+  min_spend_before_decision_x_cpa: 1.0   # spend ≥ 1x target CPA before kill decision
+  winner_scale_step_pct: 20         # scale winners by ≤20% at a time
+  scale_only_if_health_gte: 70
+
+# ---- Naming standards -------------------------------------------------------
+naming:
+  campaign: "{business}_{offer}_{objective}_{location}_{YYYYMMDD}"
+  adset:    "{audience}_{placement}_{optimisation}"
+  ad:       "{angle}_{format}_{version}"     # e.g. pain-point_UGC_v3
+  creative: "{angle}_{format}_{ratio}_{version}"
+  test_batch: "TEST_{hypothesis}_{YYYYMMDD}"
+  report:   "{business}_{period}_{YYYYMMDD}"
+  landing_page: "{offer}_{audience}_{version}"
+
+# ---- UTM standard -----------------------------------------------------------
+utm:
+  source: "meta | tiktok"
+  medium: "paid_social"
+  campaign: "{business}_{offer}_{objective}_{location}_{YYYYMMDD}"
+  content: "{creativeangle}_{format}_{version}"
+  term: "{audience}_{test}"
+  rules:
+    - "lowercase, words joined by hyphens, segments joined by underscores"
+    - "no spaces, no PII, no client secrets"
+    - "utm_campaign must match the campaign name's offer+objective"
+
+# ---- Product versions -------------------------------------------------------
+product_versions:
+  v1_no_code: "Prompt pack + Claude skills + Sheets dashboard + manual CSV import"
+  v2_low_code: "Make / Zapier / n8n automations + alerts + auto-reports + CRM loop"
+  v3_api: "Meta + TikTok API imports + alerting + white-label agency mode + SaaS direction"
