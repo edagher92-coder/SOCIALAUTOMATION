@@ -1,0 +1,126 @@
+<!doctype html><html lang=en><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>AdPilot OS — Ads Health Check (live demo)</title>
+<style>
+ :root{--ink:#1b1f24;--muted:#57606a;--line:#d0d7de;--bg:#f6f8fa;--brand:#0b5fff}
+ *{box-sizing:border-box} body{margin:0;font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+ header{background:#0b1f3a;color:#fff;padding:18px 22px} header h1{margin:0;font-size:19px}
+ header p{margin:4px 0 0;color:#aebfda;font-size:13px}
+ .safe{background:#fff7e6;border:1px solid #f0c36d;color:#7a5b00;padding:8px 12px;border-radius:8px;font-size:13px;margin:14px 22px}
+ main{max-width:980px;margin:0 auto;padding:0 22px 60px}
+ .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px} @media(max-width:760px){.grid{grid-template-columns:1fr}}
+ label{display:block;font-weight:600;font-size:13px;margin:10px 0 4px}
+ input,textarea,select{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+ textarea{min-height:150px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+ .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+ button{background:var(--brand);color:#fff;border:0;border-radius:8px;padding:11px 18px;font-weight:600;cursor:pointer}
+ button.ghost{background:#fff;color:var(--brand);border:1px solid var(--brand)}
+ .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-top:16px}
+ .score{font-size:46px;font-weight:800;line-height:1} .band{font-weight:700}
+ table{width:100%;border-collapse:collapse;font-size:13px} th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+ .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;color:#fff}
+ .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px} @media(max-width:760px){.metrics{grid-template-columns:repeat(2,1fr)}}
+ .metric{background:var(--bg);border-radius:10px;padding:10px} .metric b{display:block;font-size:18px} .metric span{color:var(--muted);font-size:12px}
+ .muted{color:var(--muted);font-size:12px} h2{font-size:16px;margin:0 0 8px} .toolbar{display:flex;gap:10px;margin-top:16px}
+ @media print{.noprint{display:none!important}body{background:#fff}}
+ code{background:var(--bg);padding:1px 5px;border-radius:5px}
+</style></head><body>
+<header class=noprint><h1>AdPilot OS — Ads Health Check</h1>
+<p>Meta + TikTok · runs 100% in your browser · no upload to any server · never edits a live ad</p></header>
+<div class="safe noprint">🔒 Read-only &amp; private. Your CSV never leaves your browser — all maths runs locally (open dev-tools network tab to verify). This proposes changes; it never edits a live ad.</div>
+<main>
+ <div class="card noprint">
+  <div class=grid>
+   <div>
+    <label>Average sale value (AUD)</label><input id=avg type=number value=200>
+    <label>Gross margin (0–1)</label><input id=margin type=number step=0.01 value=0.6>
+    <label>Business name</label><input id=biz value="Example Co">
+    <label>Platform (optional — auto-detects)</label>
+    <select id=plat><option value="">auto</option><option>meta</option><option>tiktok</option></select>
+    <div class=row>
+      <button onclick=run()>Analyse</button>
+      <button class=ghost onclick=loadSample('clean')>Sample: clean</button>
+      <button class=ghost onclick=loadSample('fatigued')>Sample: fatigued</button>
+      <button class=ghost onclick=loadSample('broken')>Sample: broken</button>
+    </div>
+    <p class=muted>Break-even CPA = avg sale × margin. Break-even ROAS = 1 ÷ margin.</p>
+   </div>
+   <div>
+    <label>CSV (paste a Meta/TikTok/universal export, or upload)</label>
+    <textarea id=csv placeholder="campaign_name,spend,impressions,clicks,purchases,revenue..."></textarea>
+    <input type=file id=file accept=".csv,text/csv" style=margin-top:8px>
+   </div>
+  </div>
+ </div>
+ <div id=out></div>
+ <p class="muted noprint" style=margin-top:24px>In-browser engine self-test:
+   <button class=ghost onclick=selftest()>run</button> <span id=st></span>
+   &nbsp;·&nbsp; Full source &amp; the no-code/agency packs:
+   <a href="https://github.com/edagher92-coder/SOCIALAUTOMATION/tree/main/CPWORK/universal-ads-os">repo</a></p>
+</main>
+<script src="engine.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const SAMPLES={
+ clean:`business_name,platform,campaign_name,date,spend,impressions,reach,clicks,leads,purchases,revenue,three_second_views,thruplays,lead_quality_score,utm_source,utm_medium,utm_campaign,tracking_status
+Example Co,meta,exampleco_hotwater_leads_brisbane_20260601,2026-06-13,600,30000,16000,600,40,12,3600,9000,4000,82,meta,paid_social,exampleco_hotwater_leads_brisbane_20260601,ok
+Example Co,tiktok,exampleco_hotwater_leads_brisbane_20260601,2026-06-13,500,28000,15000,560,35,10,3000,8200,3600,78,tiktok,paid_social,exampleco_hotwater_leads_brisbane_20260601,ok`,
+ fatigued:`business_name,platform,campaign_name,date,spend,impressions,reach,clicks,leads,purchases,revenue,three_second_views,thruplays,utm_source,utm_medium,utm_campaign,tracking_status
+Example Co,meta,exampleco_summer_sales_national_20260401,2026-06-13,2500,280000,62000,2520,0,12,1800,42000,9000,meta,paid_social,exampleco_summer_sales_national_20260401,ok
+Example Co,tiktok,summer-sale,2026-06-13,1500,150000,30000,1200,0,8,1200,30000,6000,tiktok,paid_social,summer-sale,ok`,
+ broken:`business_name,platform,campaign_name,date,spend,impressions,reach,clicks,leads,purchases,revenue,three_second_views,thruplays,utm_source,utm_medium,utm_campaign,tracking_status
+Example Co,meta,promo,2026-06-13,1800,90000,40000,540,0,0,0,12000,3000,,,,broken
+Example Co,meta,promo2,2026-06-13,1200,60000,28000,360,0,0,0,8000,2000,,,,broken`};
+$('file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$('csv').value=r.result;run()};r.readAsText(f)});
+function loadSample(n){$('csv').value=SAMPLES[n];run()}
+const C={Green:'#1a7f37',Yellow:'#9a6700',Orange:'#bc4c00',Red:'#cf222e'};
+const SEV={CRITICAL:'#cf222e',HIGH:'#bc4c00',MEDIUM:'#9a6700',LOW:'#1a7f37',INFO:'#57606a'};
+const f2=v=>v==null?'N/A':(Math.round(v*100)/100).toLocaleString();
+function run(){
+ const cfg={business_name:$('biz').value||'Your Business',currency:'AUD',average_sale_value:parseFloat($('avg').value)||200,gross_margin:parseFloat($('margin').value)||0.6};
+ const csv=$('csv').value; if(!csv.trim()){$('out').innerHTML='<div class=card style=color:#cf222e>Paste a CSV or load a sample.</div>';return}
+ let rows; try{rows=AdPilot.parseCsvText(csv,$('plat').value||null)}catch(e){$('out').innerHTML='<div class=card style=color:#cf222e>Could not parse CSV: '+e.message+'</div>';return}
+ if(!rows.length){$('out').innerHTML='<div class=card style=color:#cf222e>No rows parsed — check the headers.</div>';return}
+ const res=AdPilot.scoreAccount(rows,cfg),agg=res.agg,camps=AdPilot.scoreByCampaign(rows,cfg);
+ const decs=rows.map(r=>{const d=AdPilot.decide(r,cfg);return{...d,name:r.ad_name||r.campaign_name||r.ad_id||'(ad)',platform:r.platform||'?'}});
+ const j={config:cfg,summary:{spend:agg.spend,leads:agg.leads,purchases:agg.purchases,revenue:agg.revenue,cpa:agg.cpa,roas:agg.roas,mer:AdPilot.metrics.mer(agg.revenue,agg.spend),break_even_cpa:res.break_even_cpa,break_even_roas:AdPilot.metrics.breakEvenRoas(cfg.gross_margin)},health:{total:res.total,band:res.band,guidance:res.guidance,findings:res.findings,weakest:res.weakest},campaigns:camps,decisions:decs};
+ window.__last=j; const s=j.summary,h=j.health,col=C[h.band]||'#57606a';
+ let html='<div class=card><div style=display:flex;gap:20px;align-items:center;flex-wrap:wrap>'+
+  '<div><div class=score style=color:'+col+'>'+Math.round(h.total)+'<span style=font-size:18px;color:#57606a>/100</span></div>'+
+  '<div class=band style=color:'+col+'>'+h.band+'</div></div>'+
+  '<div style=flex:1;min-width:220px><b>'+h.guidance+'</b><div class=muted>Weakest: '+(h.weakest.join(', ')||'—')+'</div></div></div>';
+ html+='<div class=metrics style=margin-top:14px>'+m('Spend',s.spend)+m('CPA',s.cpa)+m('Break-even CPA',s.break_even_cpa)+m('ROAS',s.roas)+m('Break-even ROAS',s.break_even_roas)+m('MER',s.mer)+m('Leads',s.leads)+m('Purchases',s.purchases)+'</div></div>';
+ html+='<div class="toolbar noprint"><button onclick=downloadCSV()>Download CSV</button><button class=ghost onclick=window.print()>Print / Save PDF</button></div>';
+ if(j.campaigns.length>1){html+='<div class=card><h2>By campaign <span class=muted>(worst-first)</span></h2><table><tr><th>Health</th><th>Campaign</th><th>Platforms</th><th>Spend</th><th>CPA</th><th>ROAS</th><th>Top issue</th></tr>';
+  for(const c of j.campaigns){const cc=C[c.band]||'#57606a';html+='<tr><td><span class=pill style=background:'+cc+'>'+Math.round(c.health)+' '+c.band+'</span></td><td>'+esc(c.campaign)+'</td><td>'+c.platforms.join(', ')+'</td><td>'+f2(c.spend)+'</td><td>'+f2(c.cpa)+'</td><td>'+f2(c.roas)+'</td><td class=muted>'+esc(c.top_finding||'—')+'</td></tr>';}
+  html+='</table></div>';}
+ html+='<div class=card><h2>Findings</h2><table><tr><th>Severity</th><th>Factor</th><th>Detail</th></tr>';
+ for(const f of h.findings)html+='<tr><td><span class=pill style=background:'+(SEV[f.severity]||'#57606a')+'>'+f.severity+'</span></td><td>'+esc(f.factor)+'</td><td>'+esc(f.message)+'</td></tr>';
+ html+='</table></div>';
+ html+='<div class=card><h2>Proposals <span class=muted>(paused duplicates / proposals only — nothing live changed)</span></h2><table><tr><th>Verdict</th><th>Ad</th><th>Why</th><th>Proposal</th></tr>';
+ for(const d of j.decisions)html+='<tr><td><b>'+d.verdict+'</b></td><td>'+esc(d.name)+'<div class=muted>'+d.platform+'</div></td><td>'+esc(d.reason)+'</td><td>'+esc(d.proposal)+'</td></tr>';
+ html+='</table></div>';
+ $('out').innerHTML=html;
+}
+const m=(k,v)=>'<div class=metric><b>'+f2(v)+'</b><span>'+k+'</span></div>';
+const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function q(v){v=(v==null?'':String(v));return '"'+v.replace(/"/g,'""')+'"';}
+function downloadCSV(){const j=window.__last;if(!j)return;const L=[];
+ L.push(['section','name','platform','verdict_or_band','detail1','detail2','detail3'].join(','));
+ const s=j.summary;L.push(['summary','health',j.health.band,Math.round(j.health.total),'CPA='+f2(s.cpa),'ROAS='+f2(s.roas),'MER='+f2(s.mer)].map(q).join(','));
+ for(const c of j.campaigns)L.push(['campaign',c.campaign,c.platforms.join('|'),c.band+' '+Math.round(c.health),'spend='+f2(c.spend),'cpa='+f2(c.cpa),'roas='+f2(c.roas)].map(q).join(','));
+ for(const f of j.health.findings)L.push(['finding',f.factor,'',f.severity,f.message,'',''].map(q).join(','));
+ for(const d of j.decisions)L.push(['decision',d.name,d.platform,d.verdict,d.reason,d.proposal,''].map(q).join(','));
+ const blob=new Blob([L.join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='adpilot-analysis.csv';a.click();URL.revokeObjectURL(a.href);}
+function selftest(){
+ let p=0,n=0;const ck=(c)=>{c?p++:n++;};const M=AdPilot.metrics;
+ ck(Math.round(M.cpa(8000,118)*100)===6780); ck(Math.round(M.mer(45000,9800)*100)===459); ck(M.cpa(800,0)===null);
+ ck(AdPilot.computeHealth(Object.fromEntries(Object.keys(AdPilot.WEIGHTS).map(k=>[k,80]))).band==='Green');
+ const cfg={average_sale_value:200,gross_margin:0.6};
+ ck(AdPilot.scoreAccount(AdPilot.parseCsvText(SAMPLES.clean),cfg).band==='Green');
+ ck(AdPilot.scoreAccount(AdPilot.parseCsvText(SAMPLES.fatigued),cfg).band==='Orange');
+ ck(AdPilot.scoreAccount(AdPilot.parseCsvText(SAMPLES.broken),cfg).band==='Red');
+ $('st').textContent=p+'/'+(p+n)+(n===0?' ✅':' ❌');
+}
+loadSample('fatigued');
+</script></body></html>
