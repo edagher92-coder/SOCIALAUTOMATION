@@ -25,6 +25,9 @@ exports/
 data/raw/
 **/*.local.csv
 
+# ── Build artifacts (regenerate with tools/build_singlefile.py) ──
+dist/
+
 # ── OS / editor / tooling noise ──
 .DS_Store
 Thumbs.db
