@@ -4,6 +4,33 @@ All notable changes to the AdPilot OS package. Format: reverse-chronological.
 
 ---
 
+## [1.1.1] — 2026-06-14 — Verification pass + resale hardening
+Independent multi-agent verification, then fixes and resale mechanics.
+
+**Verified (three independent reviewers)**
+- Functional QA: PASS, 0 defects (structure, frontmatter, JSON/CSV, engine 44/44, safety).
+- Consistency: **all 16 found issues fixed**, re-verified ALL RESOLVED.
+- Security/Resale: no secrets/real IDs; RESALE-MECHANICS COMPLETE.
+
+**Fixed (16 consistency defects from the parallel build)**
+- `hook_rate` formula corrected to `three_second_views / impressions` in 6 automation
+  files + `api/data-schema.md`, `meta-api-plan.md`, `tiktok-api-plan.md`.
+- UTM values corrected to `utm_source=meta` / `utm_medium=paid_social` in templates,
+  `support-docs.md`, `white-label-agency-offer.md`, `airtable` spec, `sample-client-audit.md`.
+- Campaign naming aligned to canonical in 2 dashboards + 1 report; Sheets platform
+  dropdown set to `meta, tiktok`.
+
+**Added (resale + buyer deliverables)**
+- `tools/package_release.sh` — self-verifying resale packager (strips private packs,
+  secret-scans, runs the self-test, zips). Produces a 23-skill universal build.
+- `README-FIRST.md`, `config/config-guide.md`, `product/sops/SOP-01..05`, `qa/test-run-log.md`.
+- Genericised owner-name references in the universal core; flagged the root audit doc
+  as operator-internal / do-not-distribute.
+
+**Honest open items (human/owner only — not faked):** solicitor licence review, real
+testimonials, live support inbox, delivery platform + test purchase, non-technical
+usability sign-off, live dashboard template builds. Tracked in `qa/test-run-log.md`.
+
 ## [1.1.0] — 2026-06-14 — Executable engine + reconciliation
 Added the differentiating, hard-to-replicate layer: a working, tested engine.
 
