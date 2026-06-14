@@ -32,6 +32,13 @@ control. (See `SECURITY.md` and `AGENTS.md` §1.)
 5. **Generate your first report** with the `client-report-generator` skill, using
    `templates/weekly-client-report-template.md`.
 
+## Prefer a screen? Run the web app
+```bash
+cd tools && python3 -m webapp.server     # -> http://localhost:8000
+```
+Upload/paste a CSV, hit **Analyse** → health score + findings + safe proposals.
+Deploy it publicly in one step (Docker/Render/Railway) — see `tools/webapp/README.md`.
+
 ## Which tier am I on?
 - **Starter (DIY):** this pack + the Sheets dashboard + CSV import. Start at steps 1–5.
 - **Pro (Automation):** add `automations/` (Make/Zapier/n8n) + alerts + auto-reports.

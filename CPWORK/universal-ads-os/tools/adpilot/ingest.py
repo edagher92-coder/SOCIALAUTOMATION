@@ -5,6 +5,7 @@ CSV, maps to the schema, and back-fills computed metrics. Pure stdlib (csv).
 
 from __future__ import annotations
 import csv
+import io
 from . import metrics
 from .schema import normalise_row, detect_platform
 
@@ -34,10 +35,17 @@ def _fill_computed(row: dict) -> dict:
 
 
 def load_csv(path: str, platform: str | None = None) -> list[dict]:
-    """Load a CSV into normalised, metric-filled universal rows."""
+    """Load a CSV file into normalised, metric-filled universal rows."""
     with open(path, newline="", encoding="utf-8-sig") as fh:
-        reader = csv.DictReader(fh)
-        headers = reader.fieldnames or []
-        plat = platform or detect_platform(headers)
-        rows = [_fill_computed(normalise_row(raw, plat)) for raw in reader]
-    return rows
+        return _read(fh, platform)
+
+
+def parse_csv_text(text: str, platform: str | None = None) -> list[dict]:
+    """Same as load_csv but from a CSV string (used by the web app/API)."""
+    return _read(io.StringIO(text), platform)
+
+
+def _read(fh, platform: str | None) -> list[dict]:
+    reader = csv.DictReader(fh)
+    plat = platform or detect_platform(reader.fieldnames or [])
+    return [_fill_computed(normalise_row(raw, plat)) for raw in reader]

@@ -1,0 +1,16 @@
+# Render.com blueprint — one-click deploy of the AdPilot OS web app.
+# In Render: New > Blueprint > point at this repo. No build step (stdlib only).
+services:
+  - type: web
+    name: adpilot-os
+    runtime: python
+    rootDir: CPWORK/universal-ads-os/tools
+    plan: free
+    buildCommand: "python -m adpilot selftest"   # gate: deploy only if the engine passes
+    startCommand: "python -m webapp.server"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.5"
+      - key: HOST
+        value: "0.0.0.0"
+    healthCheckPath: /health

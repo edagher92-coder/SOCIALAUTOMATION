@@ -4,6 +4,24 @@ All notable changes to the AdPilot OS package. Format: reverse-chronological.
 
 ---
 
+## [1.3.0] — 2026-06-14 — Web app
+- `tools/webapp/server.py` — dependency-free (stdlib `http.server`) UI + JSON API over
+  the engine. Paste/upload a Meta/TikTok/universal CSV → Campaign Health Score,
+  findings, headline metrics, and **safe per-ad decisions**. Read-only; never edits a live ad.
+- Endpoints: `/`, `/health`, `/api/selftest`, `/api/sample/{clean|fatigued|broken}`,
+  `POST /api/analyze`. Verified live: health ok, self-test 54/54, analyze returns
+  correct results (fatigued sample → 51.5 Orange).
+- Deploy artifacts: `Dockerfile`, `Procfile`, `render.yaml`, `webapp/README.md`
+  (one-step deploy — no build, stdlib only).
+
+## [1.2.0] — 2026-06-14 — Auto-audit engine
+- `tools/adpilot/audit.py` — derives all 13 health factors + findings **directly from a
+  CSV** (no manual factor entry); wired into `analyze` and `report`.
+- 3 documented fixture accounts (clean/fatigued/broken) + asserts they land in the
+  expected bands: **clean 89.4 Green · fatigued 51.5 Orange · broken 33.2 Red**.
+- Self-test grew to **54/54**. `ingest.parse_csv_text()` added for the web API.
+- Fixed `prompt-tests.md` PT-R-05 routing (scaling → dana, not titan).
+
 ## [1.1.1] — 2026-06-14 — Verification pass + resale hardening
 Independent multi-agent verification, then fixes and resale mechanics.
 
