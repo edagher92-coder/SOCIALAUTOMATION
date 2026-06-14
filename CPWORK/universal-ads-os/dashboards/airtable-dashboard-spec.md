@@ -124,7 +124,7 @@ Replace `[Client Name]` with `{{client.business_name}}` at setup time.
 | Field Name | Field Type | Notes / Formula |
 |---|---|---|
 | `campaign_id` | Single line text | Platform-native campaign ID — entered manually; no auto-sync |
-| `campaign_name` | Single line text | Must follow naming convention: `[Platform]_[Objective]_[Audience]_[Date]` |
+| `campaign_name` | Single line text | Must follow naming convention: `{business}_{offer}_{objective}_{location}_{YYYYMMDD}` |
 | `platform` | Single select | Options: **Meta** / **TikTok** |
 | `objective` | Single select | Options: **Awareness** / **Traffic** / **Leads** / **Conversions** / **Sales** |
 | `budget_type` | Single select | Options: **Daily** / **Lifetime** |
@@ -238,7 +238,7 @@ Note: Airtable does not support cross-table lookups inside formulas directly. Th
 | `comments` | Number (integer) | |
 | `shares` | Number (integer) | |
 | `saves` | Number (integer) | |
-| `utm_source` | Single line text | e.g. facebook, tiktok |
+| `utm_source` | Single line text | e.g. meta, tiktok |
 | `utm_medium` | Single line text | e.g. paid_social |
 | `utm_campaign` | Single line text | Campaign slug |
 | `utm_content` | Single line text | Ad creative identifier |

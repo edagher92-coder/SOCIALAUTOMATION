@@ -74,7 +74,7 @@ recommendation, notes
 - `cost_per_lead` = `=IF(leads>0, spend/leads, "")` — column AC
 - `cost_per_purchase` = `=IF(purchases>0, spend/purchases, "")` — column AD
 - `roas` = `=IF(spend>0, revenue/spend, "")` — column AE
-- `hook_rate` = `=IF(video_views>0, three_second_views/video_views, "")` — column AJ
+- `hook_rate` = `=IF(impressions>0, three_second_views/impressions, "")` — column AJ
 - `hold_rate` = `=IF(three_second_views>0, thruplays/three_second_views, "")` — column AK
 
 ---

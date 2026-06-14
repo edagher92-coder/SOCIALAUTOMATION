@@ -63,7 +63,7 @@ The report produces aggregates at four levels:
 | CTR | clicks / impressions | % |
 | CPC | spend / clicks | AUD |
 | Average Frequency | AVG(frequency, weighted by impressions) | number |
-| Hook Rate | SUM(three_second_views) / SUM(video_views) | % |
+| Hook Rate | SUM(three_second_views) / SUM(impressions) | % |
 | Hold Rate | SUM(thruplays) / SUM(three_second_views) | % |
 | Lead Quality Score (avg) | AVG(lead_quality_score) where not null | 0–10 |
 

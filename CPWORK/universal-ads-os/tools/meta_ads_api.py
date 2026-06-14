@@ -2,7 +2,7 @@
 AdPilot OS — Meta Ads API toolkit (universal)
 Direct Graph API access. No browser, no permission popups, standard library only.
 
-Generalised from the original Snow Flow toolkit: the ad-account ID and token are
+Generalised from the original operator toolkit: the ad-account ID and token are
 NEVER hardcoded — they come from environment variables (or a git-ignored token
 file you point at). Ship this file with the product; ship NO secrets.
 

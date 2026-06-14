@@ -210,7 +210,7 @@ thruplays      = parse_actions(video_play_actions, 'video_thruplay_watched')
 | video_play_actions[video_view] | video_views | |
 | video_play_actions[3s] | three_second_views | |
 | video_play_actions[thruplay] | thruplays | |
-| — (computed) | hook_rate | three_second_views / video_views |
+| — (computed) | hook_rate | three_second_views / impressions |
 | — (computed) | hold_rate | thruplays / three_second_views |
 | — (computed) | cost_per_lead | spend / leads |
 | — (computed) | cost_per_purchase | spend / purchases |

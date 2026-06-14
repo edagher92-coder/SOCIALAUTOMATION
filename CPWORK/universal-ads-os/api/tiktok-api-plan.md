@@ -205,7 +205,7 @@ Note: `dimensions` must include `ad_id` for ad-level data. Adding `campaign_id` 
 | — (dimension) | ad_id | from `dimensions.ad_id` |
 | — (dimension) | ad_name | from ad lookup |
 | — (dimension) | date | from `dimensions.stat_time_day` |
-| — (computed) | hook_rate | three_second_views / video_views |
+| — (computed) | hook_rate | three_second_views / impressions |
 | — (computed) | hold_rate | thruplays / three_second_views |
 | — (computed) | roas | revenue / spend |
 | — (added) | platform | "tiktok" |

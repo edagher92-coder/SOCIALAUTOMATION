@@ -9,7 +9,7 @@ Where the product goes, in order of commercial leverage. Detailed phasing also i
 - 12 agents, 25 skills, universal config, schema, health score, decision rules.
 - Templates, dashboards specs, automation specs, API plans, sample reports.
 - Product pack (names, pricing, sales page, onboarding, demo, white-label).
-- QA + release checklist. Snowflow + Profit Minute AU context packs.
+- QA + release checklist. Example + private (operator) context packs.
 
 ## Next (v1.1 — productise the wedge, ~2 weeks)
 - Ship **V1 No-code** as the Starter SKU: Sheets dashboard built from

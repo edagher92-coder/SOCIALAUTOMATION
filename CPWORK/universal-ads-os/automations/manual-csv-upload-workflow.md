@@ -83,7 +83,7 @@ Map each platform's export column headers to the universal schema fields. Use th
 **Computed fields to add after paste:**
 - `cost_per_lead` = spend / leads (formula in Sheet)
 - `cost_per_purchase` = spend / purchases
-- `hook_rate` = three_second_views / video_views (where video_views > 0)
+- `hook_rate` = three_second_views / impressions (where impressions > 0)
 - `hold_rate` = thruplays / three_second_views (proxy)
 - `six_second_views` — not directly available from Meta; leave blank or map from 6s plays if custom metric added
 - `cpl` = cost_per_lead (alias)
@@ -130,7 +130,7 @@ Map each platform's export column headers to the universal schema fields. Use th
 | — (add manually) | business_name | {{client.business_name}} |
 
 **Computed fields:**
-- `hook_rate` = three_second_views / video_views
+- `hook_rate` = three_second_views / impressions
 - `hold_rate` = thruplays / three_second_views
 - `ctr` — convert from percentage to decimal if TikTok exports as "2.1%" → divide by 100
 

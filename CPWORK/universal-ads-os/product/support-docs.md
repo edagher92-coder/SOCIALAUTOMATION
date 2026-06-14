@@ -450,7 +450,7 @@ Every row in the CSV represents one ad on one day. The required columns are:
 | `landing_page_views` | Integer | `480` | Tracked landing page loads |
 | `add_to_cart` | Integer | `62` | Add-to-cart events. Use 0 if not tracked |
 | `initiate_checkout` | Integer | `28` | Checkout initiations. Use 0 if not tracked |
-| `utm_source` | String | `facebook` | UTM source tag |
+| `utm_source` | String | `meta` | UTM source tag (meta or tiktok) |
 | `utm_medium` | String | `paid_social` | UTM medium tag |
 | `utm_campaign` | String | `bab-pros-purchase-au-jun26` | UTM campaign tag |
 | `utm_content` | String | `vid01-hook-a` | UTM content (ad identifier) |

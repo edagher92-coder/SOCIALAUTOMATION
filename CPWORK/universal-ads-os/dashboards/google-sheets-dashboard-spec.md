@@ -121,7 +121,7 @@ Apply these validations after selecting entire columns (not headers):
 
 | Column | Validation Type | Allowed Values / Rule |
 |--------|-----------------|-----------------------|
-| C (platform) | Dropdown list | `Meta, TikTok, Google, LinkedIn` |
+| C (platform) | Dropdown list | `meta, tiktok` (lowercase — matches the universal schema) |
 | K (date) | Date | Valid date format, not future |
 | L (objective) | Dropdown list | `AWARENESS, TRAFFIC, LEADS, SALES, ENGAGEMENT, APP_INSTALL` |
 | M (budget_type) | Dropdown list | `DAILY, LIFETIME` |

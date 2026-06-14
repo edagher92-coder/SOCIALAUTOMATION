@@ -99,7 +99,7 @@ Video performance metrics. Apply to video ad formats only. Leave blank (null) fo
 | `three_second_views` | integer | raw | meta + tiktok | Views lasting at or past the 3-second mark. Meta: 3-second video plays (direct). TikTok: `video_watched_2s` — 2-second proxy; note in `notes` column: `"three_second_views proxied from TikTok video_watched_2s"`. |
 | `six_second_views` | integer | raw | tiktok (meta partial) | Views lasting 6 seconds or more. TikTok: `video_watched_6s` (direct). Meta: not a standard field — leave blank unless a custom metric is configured. |
 | `thruplays` | integer | raw | meta + tiktok | Complete or near-complete views. Meta: ThruPlays (full video if <15s, or 15s+ view). TikTok: `video_views_p100` (100% completion) — proxy; note in `notes` column: `"thruplays proxied from TikTok video_views_p100"`. |
-| `hook_rate` | decimal (0–1) | computed | — | `three_second_views / video_views`. Proportion of viewers who watched past the opening. Benchmark: <0.15 = weak hook; 0.15–0.30 = average; >0.30 = strong. Null if video_views = 0. Do not compare Meta hook_rate with TikTok hook_rate directly (2s vs 3s difference). |
+| `hook_rate` | decimal (0–1) | computed | — | `three_second_views / impressions`. Proportion of viewers who watched past the opening. Benchmark: <0.15 = weak hook; 0.15–0.30 = average; >0.30 = strong. Null if impressions = 0. Do not compare Meta hook_rate with TikTok hook_rate directly (2s vs 3s difference). |
 | `hold_rate` | decimal (0–1) | computed | — | `thruplays / three_second_views`. Audience retention after the hook. Null if three_second_views = 0. |
 
 ---
@@ -202,7 +202,7 @@ Apply as per-row formulas in the Raw Data tab. Computed columns should not be pa
 cost_per_lead      =IF(leads>0, spend/leads, "")
 cost_per_purchase  =IF(purchases>0, spend/purchases, "")
 roas               =IF(spend>0, revenue/spend, "")
-hook_rate          =IF(video_views>0, three_second_views/video_views, "")
+hook_rate          =IF(impressions>0, three_second_views/impressions, "")
 hold_rate          =IF(three_second_views>0, thruplays/three_second_views, "")
 gross_profit       =IF(revenue>0, revenue*Config!gross_margin, "")
 frequency          =IF(reach>0, impressions/reach, "")

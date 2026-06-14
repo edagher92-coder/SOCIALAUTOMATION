@@ -115,7 +115,7 @@
 - `cost_per_lead`: `{{if(leads > 0; divide(spend; leads); "")}}`
 - `cost_per_purchase`: `{{if(purchases > 0; divide(spend; purchases); "")}}`
 - `roas`: `{{if(spend > 0; divide(revenue; spend); "")}}`
-- `hook_rate`: `{{if(video_views > 0; divide(three_second_views; video_views); "")}}`
+- `hook_rate`: `{{if(impressions > 0; divide(three_second_views; impressions); "")}}`
 - `hold_rate`: `{{if(three_second_views > 0; divide(thruplays; three_second_views); "")}}`
 - `tracking_status`: `OK` (to be validated later by dana skill)
 - `utm_source`: `meta` (default; override if UTM params captured in landing page view data)

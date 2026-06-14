@@ -219,7 +219,7 @@ One row per ad campaign (not ad set — campaign level). Tracks performance, ope
 
 | Property Name | Type | Configuration |
 |---|---|---|
-| Campaign Name | Title | Must follow naming convention: `[Client Code]_[Platform]_[Objective]_[Date]_[Version]`. Example: `ACME_META_LEAD_2026-06_v1` |
+| Campaign Name | Title | Must follow naming convention: `{business}_{offer}_{objective}_{location}_{YYYYMMDD}`. Example: `acme_hotwater_leads_brisbane_20260601` |
 | Platform | Select | Options: Meta (blue), TikTok (red) |
 | Objective | Select | Options: Awareness, Traffic, Engagement, Leads, App Installs, Sales, Catalogue Sales |
 | Client | Relation | Relates to `AdPilot — Clients`. Many Campaigns → one Client |

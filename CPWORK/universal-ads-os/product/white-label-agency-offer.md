@@ -410,9 +410,9 @@ budget:
 
 utm:
   naming_convention: "platform_campaign-name_adset-name_ad-name"
-  source_meta: "facebook"
+  source_meta: "meta"
   source_tiktok: "tiktok"
-  medium: "paid-social"
+  medium: "paid_social"
 
 targets:
   target_roas: 3.5

@@ -26,7 +26,7 @@ Added the differentiating, hard-to-replicate layer: a working, tested engine.
 
 ## [1.0.0] — 2026-06-14 — Initial universal build
 Built from the current-state audit (`/CPWORK_AD_SYSTEM_CURRENT_STATE.md`) of
-Elie Dagher's existing Meta Ads skill + multi-agent workspace.
+the operator's existing Meta Ads skill + multi-agent workspace.
 
 **Stage 1 — Current-state audit**
 - Inventoried the `Meta Skills` ZIP (one real skill, repackaged 4×) and the Drive

@@ -3,6 +3,12 @@
 Prepared: 2026-06-14 · Author: Senior AI Systems Architect (Claude)
 Scope: the uploaded `Meta Skills` ZIP + the shared Google Drive "Claude HQ" workspace.
 
+> ⚠️ **OPERATOR-INTERNAL — DO NOT DISTRIBUTE.** This audit references real account
+> identifiers (for remediation context only). It is **not** part of the sellable
+> product — the product lives in `CPWORK/universal-ads-os/`. Never include this file
+> in any resale/white-label build. The resale packager (`tools/package_release.sh`)
+> only packages `CPWORK/universal-ads-os/` and never this file.
+
 ---
 
 ## 0. TL;DR

@@ -24,7 +24,7 @@ This audit provides a structured assessment of Example Co's Meta and TikTok paid
 | Landing page view event | ✓ Active | |
 | View Content event | ✓ Active | |
 | Conversions API (CAPI) | ⚠ Partial | CAPI connected but event deduplication not verified — potential overcounting |
-| UTM parameters on all ads | ✓ Consistent | All ads use `utm_source=facebook&utm_medium=paid_social&utm_campaign=[campaign_id]&utm_content=[ad_id]` |
+| UTM parameters on all ads | ✓ Consistent | All ads use `utm_source=meta&utm_medium=paid_social&utm_campaign=[campaign_id]&utm_content=[ad_id]` |
 | Google Analytics 4 match | ⚠ Partial | GA4 records ~18% fewer conversions than Meta reports. Investigate |
 | 7-day click / 1-day view attribution | ✓ Set | Standard window — appropriate for this offer type |
 
@@ -110,7 +110,7 @@ Ad Account: Example Co TikTok ({{client.tiktok_account_ref}})
 
 ## 3. Naming Convention Compliance
 
-**Convention standard:** `[PLATFORM]_[OBJECTIVE]_[AUDIENCE]_[OFFER]_[YYMMDD]`
+**Convention standard:** `{business}_{offer}_{objective}_{location}_{YYYYMMDD}` (AdPilot OS canonical)
 
 | Asset | Naming | Compliant |
 |-------|--------|-----------|
