@@ -76,6 +76,7 @@ def analyse(payload: dict) -> dict:
         "health": {"total": res["total"], "band": res["band"],
                    "guidance": res["guidance"], "findings": res["findings"],
                    "weakest": res["weakest"]},
+        "campaigns": audit.score_by_campaign(rows, cfg),
         "decisions": decs,
         "safety": "Read-only analysis. No live ad was changed. Budget moves need a typed YES.",
     }
@@ -106,12 +107,14 @@ PAGE = """<!doctype html><html lang=en><head><meta charset=utf-8>
  .metric{background:var(--bg);border-radius:10px;padding:10px} .metric b{display:block;font-size:18px} .metric span{color:var(--muted);font-size:12px}
  .muted{color:var(--muted);font-size:12px} h2{font-size:16px;margin:0 0 8px} .hide{display:none}
  code{background:var(--bg);padding:1px 5px;border-radius:5px}
+ .toolbar{display:flex;gap:10px;margin-top:16px}
+ @media print{.noprint{display:none!important}body{background:#fff}.card{border-color:#ccc}header{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style></head><body>
-<header><h1>AdPilot OS — Ads Health Check</h1>
+<header class=noprint><h1>AdPilot OS — Ads Health Check</h1>
 <p>Meta + TikTok · paste an export, get a health score &amp; safe proposals · never edits a live ad</p></header>
-<div class=safe>🔒 Read-only. This tool analyses your export and proposes changes. It never edits a live ad; budget moves need your typed “YES”.</div>
+<div class="safe noprint">🔒 Read-only. This tool analyses your export and proposes changes. It never edits a live ad; budget moves need your typed “YES”.</div>
 <main>
- <div class=card>
+ <div class="card noprint">
   <div class=grid>
    <div>
     <label>Average sale value (AUD)</label><input id=avg type=number value=200>
@@ -135,7 +138,7 @@ PAGE = """<!doctype html><html lang=en><head><meta charset=utf-8>
   </div>
  </div>
  <div id=out></div>
- <p class=muted style=margin-top:24px>Engine self-test:
+ <p class="muted noprint" style=margin-top:24px>Engine self-test:
    <button class=ghost onclick=selftest()>run</button> <span id=st></span></p>
 </main>
 <script>
@@ -152,7 +155,7 @@ async function run(){
  const r=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
  const j=await r.json();
  if(j.error){$('out').innerHTML='<div class=card style=color:#cf222e>'+j.error+'</div>';return}
- const s=j.summary,h=j.health,col=C[h.band]||'#57606a';
+ const s=j.summary,h=j.health,col=C[h.band]||'#57606a';window.__last=j;
  let html='<div class=card><div style=display:flex;gap:20px;align-items:center;flex-wrap:wrap>'+
   '<div><div class=score style=color:'+col+'>'+Math.round(h.total)+'<span style=font-size:18px;color:#57606a>/100</span></div>'+
   '<div class=band style=color:'+col+'>'+h.band+'</div></div>'+
@@ -160,6 +163,10 @@ async function run(){
  html+='<div class=metrics style=margin-top:14px>'+
   m('Spend',s.spend)+m('CPA',s.cpa)+m('Break-even CPA',s.break_even_cpa)+m('ROAS',s.roas)+
   m('Break-even ROAS',s.break_even_roas)+m('MER',s.mer)+m('Leads',s.leads)+m('Purchases',s.purchases)+'</div></div>';
+ html+='<div class="toolbar noprint"><button onclick=downloadCSV()>Download CSV</button><button class=ghost onclick=window.print()>Print / Save PDF</button></div>';
+ if(j.campaigns&&j.campaigns.length>1){html+='<div class=card><h2>By campaign <span class=muted>(worst-first)</span></h2><table><tr><th>Health</th><th>Campaign</th><th>Platforms</th><th>Spend</th><th>CPA</th><th>ROAS</th><th>Top issue</th></tr>';
+  for(const c of j.campaigns){const cc=C[c.band]||'#57606a';html+='<tr><td><span class=pill style=background:'+cc+'>'+Math.round(c.health)+' '+c.band+'</span></td><td>'+c.campaign+'</td><td>'+c.platforms.join(', ')+'</td><td>'+f2(c.spend)+'</td><td>'+f2(c.cpa)+'</td><td>'+f2(c.roas)+'</td><td class=muted>'+(c.top_finding||'—')+'</td></tr>';}
+  html+='</table></div>';}
  html+='<div class=card><h2>Findings</h2><table><tr><th>Severity</th><th>Factor</th><th>Detail</th></tr>';
  for(const f of h.findings)html+='<tr><td><span class=pill style=background:'+(SEV[f.severity]||'#57606a')+'>'+f.severity+'</span></td><td>'+f.factor+'</td><td>'+f.message+'</td></tr>';
  html+='</table></div>';
@@ -169,6 +176,15 @@ async function run(){
  $('out').innerHTML=html;
 }
 const m=(k,v)=>'<div class=metric><b>'+f2(v)+'</b><span>'+k+'</span></div>';
+function q(v){v=(v==null?'':String(v));return '"'+v.replace(/"/g,'""')+'"';}
+function downloadCSV(){const j=window.__last;if(!j)return;const L=[];
+ L.push(['section','name','platform','verdict_or_band','detail1','detail2','detail3'].join(','));
+ const s=j.summary;L.push(['summary','health',j.health.band,Math.round(j.health.total),'CPA='+f2(s.cpa),'ROAS='+f2(s.roas),'MER='+f2(s.mer)].map(q).join(','));
+ for(const c of (j.campaigns||[]))L.push(['campaign',c.campaign,c.platforms.join('|'),c.band+' '+Math.round(c.health),'spend='+f2(c.spend),'cpa='+f2(c.cpa),'roas='+f2(c.roas)].map(q).join(','));
+ for(const f of j.health.findings)L.push(['finding',f.factor,'',f.severity,f.message,'',''].map(q).join(','));
+ for(const d of j.decisions)L.push(['decision',d.name,d.platform,d.verdict,d.reason,d.proposal,''].map(q).join(','));
+ const blob=new Blob([L.join('\\n')],{type:'text/csv'});const a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);a.download='adpilot-analysis.csv';a.click();URL.revokeObjectURL(a.href);}
 </script></body></html>"""
 
 

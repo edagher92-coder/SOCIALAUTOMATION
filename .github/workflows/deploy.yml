@@ -1,0 +1,43 @@
+name: Deploy AdPilot OS web app
+
+# Auto-deploys the web app on merge to main. Safe by default: if no deploy hook
+# secret is configured, it no-ops with instructions (never fails the run).
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "CPWORK/universal-ads-os/tools/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: CPWORK/universal-ads-os/tools
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Self-test must pass before any deploy
+        run: python -m adpilot selftest
+
+  deploy:
+    needs: gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy (if configured)
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::notice::RENDER_DEPLOY_HOOK_URL not set — skipping deploy."
+            echo "To enable auto-deploy:"
+            echo "  1. Create the service on Render via CPWORK/universal-ads-os/tools/webapp/render.yaml"
+            echo "  2. Copy its Deploy Hook URL (Render > Service > Settings > Deploy Hook)"
+            echo "  3. Add it as repo secret RENDER_DEPLOY_HOOK_URL (Settings > Secrets > Actions)"
+            exit 0
+          fi
+          curl -fsS -X POST "$HOOK" && echo "::notice::Render deploy triggered."

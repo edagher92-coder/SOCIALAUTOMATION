@@ -1,0 +1,41 @@
+name: AdPilot OS CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  selftest:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: CPWORK/universal-ads-os/tools
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Engine self-test (metrics + health + audit + safety)
+        run: python -m adpilot selftest
+
+      - name: Byte-compile all Python
+        run: python -m py_compile adpilot/*.py adpilot/tests/*.py webapp/server.py webapp/__init__.py meta_ads_api.py tiktok_ads_api.py
+
+      - name: Validate JSON artifacts
+        working-directory: CPWORK/universal-ads-os
+        run: |
+          python -c "import json; json.load(open('api/webhook-schema.json')); json.load(open('automations/blueprints/make-daily-pull.blueprint.json')); print('JSON valid')"
+
+      - name: Web app smoke test (boot + /health + /api/analyze)
+        run: |
+          PORT=8123 python -m webapp.server &
+          SRV=$!
+          sleep 2
+          curl -fsS localhost:8123/health
+          curl -fsS localhost:8123/api/selftest
+          CSV=$(curl -fsS localhost:8123/api/sample/fatigued | python3 -c "import sys,json;print(json.dumps(sys.stdin.read()))")
+          curl -fsS localhost:8123/api/analyze -H 'Content-Type: application/json' \
+            -d "{\"csv\": $CSV, \"average_sale_value\": 200, \"gross_margin\": 0.6}" | python3 -c "import sys,json;d=json.load(sys.stdin);print('health',d['health']['total'],d['health']['band'])"
+          kill $SRV

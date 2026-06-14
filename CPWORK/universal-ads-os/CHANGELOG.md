@@ -4,6 +4,19 @@ All notable changes to the AdPilot OS package. Format: reverse-chronological.
 
 ---
 
+## [1.4.0] — 2026-06-14 — Drilldown, exports, CI/CD
+- **Per-campaign drilldown:** `audit.score_by_campaign()` scores each campaign
+  (worst-first) — surfaced in the CLI report, the web `/api/analyze` response, and a
+  new web "By campaign" table.
+- **Web exports:** "Download CSV" (summary + campaigns + findings + decisions) and
+  "Print / Save PDF" (print-stylesheet → browser Save-as-PDF; no server dependency).
+- **CI** (`.github/workflows/ci.yml`): runs the engine self-test, byte-compile, JSON
+  validation, and a web-app smoke test on every push/PR — gives the PR real green checks.
+- **Auto-deploy** (`.github/workflows/deploy.yml`): on merge to main, runs the
+  self-test gate then triggers a Render deploy (no-ops safely until
+  `RENDER_DEPLOY_HOOK_URL` secret is set).
+- Self-test now **56/56**.
+
 ## [1.3.0] — 2026-06-14 — Web app
 - `tools/webapp/server.py` — dependency-free (stdlib `http.server`) UI + JSON API over
   the engine. Paste/upload a Meta/TikTok/universal CSV → Campaign Health Score,

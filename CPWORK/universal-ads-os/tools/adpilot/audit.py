@@ -183,6 +183,28 @@ def score_account(rows: list[dict], cfg: dict) -> dict:
     return result
 
 
+def score_by_campaign(rows: list[dict], cfg: dict) -> list[dict]:
+    """Health + key metrics per campaign, worst-first (drilldown view)."""
+    groups: dict[str, list[dict]] = {}
+    for r in rows:
+        key = r.get("campaign_name") or r.get("campaign_id") or "(unnamed)"
+        groups.setdefault(key, []).append(r)
+    out = []
+    for name, grp in groups.items():
+        res = score_account(grp, cfg)
+        agg = res["agg"]
+        out.append({
+            "campaign": name,
+            "platforms": sorted({(r.get("platform") or "?") for r in grp}),
+            "ads": len(grp),
+            "spend": agg["spend"], "cpa": agg["cpa"], "roas": agg["roas"],
+            "health": res["total"], "band": res["band"],
+            "top_finding": res["findings"][0]["message"] if res["findings"] else "",
+        })
+    out.sort(key=lambda c: c["health"])   # worst first
+    return out
+
+
 def _sev(score: float) -> str:
     if score < 25:
         return "CRITICAL"

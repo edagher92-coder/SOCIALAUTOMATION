@@ -134,6 +134,12 @@ def test_audit():
                broken["breakdown"]["tracking_quality"]["score"] < 25,
                broken["breakdown"]["tracking_quality"]["score"])
 
+    # Per-campaign drilldown.
+    camps = audit.score_by_campaign(load("fatigued_account.csv"), cfg)
+    check_true("score_by_campaign returns ≥2 campaigns", len(camps) >= 2, len(camps))
+    check_true("campaigns sorted worst-first",
+               [c["health"] for c in camps] == sorted(c["health"] for c in camps))
+
     # Extra metric coverage.
     check("conversion_rate %", (metrics.conversion_rate(12, 600) or 0) * 100, 2.0)
     check("frequency", metrics.frequency(30000, 16000), 1.875, dp=3)

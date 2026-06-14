@@ -68,6 +68,17 @@ def summarise(rows: list[dict], cfg: dict, health_factors: dict | None = None) -
     else:
         lines.append(audit.render(audit.score_account(rows, cfg)))
 
+    # Per-campaign drilldown (worst-first).
+    camps = audit.score_by_campaign(rows, cfg)
+    if len(camps) > 1:
+        lines.append("-" * 60)
+        lines.append("By campaign (worst-first):")
+        for c in camps:
+            lines.append(
+                f"  {c['health']:5.1f} {c['band']:6} {c['campaign']}  "
+                f"(spend {metrics.fmt(c['spend'])}, CPA {metrics.fmt(c['cpa'])}, "
+                f"ROAS {metrics.fmt(c['roas'])})")
+
     # Per-ad decisions.
     lines.append("-" * 60)
     lines.append("Proposals (no live-ad edits — paused duplicates / proposals only):")
