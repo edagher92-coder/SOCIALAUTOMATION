@@ -1,0 +1,529 @@
+<!doctype html><html lang=en><head>
+<meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>AdPilot OS — Meta &amp; TikTok Ads Health Check</title>
+<meta name=description content="Audit your Meta &amp; TikTok ads in seconds. Get a Campaign Health Score, find what's leaking money, and get safe, numbers-first recommendations — without ever touching a live ad.">
+<style>
+ :root{--ink:#0d1626;--muted:#5a6577;--line:#e3e8ef;--bg:#f4f7fb;--card:#fff;
+  --brand:#0b5fff;--navy:#0b1f3a;--teal:#00c2a8;
+  --green:#16a34a;--yellow:#ca8a04;--orange:#ea580c;--red:#dc2626;
+  --shadow:0 1px 3px rgba(13,22,38,.06),0 8px 24px rgba(13,22,38,.06)}
+ *{box-sizing:border-box}
+ html{scroll-behavior:smooth}
+ body{margin:0;font:16px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+ a{color:var(--brand);text-decoration:none} a:hover{text-decoration:underline}
+ .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+ /* nav */
+ nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+ nav .wrap{display:flex;align-items:center;gap:18px;height:60px}
+ .logo{font-weight:800;letter-spacing:-.3px;font-size:18px;display:flex;align-items:center;gap:9px}
+ .logo .dot{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--brand),var(--teal));display:inline-block}
+ nav .links{margin-left:auto;display:flex;gap:20px;align-items:center}
+ nav .links a{color:var(--muted);font-size:14px;font-weight:600}
+ .btn{background:var(--brand);color:#fff;border:0;border-radius:10px;padding:11px 18px;font:inherit;font-weight:700;cursor:pointer;display:inline-block;transition:.15s}
+ .btn:hover{filter:brightness(1.07);text-decoration:none}
+ .btn.alt{background:var(--navy)} .btn.ghost{background:#fff;color:var(--brand);border:1.5px solid var(--brand)}
+ .btn.sm{padding:8px 13px;font-size:13px;border-radius:8px}
+ @media(max-width:720px){nav .links a:not(.btn){display:none}}
+ /* hero */
+ .hero{background:radial-gradient(1200px 500px at 80% -10%,rgba(0,194,168,.18),transparent),linear-gradient(180deg,#fff, var(--bg));padding:64px 0 44px;border-bottom:1px solid var(--line)}
+ .badge{display:inline-block;background:#eaf1ff;color:#0b3aa6;font-weight:700;font-size:12.5px;padding:5px 12px;border-radius:999px;margin-bottom:18px}
+ .hero h1{font-size:clamp(30px,5vw,50px);line-height:1.08;letter-spacing:-1.2px;margin:0 0 16px;max-width:14ch}
+ .hero h1 .grad{background:linear-gradient(120deg,var(--brand),var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent}
+ .hero p.lead{font-size:19px;color:var(--muted);max-width:60ch;margin:0 0 26px}
+ .hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+ .trust{margin-top:22px;display:flex;gap:20px;flex-wrap:wrap;color:var(--muted);font-size:13.5px;font-weight:600}
+ .trust span{display:flex;align-items:center;gap:7px}
+ .check{color:var(--teal);font-weight:900}
+ section{padding:54px 0} h2.sec{font-size:30px;letter-spacing:-.6px;margin:0 0 8px;text-align:center}
+ .sub{color:var(--muted);text-align:center;max-width:60ch;margin:0 auto 32px}
+ /* analyzer */
+ #try{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+ .panel{display:grid;grid-template-columns:340px 1fr;gap:22px}
+ @media(max-width:860px){.panel{grid-template-columns:1fr}}
+ .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+ label{display:block;font-weight:700;font-size:13px;margin:12px 0 5px}
+ input,textarea,select{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:9px;font:inherit;background:#fff}
+ textarea{min-height:120px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+ .samples{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
+ .results .placeholder{display:flex;align-items:center;justify-content:center;min-height:320px;color:var(--muted);text-align:center;border:2px dashed var(--line);border-radius:14px}
+ /* score + charts */
+ .scorerow{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
+ @media(max-width:560px){.scorerow{grid-template-columns:1fr;text-align:center;justify-items:center}}
+ .gauge{position:relative;width:150px;height:150px}
+ .gauge .label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+ .gauge .num{font-size:40px;font-weight:800;line-height:1} .gauge .of{font-size:12px;color:var(--muted)}
+ .bandtag{display:inline-block;color:#fff;font-weight:800;font-size:13px;padding:4px 12px;border-radius:999px;margin-top:6px}
+ .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}
+ @media(max-width:680px){.metrics{grid-template-columns:repeat(2,1fr)}}
+ .metric{background:var(--bg);border-radius:11px;padding:11px}.metric b{display:block;font-size:19px}.metric span{color:var(--muted);font-size:12px}
+ .charts{display:grid;grid-template-columns:1fr 240px;gap:18px;margin-top:18px}
+ @media(max-width:680px){.charts{grid-template-columns:1fr}}
+ .bar{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;font-size:12.5px;margin:7px 0}
+ .bar .track{background:var(--bg);border-radius:7px;height:24px;overflow:hidden;position:relative}
+ .bar .fill{height:100%;border-radius:7px;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:700;font-size:11px;white-space:nowrap}
+ .bar .cn{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+ th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+ th{color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em}
+ .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:800;color:#fff}
+ .vpill{font-weight:800;text-transform:capitalize}
+ .toolbar{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+ .muted{color:var(--muted);font-size:12.5px} h3.blk{font-size:14px;margin:18px 0 4px}
+ /* features / steps / pricing */
+ .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+ @media(max-width:780px){.grid3{grid-template-columns:1fr}}
+ .feat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow)}
+ .feat .ic{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#eaf1ff,#e6fbf6);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px}
+ .feat h3{margin:0 0 6px;font-size:17px} .feat p{margin:0;color:var(--muted);font-size:14.5px}
+ .step{display:flex;gap:16px;align-items:flex-start;margin-bottom:18px}
+ .step .n{flex:none;width:38px;height:38px;border-radius:50%;background:var(--navy);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
+ .tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+ @media(max-width:880px){.tiers{grid-template-columns:1fr 1fr}}@media(max-width:520px){.tiers{grid-template-columns:1fr}}
+ .tier{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+ .tier.pop{border:2px solid var(--brand);position:relative}
+ .tier.pop:before{content:"Most popular";position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--brand);color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px}
+ .tier h3{margin:0 0 2px;font-size:18px} .tier .price{font-size:24px;font-weight:800;margin:6px 0} .tier .price small{font-size:13px;color:var(--muted);font-weight:600}
+ .tier ul{list-style:none;padding:0;margin:10px 0 16px;font-size:13.5px;color:var(--muted)} .tier li{padding:4px 0 4px 22px;position:relative} .tier li:before{content:"✓";position:absolute;left:0;color:var(--teal);font-weight:900}
+ .tier .btn{margin-top:auto}
+ .cta-band{background:linear-gradient(120deg,var(--navy),#11357a);color:#fff;border-radius:18px;padding:40px;text-align:center}
+ .cta-band h2{margin:0 0 8px;font-size:28px} .cta-band p{color:#c5d4f0;margin:0 0 20px}
+ footer{padding:34px 0;color:var(--muted);font-size:13px;border-top:1px solid var(--line);text-align:center}
+ .safebar{background:#fff7e6;border:1px solid #f0c36d;color:#7a5b00;border-radius:12px;padding:12px 16px;font-size:13.5px;margin-top:18px}
+ @media print{nav,.hero .cta,.samples,.toolbar,#how,#features,#pricing,#cta,.safebar.top,footer .links{display:none!important}body{background:#fff}}
+</style></head><body>
+
+<nav><div class=wrap>
+ <div class=logo><span class=dot></span> AdPilot OS</div>
+ <div class=links>
+   <a href="#try">Try it live</a><a href="#how">How it works</a>
+   <a href="#features">Features</a><a href="#pricing">Pricing</a>
+   <a class="btn sm" href="#cta">Book a demo</a>
+ </div>
+</div></nav>
+
+<header class=hero><div class=wrap>
+ <span class=badge>Meta &amp; TikTok · numbers-first · safe by design</span>
+ <h1>Know exactly what your ads are <span class=grad>doing to your money.</span></h1>
+ <p class=lead>Upload an ad export and get a <b>Campaign Health Score</b>, the findings that are leaking budget, and clear, safe recommendations — in seconds. No logins, no risk to your live campaigns.</p>
+ <div class=cta>
+   <a class=btn href="#try" onclick="setTimeout(()=>loadSample('fatigued'),350)">Analyse my ads — free</a>
+   <a class="btn ghost" href="#how">See how it works</a>
+ </div>
+ <div class=trust>
+   <span><i class=check>✓</i> Never edits a live ad</span>
+   <span><i class=check>✓</i> Runs 100% in your browser</span>
+   <span><i class=check>✓</i> No data leaves this page</span>
+   <span><i class=check>✓</i> Self-verified engine</span>
+ </div>
+</div></header>
+
+<section id=try><div class=wrap>
+ <h2 class=sec>Try it live</h2>
+ <p class=sub>Click a sample account, or paste/upload your own Meta or TikTok export. Everything runs locally in your browser.</p>
+ <div class=panel>
+  <div class=card>
+    <div class=samples>
+      <button class="btn ghost sm" onclick="loadSample('clean')">🟢 Healthy account</button>
+      <button class="btn ghost sm" onclick="loadSample('fatigued')">🟠 Fatigued account</button>
+      <button class="btn ghost sm" onclick="loadSample('broken')">🔴 Broken tracking</button>
+    </div>
+    <label>Average sale value (AUD)</label><input id=avg type=number value=200>
+    <label>Gross margin (0–1)</label><input id=margin type=number step=0.01 value=0.6>
+    <label>Business name</label><input id=biz value="Example Co">
+    <label>Platform (auto-detects)</label>
+    <select id=plat><option value="">Auto</option><option>meta</option><option>tiktok</option></select>
+    <label>CSV — paste an export</label>
+    <textarea id=csv placeholder="campaign_name,spend,impressions,clicks,purchases,revenue ..."></textarea>
+    <input type=file id=file accept=".csv,text/csv" style=margin-top:8px>
+    <div class=samples><button class=btn onclick=run() style=flex:1>Analyse →</button></div>
+    <p class=muted style=margin:8px_0_0>Break-even CPA = avg sale × margin · Break-even ROAS = 1 ÷ margin.</p>
+  </div>
+  <div class="results card" id=out>
+    <div class=placeholder>Pick a sample or paste a CSV, then hit <b style=margin:0_4px>Analyse</b> to see the health score, charts &amp; safe proposals.</div>
+  </div>
+ </div>
+ <div class="safebar top">🔒 <b>Read-only &amp; private.</b> Your CSV is analysed entirely in your browser and never uploaded. This tool proposes changes; it never edits a live ad. Budget moves always need your typed “YES”.</div>
+</div></section>
+
+<section id=how><div class=wrap>
+ <h2 class=sec>How it works</h2>
+ <p class=sub>The same engine that powers the full agent system — distilled into three steps.</p>
+ <div style=max-width:720px;margin:0_auto>
+  <div class=step><div class=n>1</div><div><h3 style=margin:2px_0_4px>Bring your data</h3><p class=muted>Export from Meta Ads Manager or TikTok Ads Manager (or use our universal CSV). Paste or upload — it's mapped to one schema automatically.</p></div></div>
+  <div class=step><div class=n>2</div><div><h3 style=margin:2px_0_4px>Get scored</h3><p class=muted>A 13-factor Campaign Health Score (0–100), per-campaign drilldown, and prioritised findings — driven by break-even CPA/ROAS and MER, not vanity metrics.</p></div></div>
+  <div class=step><div class=n>3</div><div><h3 style=margin:2px_0_4px>Act safely</h3><p class=muted>Every recommendation is a proposal — keep, kill, scale, refresh, or fix-tracking — shipped as paused duplicates. Your live spend is never touched.</p></div></div>
+ </div>
+</div></section>
+
+<section id=features style=background:#fff;border-top:1px solid_var(--line);border-bottom:1px solid_var(--line)><div class=wrap>
+ <h2 class=sec>A full ads operating system</h2>
+ <p class=sub>This demo is the no-code analysis layer. The product underneath is a complete, resellable system.</p>
+ <div class=grid3>
+  <div class=feat><div class=ic>🧭</div><h3>12 specialist agents</h3><p>A router plus Meta, TikTok, data, creative, funnel, automation, tracking, reporting, policy, productisation &amp; QA agents.</p></div>
+  <div class=feat><div class=ic>🧩</div><h3>25 Claude skills</h3><p>Audits, creative testing, UTM builder, health monitor, fatigue detector, client reports, white-label pack &amp; more.</p></div>
+  <div class=feat><div class=ic>🛡️</div><h3>Safe by construction</h3><p>No code path edits or deletes a live ad. Money moves need a typed “YES”. The optimiser literally can't wreck an account.</p></div>
+  <div class=feat><div class=ic>📊</div><h3>One schema, both platforms</h3><p>Meta + TikTok unified, with MER, break-even and lead-quality so you see real profit — not just cheap clicks.</p></div>
+  <div class=feat><div class=ic>⚙️</div><h3>Tested engine</h3><p>Dependency-free, self-verifying engine (56 server checks, 30 browser-parity checks) so the numbers are provably right.</p></div>
+  <div class=feat><div class=ic>🏷️</div><h3>White-label ready</h3><p>Config-driven for many clients, branded reports, agency mode — sell it as your own.</p></div>
+ </div>
+</div></section>
+
+<section id=pricing><div class=wrap>
+ <h2 class=sec>Simple, honest pricing</h2>
+ <p class=sub>Australian dollars. No results guarantees — just a system that does the work.</p>
+ <div class=tiers>
+  <div class=tier><h3>Starter</h3><div class=muted>DIY template</div><div class=price>$97–297</div><ul><li>Prompt + skills pack</li><li>Sheets dashboard</li><li>CSV import + audits</li><li>This analyzer</li></ul><a class="btn ghost" href="#cta">Get started</a></div>
+  <div class="tier pop"><h3>Pro</h3><div class=muted>Automation pack</div><div class=price>$497–1,497</div><ul><li>Everything in Starter</li><li>Make / Zapier / n8n</li><li>Alerts + auto-reports</li><li>Health scoring + UTM builder</li></ul><a class=btn href="#cta">Choose Pro</a></div>
+  <div class=tier><h3>Agency</h3><div class=muted>White-label</div><div class=price>$1,997–4,997+</div><ul><li>Multi-client config</li><li>Branded reports + dashboard</li><li>Onboarding + sales support</li><li>Resale rights</li></ul><a class="btn ghost" href="#cta">Talk to us</a></div>
+  <div class=tier><h3>Done-with-you</h3><div class=muted>Setup service</div><div class=price>$1,500–5,000+</div><ul><li>Setup call</li><li>Dashboard + first audit</li><li>First report + workflows</li><li>Hands-on install</li></ul><a class="btn ghost" href="#cta">Book setup</a></div>
+ </div>
+</div></section>
+
+<section id=cta><div class=wrap>
+ <div class=cta-band>
+   <h2>See it on your own ad account</h2>
+   <p>Book a 20-minute demo — we'll run a live health check on your Meta &amp; TikTok numbers.</p>
+   <a class=btn href="mailto:hello@adpilot.example?subject=AdPilot%20OS%20demo">Book a demo →</a>
+   <a class="btn ghost" style=background:transparent;color:#fff;border-color:#5b78b8;margin-left:8px href="#try">Try the sample again</a>
+ </div>
+</div></section>
+
+<footer><div class=wrap>
+ <div class=logo style=justify-content:center;margin-bottom:8px><span class=dot></span> AdPilot OS</div>
+ <p>Universal Meta &amp; TikTok ads operating system · numbers-first · safe by design.<br>
+ Engine self-test: <button class="btn ghost sm" onclick=selftest()>run</button> <span id=st class=muted></span></p>
+ <p class=links style=margin-top:6px><a href="https://github.com/edagher92-coder/SOCIALAUTOMATION/tree/main/CPWORK/universal-ads-os">Source &amp; full system on GitHub</a></p>
+ <p class=muted>No earnings or results guarantees. Figures shown are illustrative. © AdPilot OS.</p>
+</div></footer>
+
+<script>
+/* AdPilot OS engine (inlined) */
+/*
+ * AdPilot OS — client-side engine (faithful port of tools/adpilot/*.py).
+ * Runs entirely in the browser: metrics, 13-factor health score, auto-audit,
+ * and SAFE decisions. No backend, no dependencies, no secrets. Read-only.
+ * A parity test (engine.test.js) checks it matches the Python engine.
+ */
+(function (root) {
+  "use strict";
+
+  // ---------- metrics ----------
+  const safeDiv = (n, d) => (!d ? null : n / d);
+  const M = {
+    safeDiv,
+    ctr: (clicks, imp) => safeDiv(clicks, imp),
+    cpc: (spend, clicks) => safeDiv(spend, clicks),
+    cpm: (spend, imp) => { const v = safeDiv(spend, imp); return v == null ? null : v * 1000; },
+    cpl: (spend, leads) => safeDiv(spend, leads),
+    cpa: (spend, p) => safeDiv(spend, p),
+    roas: (rev, spend) => safeDiv(rev, spend),
+    mer: (rev, spend) => safeDiv(rev, spend),
+    frequency: (imp, reach) => safeDiv(imp, reach),
+    hookRate: (s3, imp) => safeDiv(s3, imp),
+    holdRate: (tp, s3) => safeDiv(tp, s3),
+    convRate: (p, clicks) => safeDiv(p, clicks),
+    breakEvenCpa: (avg, gm) => avg * gm,
+    breakEvenRoas: (gm) => safeDiv(1, gm),
+    variancePct: (a, t) => safeDiv((a - t) * 100, t),
+    isRoasAnomaly: (r) => r != null && r >= 20,
+    blendedCpa: (spends, convs) => safeDiv(spends.reduce((a, b) => a + b, 0), convs.reduce((a, b) => a + b, 0)),
+    fmt: (v, dp = 2) => v == null ? "N/A" : Number(v).toLocaleString(undefined, { minimumFractionDigits: dp, maximumFractionDigits: dp }),
+  };
+
+  // ---------- health (canonical 13-factor) ----------
+  const WEIGHTS = {
+    tracking_quality: 15, cpa: 15, spend_efficiency: 12, conversion_rate: 10,
+    ctr: 8, lead_quality: 8, creative_freshness: 8, cpc: 7, naming_quality: 5,
+    offer_strength: 5, landing_page_alignment: 4, budget_pacing: 2, data_confidence: 1,
+  };
+  const BANDS = [[80, "Green", "Healthy — scale-eligible if tracking is clean."],
+                 [60, "Yellow", "Watch — fix the weak factors before scaling."],
+                 [40, "Orange", "Needs work — significant issues, act this week."],
+                 [0, "Red", "Critical — stop and fix before spending more."]];
+  function band(score) { for (const [f, n, g] of BANDS) if (score >= f) return [n, g]; return ["Red", BANDS[3][2]]; }
+
+  function computeHealth(factorScores, naFactors) {
+    const na = new Set(naFactors || []);
+    for (const f in WEIGHTS) if (!(f in factorScores)) na.add(f);
+    let activeWeight = 0;
+    for (const f in WEIGHTS) if (!na.has(f)) activeWeight += WEIGHTS[f];
+    if (activeWeight === 0) throw new Error("All factors N/A");
+    const breakdown = {}; let total = 0;
+    for (const f in WEIGHTS) {
+      if (na.has(f)) { breakdown[f] = { score: null, weight: WEIGHTS[f], adjusted_weight: 0, weighted_points: 0 }; continue; }
+      const adj = WEIGHTS[f] * 100 / activeWeight;
+      const pts = factorScores[f] * adj / 100;
+      total += pts;
+      breakdown[f] = { score: factorScores[f], weight: WEIGHTS[f], adjusted_weight: adj, weighted_points: pts };
+    }
+    total = Math.round(total * 100) / 100;
+    const [name, guidance] = band(total);
+    // weakest = biggest lost weighted points
+    const losses = [];
+    for (const f in breakdown) { const b = breakdown[f]; if (b.score == null) continue; losses.push([b.adjusted_weight * (100 - b.score) / 100, f]); }
+    losses.sort((a, b) => b[0] - a[0]);
+    return { total, band: name, guidance, breakdown, weakest: losses.slice(0, 3).map(x => x[1]) };
+  }
+
+  // ---------- audit (heuristic factor derivation) ----------
+  const NEUTRAL = 70;
+  function cpaScore(cpa, be) {
+    if (cpa == null || be <= 0) return null;
+    const over = (cpa - be) / be;
+    const pts = [[0, 100], [0.10, 80], [0.25, 60], [0.50, 35], [0.75, 10]];
+    if (over <= 0) return 100; if (over >= 0.75) return 10;
+    for (let i = 0; i < pts.length - 1; i++) { const [x0, y0] = pts[i], [x1, y1] = pts[i + 1]; if (over >= x0 && over <= x1) return y0 + (over - x0) / (x1 - x0) * (y1 - y0); }
+    return 10;
+  }
+  function ctrScore(ctr) {
+    if (ctr == null) return 50; const p = ctr * 100;
+    if (p >= 2) return 95; if (p >= 1) return 60 + (p - 1) * 35; if (p >= 0.5) return 30 + (p - 0.5) / 0.5 * 30;
+    return Math.max(10, p / 0.5 * 30);
+  }
+  function freshnessScore(freq) { if (freq == null || freq < 1) return 80; if (freq <= 2) return 90; if (freq <= 3) return 65; if (freq <= 4) return 35; return 12; }
+  function convRateScore(cr) { if (cr == null) return 50; const p = cr * 100; if (p >= 3) return 90; if (p >= 1.5) return 55 + (p - 1.5) / 1.5 * 35; if (p >= 0.5) return 25 + (p - 0.5) / 1.0 * 30; return Math.max(10, p / 0.5 * 25); }
+  function trackingScore(rows, agg) {
+    const w = { ok: 100, active: 100, partial: 60, review: 30, broken: 12 };
+    const tot = rows.reduce((a, r) => a + (r.spend || 0), 0) || 1;
+    let s = 0; for (const r of rows) s += (w[(r.tracking_status || "ok").toLowerCase()] ?? 70) * (r.spend || 0) / tot;
+    if (agg.spend > 0 && agg.purchases === 0 && agg.leads === 0) s = Math.min(s, 30);
+    const missing = rows.filter(r => !r.utm_campaign).length;
+    if (rows.length && missing) s -= 15 * missing / rows.length;
+    return Math.max(0, Math.min(100, s));
+  }
+  function namingScore(rows) {
+    if (!rows.length) return NEUTRAL; let ok = 0;
+    for (const r of rows) { const segs = String(r.campaign_name || "").split("_"); const hasDate = segs.some(x => /^\d{8}$/.test(x)); if (segs.length >= 4 && hasDate) ok++; }
+    return 100 * ok / rows.length;
+  }
+  function dataConfScore(agg) { if (agg.clicks >= 200 || agg.purchases >= 30) return 100; if (agg.clicks >= 50 || agg.purchases >= 15) return 70; if (agg.clicks >= 20) return 40; return 15; }
+
+  function aggregate(rows) {
+    const s = k => rows.reduce((a, r) => a + (r[k] || 0), 0);
+    const spend = s("spend");
+    return { spend, impressions: s("impressions"), reach: s("reach"), clicks: s("clicks"),
+      leads: s("leads"), purchases: s("purchases"), revenue: s("revenue"),
+      ctr: M.ctr(s("clicks"), s("impressions")), cpa: M.cpa(spend, s("purchases")),
+      roas: M.roas(s("revenue"), spend), conv_rate: M.convRate(s("purchases"), s("clicks")) };
+  }
+  function sev(score) { if (score < 25) return "CRITICAL"; if (score < 45) return "HIGH"; if (score < 65) return "MEDIUM"; return "LOW"; }
+
+  function scoreAccount(rows, cfg) {
+    const agg = aggregate(rows);
+    const be = M.breakEvenCpa(cfg.average_sale_value, cfg.gross_margin);
+    const freq = M.frequency(agg.impressions, agg.reach);
+    const factors = {}; const na = [];
+    factors.tracking_quality = trackingScore(rows, agg);
+    const cs = cpaScore(agg.cpa, be); if (cs == null) na.push("cpa"); else factors.cpa = cs;
+    factors.ctr = ctrScore(agg.ctr);
+    factors.conversion_rate = convRateScore(agg.conv_rate);
+    factors.creative_freshness = freshnessScore(freq);
+    factors.naming_quality = namingScore(rows);
+    factors.data_confidence = dataConfScore(agg);
+    if (agg.spend > 0 && agg.purchases === 0 && agg.leads === 0) factors.data_confidence = Math.min(factors.data_confidence, 20);
+    factors.budget_pacing = 85;
+    const lq = rows.map(r => r.lead_quality_score).filter(v => v); if (!lq.length) na.push("lead_quality"); else factors.lead_quality = lq.reduce((a, b) => a + b, 0) / lq.length;
+    const effBase = cs == null ? 50 : cs;
+    factors.spend_efficiency = 0.6 * effBase + 0.4 * factors.data_confidence;
+    factors.cpc = 0.5 * factors.ctr + 0.5 * NEUTRAL;
+    factors.offer_strength = NEUTRAL; factors.landing_page_alignment = NEUTRAL;
+    const res = computeHealth(factors, na);
+    res.agg = agg; res.break_even_cpa = be; res.findings = findings(factors, agg, be, freq, na);
+    return res;
+  }
+  function findings(factors, agg, be, freq, na) {
+    const out = [];
+    if (agg.spend > 0 && agg.purchases === 0 && agg.leads === 0) out.push({ severity: "CRITICAL", factor: "tracking_quality", message: "Spend with zero recorded conversions/leads — verify pixel/events before any budget decision." });
+    if ("cpa" in factors && agg.cpa && agg.cpa > be) out.push({ severity: sev(factors.cpa), factor: "cpa", message: `CPA ${M.fmt(agg.cpa)} over break-even ${M.fmt(be)}.` });
+    if (freq && freq >= 4) out.push({ severity: "HIGH", factor: "creative_freshness", message: `Frequency ${freq.toFixed(1)} ≥ 4.0 — creative fatigue; refresh.` });
+    const seen = new Set(out.map(o => o.factor));
+    Object.entries(factors).sort((a, b) => a[1] - b[1]).forEach(([f, s]) => { if (s < 45 && !seen.has(f)) { out.push({ severity: sev(s), factor: f, message: `${f} weak (score ${Math.round(s)}).` }); seen.add(f); } });
+    if (na.length) out.push({ severity: "INFO", factor: na.join(","), message: "Not derivable from media data — needs human input (e.g. lead quality from CRM; offer/landing review)." });
+    return out.slice(0, 8);
+  }
+  function scoreByCampaign(rows, cfg) {
+    const groups = {};
+    for (const r of rows) { const k = r.campaign_name || r.campaign_id || "(unnamed)"; (groups[k] = groups[k] || []).push(r); }
+    const out = Object.entries(groups).map(([name, grp]) => {
+      const res = scoreAccount(grp, cfg); const a = res.agg;
+      return { campaign: name, platforms: [...new Set(grp.map(r => r.platform || "?"))].sort(), ads: grp.length,
+        spend: a.spend, cpa: a.cpa, roas: a.roas, health: res.total, band: res.band,
+        top_finding: res.findings.length ? res.findings[0].message : "" };
+    });
+    out.sort((a, b) => a.health - b.health);
+    return out;
+  }
+
+  // ---------- decisions ----------
+  function decide(row, cfg, ctrPeak, health) {
+    const g = k => row[k] || 0;
+    const spend = g("spend"), clicks = g("clicks"), leads = g("leads"), purchases = g("purchases"), revenue = g("revenue");
+    let freq = row.frequency || M.frequency(g("impressions"), g("reach")) || 0;
+    let curCtr = row.ctr; if (curCtr == null) curCtr = M.ctr(clicks, g("impressions"));
+    const be = M.breakEvenCpa(cfg.average_sale_value, cfg.gross_margin);
+    const cpa = M.cpa(spend, purchases), roas = M.roas(revenue, spend);
+    const tracking = (row.tracking_status || "ok").toLowerCase();
+    const out = (verdict, reason, proposal) => ({ verdict, reason, proposal, safe: true });
+    if (tracking === "broken" || tracking === "review" || (spend > 0 && purchases === 0 && leads === 0)) {
+      if (spend >= be) return out("fix-tracking", "Spend with zero recorded results and/or tracking flagged — verify pixel/events before any budget or scale decision.", "Audit pixel + events (atlas). Do NOT scale or cut yet.");
+    }
+    const conf = clicks >= 50 || (purchases || leads) >= 15;
+    if (!conf) return out("insufficient-data", "Below decision floor (<50 clicks and <15 conversions). Not statistically reliable.", "Let spend accumulate; re-evaluate later. No change.");
+    if (M.isRoasAnomaly(roas)) return out("fix-tracking", `ROAS ${M.fmt(roas)} is implausibly high — likely a tracking anomaly.`, "Verify conversion values before acting on this number.");
+    const ctrDropped = ctrPeak && curCtr != null && ctrPeak > 0 && (ctrPeak - curCtr) / ctrPeak >= 0.25;
+    if (freq >= 4 && (ctrDropped || (curCtr != null && curCtr < 0.01))) return out("refresh", `Creative fatigue: frequency ${freq.toFixed(1)} ≥ 4.0 with falling/low CTR.`, "Build 3-5 fresh variants of the winning angle as PAUSED duplicates; broaden audience. Original untouched.");
+    if (cpa != null) {
+      if (cpa <= be) { if (health != null && health >= 70 && tracking === "ok") return out("scale", `CPA ${M.fmt(cpa)} ≤ break-even ${M.fmt(be)}, health ${Math.round(health)} ≥ 70.`, "Propose ≤20% budget increase (needs typed YES) AND duplicate the winning angle."); return out("keep", `CPA ${M.fmt(cpa)} ≤ break-even ${M.fmt(be)} but not clear-to-scale (health/tracking).`, "Keep running; duplicate the angle; clean tracking before scaling."); }
+      if (cpa <= be * 1.5) return out("reduce", `CPA ${M.fmt(cpa)} above break-even ${M.fmt(be)} but recoverable.`, "Reduce budget; test a new angle as a paused duplicate.");
+      return out("kill", `CPA ${M.fmt(cpa)} > 1.5× break-even ${M.fmt(be)}.`, "Pause this ad (reversible). Reallocate to a winner.");
+    }
+    if (leads > 0 && purchases === 0) return out("keep", `CPL ${M.fmt(M.cpl(spend, leads))} but no sales recorded — likely a lead quality / qualification / follow-up / offer issue, not media.`, "Route to lead-quality-analyser + titan; don't scale on CPL alone.");
+    return out("keep", "Within acceptable range.", "Monitor; no change proposed.");
+  }
+
+  // ---------- ingest (CSV text -> normalised rows) ----------
+  const NUMERIC = new Set(["daily_budget","lifetime_budget","spend","impressions","reach","frequency","clicks","ctr","cpc","cpm","landing_page_views","leads","purchases","revenue","cost_per_lead","cost_per_purchase","roas","video_views","three_second_views","six_second_views","thruplays","hook_rate","hold_rate","comments","shares","saves","lead_quality_score","sales_count","gross_profit"]);
+  const FIELDS = ["business_id","business_name","platform","ad_account_id","campaign_id","campaign_name","adset_id","adset_name","ad_id","ad_name","date","objective","budget_type","daily_budget","lifetime_budget","spend","impressions","reach","frequency","clicks","ctr","cpc","cpm","landing_page_views","leads","purchases","revenue","cost_per_lead","cost_per_purchase","roas","video_views","three_second_views","six_second_views","thruplays","hook_rate","hold_rate","comments","shares","saves","lead_quality_score","sales_count","gross_profit","utm_source","utm_medium","utm_campaign","utm_content","utm_term","tracking_status","recommendation","notes"];
+  const META_MAP = { "Campaign name": "campaign_name", "Ad set name": "adset_name", "Ad name": "ad_name", "Day": "date", "Reporting starts": "date", "Amount spent (AUD)": "spend", "Amount spent": "spend", "Impressions": "impressions", "Reach": "reach", "Frequency": "frequency", "Link clicks": "clicks", "Clicks (all)": "clicks", "Landing page views": "landing_page_views", "Leads": "leads", "Purchases": "purchases", "Purchases conversion value": "revenue", "3-second video plays": "three_second_views", "ThruPlays": "thruplays" };
+  const TT_MAP = { "Campaign name": "campaign_name", "Ad group name": "adset_name", "Ad name": "ad_name", "Date": "date", "Cost": "spend", "Impressions": "impressions", "Reach": "reach", "Frequency": "frequency", "Clicks": "clicks", "Landing page views": "landing_page_views", "Leads (form)": "leads", "Conversions": "purchases", "Total conversion value": "revenue", "Video views": "video_views", "2-second video views": "three_second_views", "Video views at 100%": "thruplays" };
+
+  function toNum(v) { if (v == null) return null; const s = String(v).trim().replace(/[,$%]/g, ""); if (s === "" || ["N/A","NA","-"].includes(s.toUpperCase())) return null; const n = Number(s); return isNaN(n) ? null : n; }
+  function detectPlatform(h) { const s = new Set(h); if (s.has("Ad group name") || s.has("Cost")) return "tiktok"; if (s.has("Ad set name") || s.has("Amount spent (AUD)") || s.has("ThruPlays")) return "meta"; return "universal"; }
+
+  function parseCSV(text) {
+    const rows = []; let i = 0, field = "", row = [], inq = false;
+    while (i < text.length) { const c = text[i];
+      if (inq) { if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inq = false; } else field += c; }
+      else if (c === '"') inq = true;
+      else if (c === ",") { row.push(field); field = ""; }
+      else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(field); rows.push(row); row = []; field = ""; }
+      else field += c;
+      i++;
+    }
+    if (field !== "" || row.length) { row.push(field); rows.push(row); }
+    return rows.filter(r => r.length && !(r.length === 1 && r[0] === ""));
+  }
+
+  function normalise(raw, platform) {
+    const map = platform === "meta" ? META_MAP : platform === "tiktok" ? TT_MAP : null;
+    const row = {}; FIELDS.forEach(f => row[f] = null);
+    if (platform === "meta" || platform === "tiktok") row.platform = platform;
+    for (const key in raw) {
+      const field = map ? (map[key] || (FIELDS.includes(key) ? key : null)) : (FIELDS.includes(key) ? key : null);
+      if (!field) continue;
+      row[field] = NUMERIC.has(field) ? toNum(raw[key]) : raw[key];
+    }
+    if (platform === "meta" || platform === "tiktok") row.platform = platform;
+    return row;
+  }
+  function fillComputed(r) {
+    const g = k => r[k] || 0;
+    if (r.frequency == null) r.frequency = M.frequency(g("impressions"), g("reach"));
+    if (r.ctr == null) r.ctr = M.ctr(g("clicks"), g("impressions"));
+    if (r.cpc == null) r.cpc = M.cpc(g("spend"), g("clicks"));
+    if (r.cpm == null) r.cpm = M.cpm(g("spend"), g("impressions"));
+    if (r.cost_per_lead == null) r.cost_per_lead = M.cpl(g("spend"), g("leads"));
+    if (r.cost_per_purchase == null) r.cost_per_purchase = M.cpa(g("spend"), g("purchases"));
+    if (r.roas == null) r.roas = M.roas(g("revenue"), g("spend"));
+    if (r.hook_rate == null) r.hook_rate = M.hookRate(g("three_second_views"), g("impressions"));
+    if (r.hold_rate == null) r.hold_rate = M.holdRate(g("thruplays"), g("three_second_views"));
+    return r;
+  }
+  function parseCsvText(text, platform) {
+    const grid = parseCSV(text); if (!grid.length) return [];
+    const headers = grid[0]; const plat = platform || detectPlatform(headers);
+    return grid.slice(1).map(cells => { const raw = {}; headers.forEach((h, idx) => raw[h] = cells[idx]); return fillComputed(normalise(raw, plat)); });
+  }
+
+  const API = { metrics: M, WEIGHTS, band, computeHealth, scoreAccount, scoreByCampaign, decide, parseCsvText, detectPlatform };
+  root.AdPilot = API;
+  if (typeof module !== "undefined" && module.exports) module.exports = API;
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
+<script>
+const $=id=>document.getElementById(id);
+const C={Green:'#16a34a',Yellow:'#ca8a04',Orange:'#ea580c',Red:'#dc2626'};
+const SEV={CRITICAL:'#dc2626',HIGH:'#ea580c',MEDIUM:'#ca8a04',LOW:'#16a34a',INFO:'#5a6577'};
+const PLATC={meta:'#0b5fff',tiktok:'#111',unknown:'#5a6577','?':'#5a6577'};
+const f2=v=>v==null?'N/A':(Math.round(v*100)/100).toLocaleString();
+const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const SAMPLES={
+ clean:`business_name,platform,campaign_name,date,spend,impressions,reach,clicks,leads,purchases,revenue,three_second_views,thruplays,lead_quality_score,utm_source,utm_medium,utm_campaign,tracking_status
+Example Co,meta,exampleco_hotwater_leads_brisbane_20260601,2026-06-13,600,30000,16000,600,40,12,3600,9000,4000,82,meta,paid_social,exampleco_hotwater_leads_brisbane_20260601,ok
+Example Co,tiktok,exampleco_hotwater_leads_brisbane_20260601,2026-06-13,500,28000,15000,560,35,10,3000,8200,3600,78,tiktok,paid_social,exampleco_hotwater_leads_brisbane_20260601,ok`,
+ fatigued:`business_name,platform,campaign_name,date,spend,impressions,reach,clicks,leads,purchases,revenue,three_second_views,thruplays,utm_source,utm_medium,utm_campaign,tracking_status
+Example Co,meta,exampleco_summer_sales_national_20260401,2026-06-13,2500,280000,62000,2520,0,12,1800,42000,9000,meta,paid_social,exampleco_summer_sales_national_20260401,ok
+Example Co,tiktok,summer-sale,2026-06-13,1500,150000,30000,1200,0,8,1200,30000,6000,tiktok,paid_social,summer-sale,ok`,
+ broken:`business_name,platform,campaign_name,date,spend,impressions,reach,clicks,leads,purchases,revenue,three_second_views,thruplays,utm_source,utm_medium,utm_campaign,tracking_status
+Example Co,meta,promo,2026-06-13,1800,90000,40000,540,0,0,0,12000,3000,,,,broken
+Example Co,meta,promo2,2026-06-13,1200,60000,28000,360,0,0,0,8000,2000,,,,broken`};
+$('file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$('csv').value=r.result;run()};r.readAsText(f)});
+function loadSample(n){$('csv').value=SAMPLES[n];run();document.getElementById('try').scrollIntoView({behavior:'smooth'});}
+function gauge(score,band){const col=C[band]||'#5a6577';const r=64,cx=75,cy=75,circ=2*Math.PI*r;const off=circ*(1-Math.max(0,Math.min(100,score))/100);
+ return '<div class=gauge><svg width=150 height=150 viewBox="0 0 150 150">'+
+  '<circle cx='+cx+' cy='+cy+' r='+r+' fill=none stroke="#eef2f7" stroke-width=13></circle>'+
+  '<circle cx='+cx+' cy='+cy+' r='+r+' fill=none stroke="'+col+'" stroke-width=13 stroke-linecap=round stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'" transform="rotate(-90 '+cx+' '+cy+')"></circle></svg>'+
+  '<div class=label><div class=num style=color:'+col+'>'+Math.round(score)+'</div><div class=of>/ 100</div></div></div>';}
+function run(){
+ const cfg={business_name:$('biz').value||'Your Business',currency:'AUD',average_sale_value:parseFloat($('avg').value)||200,gross_margin:parseFloat($('margin').value)||0.6};
+ const csv=$('csv').value;if(!csv.trim()){$('out').innerHTML='<div class=placeholder>Paste a CSV or pick a sample above.</div>';return}
+ let rows;try{rows=AdPilot.parseCsvText(csv,$('plat').value||null)}catch(e){$('out').innerHTML='<div class=placeholder style=color:#dc2626>Could not parse CSV: '+esc(e.message)+'</div>';return}
+ if(!rows.length){$('out').innerHTML='<div class=placeholder style=color:#dc2626>No rows parsed — check the headers.</div>';return}
+ const res=AdPilot.scoreAccount(rows,cfg),agg=res.agg,camps=AdPilot.scoreByCampaign(rows,cfg);
+ const decs=rows.map(r=>{const d=AdPilot.decide(r,cfg);return{...d,name:r.ad_name||r.campaign_name||r.ad_id||'(ad)',platform:r.platform||'?'}});
+ const be=res.break_even_cpa,beR=AdPilot.metrics.breakEvenRoas(cfg.gross_margin),mer=AdPilot.metrics.mer(agg.revenue,agg.spend);
+ const col=C[res.band]||'#5a6577';
+ window.__last={cfg,summary:{spend:agg.spend,leads:agg.leads,purchases:agg.purchases,revenue:agg.revenue,cpa:agg.cpa,roas:agg.roas,mer,break_even_cpa:be,break_even_roas:beR},health:res,campaigns:camps,decisions:decs};
+ let h='<div class=scorerow>'+gauge(res.total,res.band)+
+  '<div><div class=bandtag style=background:'+col+'>'+res.band+'</div>'+
+  '<div style=font-weight:700;margin:8px_0_2px>'+esc(res.guidance)+'</div>'+
+  '<div class=muted>Weakest factors: '+(res.weakest.join(', ')||'—')+'</div></div></div>';
+ h+='<div class=metrics>'+mc('Spend',agg.spend)+mc('CPA',agg.cpa)+mc('Break-even CPA',be)+mc('ROAS',agg.roas)+mc('Break-even ROAS',beR)+mc('MER',mer)+mc('Leads',agg.leads)+mc('Purchases',agg.purchases)+'</div>';
+ // charts
+ h+='<div class=charts>';
+ h+='<div><h3 class=blk>Campaign health (worst-first)</h3>';
+ const maxH=100;for(const c of camps){const cc=C[c.band]||'#5a6577';const w=Math.max(6,c.health);
+   h+='<div class=bar><div class=cn title="'+esc(c.campaign)+'">'+esc(c.campaign)+'</div><div class=track><div class=fill style="width:'+w+'%;background:'+cc+'">'+Math.round(c.health)+'</div></div></div>';}
+ h+='</div>';
+ // donut spend by platform
+ const byP={};rows.forEach(r=>{const p=r.platform||'?';byP[p]=(byP[p]||0)+(r.spend||0)});
+ h+='<div><h3 class=blk>Spend by platform</h3>'+donut(byP)+'</div></div>';
+ h+='<div class=toolbar><button class="btn sm" onclick=downloadCSV()>⬇ Download CSV</button><button class="btn ghost sm" onclick=window.print()>🖨 Print / Save PDF</button></div>';
+ // findings
+ h+='<h3 class=blk>Findings</h3><table><tr><th>Severity</th><th>Factor</th><th>Detail</th></tr>';
+ for(const f of res.findings)h+='<tr><td><span class=pill style=background:'+(SEV[f.severity]||'#5a6577')+'>'+f.severity+'</span></td><td>'+esc(f.factor)+'</td><td>'+esc(f.message)+'</td></tr>';
+ h+='</table>';
+ // proposals
+ h+='<h3 class=blk>Proposals <span class=muted style=font-weight:400>(paused duplicates / proposals only — nothing live changed)</span></h3><table><tr><th>Verdict</th><th>Ad</th><th>Why</th><th>Proposal</th></tr>';
+ for(const d of decs){const vc=d.verdict==='kill'?'#dc2626':d.verdict==='scale'?'#16a34a':d.verdict.indexOf('fix')>-1?'#ea580c':'#0b5fff';
+   h+='<tr><td><span class=vpill style=color:'+vc+'>'+d.verdict+'</span></td><td>'+esc(d.name)+'<div class=muted>'+esc(d.platform)+'</div></td><td>'+esc(d.reason)+'</td><td>'+esc(d.proposal)+'</td></tr>';}
+ h+='</table>';
+ $('out').innerHTML=h;
+}
+function donut(byP){const tot=Object.values(byP).reduce((a,b)=>a+b,0)||1;let acc=0;const segs=[];
+ for(const p in byP){const frac=byP[p]/tot;segs.push({p,frac,acc});acc+=frac;}
+ const r=54,cx=70,cy=70,circ=2*Math.PI*r;let s='<svg width=140 height=140 viewBox="0 0 140 140">';
+ s+='<circle cx='+cx+' cy='+cy+' r='+r+' fill=none stroke="#eef2f7" stroke-width=20></circle>';
+ for(const seg of segs){const len=circ*seg.frac,gap=circ-len,off=-circ*seg.acc;
+   s+='<circle cx='+cx+' cy='+cy+' r='+r+' fill=none stroke="'+(PLATC[seg.p]||'#5a6577')+'" stroke-width=20 stroke-dasharray="'+len+' '+gap+'" stroke-dashoffset="'+off+'" transform="rotate(-90 '+cx+' '+cy+')"></circle>';}
+ s+='</svg><div style=margin-top:6px>';
+ for(const seg of segs)s+='<div class=muted style=display:flex;align-items:center;gap:7px><span style="width:10px;height:10px;border-radius:3px;background:'+(PLATC[seg.p]||'#5a6577')+';display:inline-block"></span>'+esc(seg.p)+' — '+Math.round(seg.frac*100)+'% ('+f2(byP[seg.p])+')</div>';
+ return s+'</div>';}
+const mc=(k,v)=>'<div class=metric><b>'+f2(v)+'</b><span>'+k+'</span></div>';
+function q(v){v=(v==null?'':String(v));return '"'+v.replace(/"/g,'""')+'"';}
+function downloadCSV(){const j=window.__last;if(!j)return;const L=[['section','name','platform','verdict_or_band','d1','d2','d3'].join(',')];const s=j.summary;
+ L.push(['summary','health',j.health.band,Math.round(j.health.total),'CPA='+f2(s.cpa),'ROAS='+f2(s.roas),'MER='+f2(s.mer)].map(q).join(','));
+ for(const c of j.campaigns)L.push(['campaign',c.campaign,c.platforms.join('|'),c.band+' '+Math.round(c.health),'spend='+f2(c.spend),'cpa='+f2(c.cpa),'roas='+f2(c.roas)].map(q).join(','));
+ for(const f of j.health.findings)L.push(['finding',f.factor,'',f.severity,f.message,'',''].map(q).join(','));
+ for(const d of j.decisions)L.push(['decision',d.name,d.platform,d.verdict,d.reason,d.proposal,''].map(q).join(','));
+ const b=new Blob([L.join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='adpilot-analysis.csv';a.click();URL.revokeObjectURL(a.href);}
+function selftest(){let p=0,n=0;const ck=c=>{c?p++:n++};const M=AdPilot.metrics;const cfg={average_sale_value:200,gross_margin:0.6};
+ ck(Math.round(M.cpa(8000,118)*100)===6780);ck(Math.round(M.mer(45000,9800)*100)===459);ck(M.cpa(800,0)===null);
+ ck(AdPilot.computeHealth(Object.fromEntries(Object.keys(AdPilot.WEIGHTS).map(k=>[k,80]))).band==='Green');
+ ck(AdPilot.scoreAccount(AdPilot.parseCsvText(SAMPLES.clean),cfg).band==='Green');
+ ck(AdPilot.scoreAccount(AdPilot.parseCsvText(SAMPLES.fatigued),cfg).band==='Orange');
+ ck(AdPilot.scoreAccount(AdPilot.parseCsvText(SAMPLES.broken),cfg).band==='Red');
+ $('st').textContent=p+'/'+(p+n)+(n===0?' ✅ engine verified':' ❌');}
+loadSample('fatigued');
+</script></body></html>
