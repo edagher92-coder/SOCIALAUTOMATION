@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { parseCsvText, analyse } from "@/lib/engine";
+import { ensureOrg } from "@/lib/org";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
@@ -32,5 +34,29 @@ export async function POST(req: Request) {
   if (rows.length > 20000) { rows = rows.slice(0, 20000); capped = true; }
 
   const result = analyse(rows, { business_name: business, average_sale_value, gross_margin, currency: "AUD" });
-  return NextResponse.json({ ...result, capped, rows: rows.length });
+
+  // Best-effort persistence (saved report + score + recommendations). If the DB
+  // isn't configured, analysis still returns — we just don't save.
+  let reportId: string | null = null;
+  try {
+    const orgId = await ensureOrg(user.id, user.email ?? undefined);
+    const admin = createAdminClient();
+    await admin.from("health_scores").insert({
+      organisation_id: orgId, scope: "account", total: result.health.total, band: result.health.band,
+      breakdown: result.health.breakdown, data_confidence: (result.health as any).breakdown?.data_confidence?.score ?? null,
+    });
+    const recs = result.decisions.map((d: any) => ({
+      organisation_id: orgId, verdict: d.verdict, entity_name: d.name, platform: d.platform, reason: d.reason, proposal: d.proposal,
+    }));
+    if (recs.length) await admin.from("recommendations").insert(recs);
+    const { data: rep } = await admin.from("reports").insert({
+      organisation_id: orgId, title: `${business || "Analysis"} — health ${Math.round(result.health.total)}`,
+      period: new Date().toISOString().slice(0, 10), payload: result, created_by: user.id,
+    }).select("id").single();
+    reportId = (rep?.id as string) ?? null;
+  } catch {
+    // persistence is best-effort
+  }
+
+  return NextResponse.json({ ...result, capped, rows: rows.length, reportId, saved: !!reportId });
 }

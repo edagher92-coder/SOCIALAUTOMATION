@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import AiButton from "@/components/AiButton";
 
 const PLAYBOOKS: Record<string, string[]> = {
   "Get more leads": [
@@ -53,6 +54,7 @@ export default function Bobby() {
           className="mt-2 w-full rounded-lg border border-[#e3e8ef] p-2.5" />
         <p className="mt-3 text-xs font-bold text-muted">Copy-paste prompt (use in Claude, or connect the Claude API to run it here):</p>
         <pre className="mt-1 whitespace-pre-wrap rounded-lg bg-[#f4f7fb] p-3 text-xs">{prompt}</pre>
+        <AiButton task="bobby" getInputs={() => ({ question: q })} label="✨ Ask Bobby with AI" />
       </div>
     </div>
   );

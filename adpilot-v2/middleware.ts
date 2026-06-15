@@ -26,6 +26,7 @@ export async function middleware(request: NextRequest) {
   const appRoutes = [
     "/dashboard", "/ai-specialists", "/build-dashboard", "/canva-creator",
     "/claude-api", "/bobby-business-assistant", "/aria-course-creator", "/crm-maintenance",
+    "/reports", "/billing",
   ];
   const p = request.nextUrl.pathname;
   if (!user && appRoutes.some((r) => p === r || p.startsWith(r + "/"))) {
