@@ -54,3 +54,6 @@
 - **Entitlements are the single source of truth** (`lib/entitlements.ts`). Gate every premium route AND the cron path.
 - **Fail closed on billing:** an unmapped `priceId` or missing price→plan config must 503, never default to a paid plan. `normalisePlan(unknown)` → `"free"`.
 - **Handle `customer.subscription.deleted/updated`** to downgrade to free — not just `checkout.session.completed`. Idempotent upsert on `stripe_subscription_id`.
+
+## Build/CI (added 2026-06-15)
+- **Stale `.next/types` across branches:** `tsc --noEmit` reads cached route types from a previous build, so after switching branches it throws phantom `TS2307` "Cannot find module …/route.js" errors for routes that only exist on the *other* branch. Fix: `rm -rf .next` before typecheck (or trust `next build`, which regenerates types fresh). A fresh CI checkout is unaffected.
