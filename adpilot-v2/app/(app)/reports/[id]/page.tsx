@@ -10,11 +10,19 @@ export default async function ReportDetail({ params }: { params: { id: string } 
   const supabase = createClient();
   const { data: report } = await supabase.from("reports").select("title,period,payload,created_at").eq("id", params.id).maybeSingle();
   if (!report) notFound();
+  const { data: wl } = await supabase.from("white_label_profiles").select("brand_name,logo_url,primary_color,support_email").maybeSingle();
   const p: any = (report as any).payload;
   const h = p?.health, s = p?.summary;
 
   return (
     <div className="max-w-3xl">
+      {wl?.brand_name && (
+        <div className="mb-4 flex items-center gap-3 rounded-xl p-3 text-white" style={{ background: (wl as any).primary_color || "#0b5fff" }}>
+          {(wl as any).logo_url ? <img src={(wl as any).logo_url} alt="" className="h-7 w-7 rounded bg-white object-contain" /> : null}
+          <b>{(wl as any).brand_name}</b>
+          <span className="ml-auto text-sm opacity-80">Ads Health Report</span>
+        </div>
+      )}
       <Link href="/reports" className="text-sm font-semibold text-brand">← All reports</Link>
       <h1 className="mt-2 text-2xl font-extrabold tracking-tight">{(report as any).title}</h1>
       <p className="mb-5 mt-1 text-muted">{(report as any).period} · saved {new Date((report as any).created_at).toLocaleString()}</p>
