@@ -1,5 +1,6 @@
 import "server-only";
 import crypto from "crypto";
+import { callClaude, NoKeyError } from "@/lib/ai/claude";
 
 // Multi-channel Messenger/Instagram/WhatsApp bot core: signature verification, hours-aware
 // reply decisioning, and the Send APIs. Ported from the meta-messaging-bot skill's reply
@@ -99,4 +100,53 @@ export async function subscribePage(pageToken: string): Promise<any> {
   const j: any = await r.json();
   if (!r.ok) throw new Error(j?.error?.message || `Subscribe error ${r.status}`);
   return { page: me, subscribed: j };
+}
+
+// --- LLM-grounded auto-reply (smart mode) ---------------------------------
+// Port of the uploaded Sam bot's "smart mode": only fires when no payload-rule and no
+// keyword matched. Answers STRICTLY from the channel's VERIFIED FACTS — no invention of
+// prices/specs/policies, never collects finance/credit details in chat. PURE + unit-testable.
+export const AI_MODEL = "claude-haiku-4-5";
+
+// Build the strict, no-hallucination system prompt. `facts` is the ONLY source of truth the
+// model may answer from; `voice` is an optional brand-voice note. Returns a self-contained
+// prompt — no network, no env, deterministic for the same inputs.
+export function buildAiSystemPrompt(facts?: string | null, voice?: string | null): string {
+  const f = (facts || "").trim();
+  const v = (voice || "").trim();
+  return [
+    "You are the customer-service assistant for a business, replying inside a chat (Messenger / Instagram DM / WhatsApp).",
+    "",
+    "VERIFIED FACTS (the ONLY information you may state as true):",
+    f || "(none provided)",
+    "",
+    "STRICT RULES — follow every one:",
+    "- Answer ONLY using the VERIFIED FACTS above. Do not use outside knowledge or assumptions.",
+    "- If a fact needed to answer is NOT in the VERIFIED FACTS, do NOT guess or invent it. Either ask the customer a clarifying question, or tell them you'll have the business follow up.",
+    "- NEVER invent or estimate prices, specs, availability, hours, or policies. If it isn't in the VERIFIED FACTS, say you don't have that detail and offer to connect them with the business.",
+    "- NEVER collect or request finance, credit, card, or banking details in chat. If finance/payment comes up, say the business will handle that securely and offer to pass them on.",
+    "- Keep replies to 1–4 short sentences. Use at most ONE emoji, and only when it fits the tone.",
+    "- Be helpful, friendly, and concise. Do not make promises the business hasn't authorised.",
+    v ? `\nBRAND VOICE: ${v}` : "",
+  ].join("\n").trim();
+}
+
+// Generate a grounded reply for an inbound message, or null when the model can't/shouldn't
+// answer (no API key, error, or empty output) so the caller can fall back to canned replies.
+export async function aiReply(facts: string | null | undefined, voice: string | null | undefined, text: string): Promise<string | null> {
+  const msg = (text || "").trim();
+  if (!msg) return null;
+  try {
+    const out = await callClaude({
+      system: buildAiSystemPrompt(facts, voice),
+      user: msg,
+      model: AI_MODEL,
+      maxTokens: 320,
+    });
+    const reply = (out || "").trim();
+    return reply || null;
+  } catch (e) {
+    if (e instanceof NoKeyError) return null;
+    return null; // best-effort: any API/parse error → fall back to canned replies
+  }
 }

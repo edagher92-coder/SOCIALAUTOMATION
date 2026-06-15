@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-type Page = { external_page_id: string; display_name?: string; channel?: string };
+type Page = { external_page_id: string; display_name?: string; channel?: string; ai_enabled?: boolean; ai_facts?: string | null; ai_voice?: string | null };
 type RuleRow = { id: string; external_page_id: string; trigger_type: string; trigger?: string | null; reply: string; priority: number };
 
 const TRIGGER_TYPES = [
@@ -29,6 +29,11 @@ export default function MessengerBot({ webhookUrl, verifyConfigured, appSecretCo
   const [busy, setBusy] = useState("");
   const [msg, setMsg] = useState("");
 
+  // AI smart-mode settings for the active channel.
+  const [ai, setAi] = useState({ enabled: false, facts: "", voice: "" });
+  const [aiMsg, setAiMsg] = useState("");
+  const activePage = pages.find((p) => p.external_page_id === active);
+
   async function loadPages() {
     const r = await fetch("/api/messenger/pages"); const j = await r.json();
     if (r.ok) { setPages(j.pages || []); if (!active && j.pages?.[0]) setActive(j.pages[0].external_page_id); }
@@ -40,6 +45,11 @@ export default function MessengerBot({ webhookUrl, verifyConfigured, appSecretCo
   }
   useEffect(() => { loadPages(); }, []);
   useEffect(() => { loadRules(active); }, [active]);
+  // Hydrate the AI editor from the active page whenever the selection or page data changes.
+  useEffect(() => {
+    setAiMsg("");
+    setAi({ enabled: !!activePage?.ai_enabled, facts: activePage?.ai_facts || "", voice: activePage?.ai_voice || "" });
+  }, [active, activePage?.ai_enabled, activePage?.ai_facts, activePage?.ai_voice]);
 
   async function register() {
     setBusy("reg"); setMsg("");
@@ -71,6 +81,19 @@ export default function MessengerBot({ webhookUrl, verifyConfigured, appSecretCo
     } catch (e: any) { setMsg(e.message); } finally { setBusy(""); }
   }
   async function delRule(id: string) { await fetch(`/api/messenger/rules?id=${id}`, { method: "DELETE" }); loadRules(active); }
+  async function saveAi() {
+    if (!active) return;
+    setBusy("ai"); setAiMsg("");
+    try {
+      const r = await fetch("/api/messenger/pages", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ external_page_id: active, ai_enabled: ai.enabled, ai_facts: ai.facts.trim() || null, ai_voice: ai.voice.trim() || null }),
+      });
+      const j = await r.json();
+      if (!r.ok) setAiMsg(j.error || "Could not save");
+      else { setAiMsg("Saved ✅"); await loadPages(); }
+    } catch (e: any) { setAiMsg(e.message); } finally { setBusy(""); }
+  }
   const toggleDay = (d: number) => setHours({ ...hours, days: hours.days.includes(d) ? hours.days.filter((x) => x !== d) : [...hours.days, d].sort() });
 
   return (
@@ -133,10 +156,11 @@ export default function MessengerBot({ webhookUrl, verifyConfigured, appSecretCo
         {msg && <p className="mt-2 text-sm text-muted">{msg}</p>}
       </div>
 
-      {/* Rules */}
+      {/* Rules + AI smart mode */}
       {active && (
+        <>
         <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
-          <h3 className="font-bold">Auto-reply rules <span className="text-xs font-normal text-muted">— {pages.find((p) => p.external_page_id === active)?.display_name}</span></h3>
+          <h3 className="font-bold">Auto-reply rules <span className="text-xs font-normal text-muted">— {activePage?.display_name}</span></h3>
           <p className="mt-0.5 text-xs text-muted">Order: payload → keyword → first-message greeting (hours-aware) → default.</p>
           <div className="mt-3 space-y-2">
             {rules.length === 0 && <p className="text-sm text-muted">No rules yet. Add a welcome + a few keyword rules (e.g. <code>winter</code> → your service reply).</p>}
@@ -165,6 +189,36 @@ export default function MessengerBot({ webhookUrl, verifyConfigured, appSecretCo
             <button onClick={addRule} disabled={busy === "rule" || !form.reply.trim()} className="rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{busy === "rule" ? "Adding…" : "Add rule"}</button>
           </div>
         </div>
+
+        {/* AI smart mode (LLM-grounded auto-reply) */}
+        <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="font-bold">AI smart replies <span className="text-xs font-normal text-muted">— answers from your verified facts only</span></h3>
+              <p className="mt-0.5 text-xs text-muted">When no payload or keyword rule matches, the assistant answers strictly from the facts below. It never invents prices, specs, or policies, and never collects finance details in chat. Falls back to your welcome/away/default rules if it can't answer.</p>
+            </div>
+            <label className="flex flex-shrink-0 cursor-pointer items-center gap-2 text-sm font-semibold">
+              <input type="checkbox" checked={ai.enabled} onChange={(e) => setAi({ ...ai, enabled: e.target.checked })} className="h-4 w-4" />
+              {ai.enabled ? "On" : "Off"}
+            </label>
+          </div>
+          <div className="mt-3 space-y-2">
+            <label className="block text-sm">
+              <span className="mb-1 block font-semibold">Verified facts <span className="font-normal text-muted">(the only source the AI may answer from — prices, specials, hours, policies, what you offer)</span></span>
+              <textarea value={ai.facts} onChange={(e) => setAi({ ...ai, facts: e.target.value })} maxLength={8000} placeholder={"e.g.\n- We service and repair all major brands. Standard service is $120.\n- Current special: 10% off repairs booked this month.\n- Open Mon–Fri 8am–6pm; finance available (handled by our team, not in chat)."} className="h-32 w-full rounded-lg border border-border-subtle p-2.5 text-sm" />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block font-semibold">Brand voice <span className="font-normal text-muted">(optional)</span></span>
+              <input value={ai.voice} onChange={(e) => setAi({ ...ai, voice: e.target.value })} maxLength={1000} placeholder="e.g. friendly, concise, warm Aussie tone" className="w-full rounded-lg border border-border-subtle p-2 text-sm" />
+            </label>
+            <div className="flex items-center gap-3">
+              <button onClick={saveAi} disabled={busy === "ai"} className="rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{busy === "ai" ? "Saving…" : "Save AI settings"}</button>
+              {aiMsg && <span className="text-sm text-muted">{aiMsg}</span>}
+            </div>
+            <p className="text-2xs text-muted">Requires <code className="rounded bg-surface px-1 py-0.5">ANTHROPIC_API_KEY</code> on the server. Same Meta app review as auto-replies (pages_messaging / instagram_manage_messages / whatsapp_business_messaging) to reply to the public.</p>
+          </div>
+        </div>
+        </>
       )}
     </div>
   );

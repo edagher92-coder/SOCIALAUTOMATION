@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import crypto from "crypto";
-import { decide, withinHours, verifySignature, type Rule } from "./bot";
+import { decide, withinHours, verifySignature, buildAiSystemPrompt, type Rule } from "./bot";
 
 // ---------------------------------------------------------------------------
 // decide()
@@ -186,5 +186,72 @@ describe("verifySignature", () => {
 
   it("fails for an empty app secret", () => {
     expect(verifySignature(body, sign(body, secret), "")).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildAiSystemPrompt()
+// PURE: embeds the supplied VERIFIED FACTS verbatim and enforces the strict
+// no-hallucination contract. No network — buildAiSystemPrompt never calls the API.
+// ---------------------------------------------------------------------------
+describe("buildAiSystemPrompt", () => {
+  const FACTS = "Standard service is $120. Open Mon-Fri 8-6. Current special: 10% off repairs.";
+  const VOICE = "friendly, concise, warm Aussie tone";
+
+  it("embeds the supplied verified facts verbatim", () => {
+    const p = buildAiSystemPrompt(FACTS, VOICE);
+    expect(p).toContain(FACTS);
+  });
+
+  it("includes the brand voice when provided", () => {
+    const p = buildAiSystemPrompt(FACTS, VOICE);
+    expect(p).toContain(VOICE);
+  });
+
+  it("omits the brand-voice line when voice is empty/missing", () => {
+    expect(buildAiSystemPrompt(FACTS, "")).not.toContain("BRAND VOICE:");
+    expect(buildAiSystemPrompt(FACTS, null)).not.toContain("BRAND VOICE:");
+    expect(buildAiSystemPrompt(FACTS)).not.toContain("BRAND VOICE:");
+  });
+
+  it("labels the facts as the only source of truth", () => {
+    const p = buildAiSystemPrompt(FACTS);
+    expect(p).toContain("VERIFIED FACTS");
+    expect(p).toMatch(/only.*information you may state as true/i);
+  });
+
+  it("states the no-invention rule for prices/specs/policies", () => {
+    const p = buildAiSystemPrompt(FACTS).toLowerCase();
+    // Must forbid making things up and explicitly cover prices/specs/policies.
+    expect(p).toMatch(/never invent/);
+    expect(p).toContain("price");
+    expect(p).toContain("polic");
+    // When a fact is missing, ask or route to the business rather than guess.
+    expect(p).toMatch(/do not guess|don't guess|not guess/);
+    expect(p).toMatch(/clarifying question|ask the customer|follow up|connect them/i);
+  });
+
+  it("forbids collecting finance/credit details in chat", () => {
+    const p = buildAiSystemPrompt(FACTS).toLowerCase();
+    expect(p).toMatch(/never collect|never request/);
+    expect(p).toMatch(/finance|credit|card|banking/);
+  });
+
+  it("constrains length to a few short sentences with at most one emoji", () => {
+    const p = buildAiSystemPrompt(FACTS);
+    expect(p).toMatch(/1.?4 short sentences/i);
+    expect(p).toMatch(/at most one emoji/i);
+  });
+
+  it("degrades gracefully when no facts are supplied", () => {
+    const p = buildAiSystemPrompt("", "");
+    // Still produces the strict contract; signals there are no facts to draw on.
+    expect(p).toContain("VERIFIED FACTS");
+    expect(p).toContain("(none provided)");
+    expect(p).toMatch(/never invent/i);
+  });
+
+  it("is deterministic for the same inputs", () => {
+    expect(buildAiSystemPrompt(FACTS, VOICE)).toBe(buildAiSystemPrompt(FACTS, VOICE));
   });
 });

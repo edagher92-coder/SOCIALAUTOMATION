@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decrypt } from "@/lib/crypto";
-import { verifySignature, decide, withinHours, sendMessage, sendWhatsApp, type Rule, type BusinessHours } from "@/lib/messenger/bot";
+import { verifySignature, decide, withinHours, sendMessage, sendWhatsApp, aiReply, type Rule, type BusinessHours } from "@/lib/messenger/bot";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -28,17 +28,21 @@ export async function POST(req: Request) {
   try { body = JSON.parse(raw); } catch { return NextResponse.json({ received: true }); }
 
   const admin = createAdminClient();
-  type Channel = { token: string | null; rules: Rule[]; hours?: BusinessHours | null; channel: string };
+  type Channel = { token: string | null; rules: Rule[]; hours?: BusinessHours | null; channel: string; aiEnabled: boolean; aiFacts: string | null; aiVoice: string | null };
   const cache = new Map<string, Channel>();
 
   async function channelFor(externalPageId: string): Promise<Channel> {
     if (cache.has(externalPageId)) return cache.get(externalPageId)!;
     const { data: page } = await admin.from("messenger_pages")
-      .select("ciphertext,iv,auth_tag,business_hours,channel").eq("external_page_id", externalPageId).maybeSingle();
+      .select("ciphertext,iv,auth_tag,business_hours,channel,ai_enabled,ai_facts,ai_voice").eq("external_page_id", externalPageId).maybeSingle();
     let token: string | null = null;
     try { if (page?.ciphertext) token = decrypt({ ciphertext: page.ciphertext, iv: page.iv, authTag: page.auth_tag }); } catch { token = null; }
     const { data: rules } = await admin.from("messenger_rules").select("trigger_type,trigger,reply,priority").eq("external_page_id", externalPageId);
-    const ch: Channel = { token, rules: (rules || []) as Rule[], hours: (page as any)?.business_hours ?? null, channel: (page as any)?.channel || "messenger" };
+    const ch: Channel = {
+      token, rules: (rules || []) as Rule[],
+      hours: (page as any)?.business_hours ?? null, channel: (page as any)?.channel || "messenger",
+      aiEnabled: !!(page as any)?.ai_enabled, aiFacts: (page as any)?.ai_facts ?? null, aiVoice: (page as any)?.ai_voice ?? null,
+    };
     cache.set(externalPageId, ch);
     return ch;
   }
@@ -63,6 +67,14 @@ export async function POST(req: Request) {
     const keywordMatched = input.text
       ? ch.rules.some((r) => r.trigger_type === "keyword" && (r.trigger || "").split(",").some((k) => input.text!.toLowerCase().includes(k.trim().toLowerCase())))
       : false;
+    // LLM-grounded "smart mode": no payload-rule and no keyword matched, the channel has AI
+    // enabled, an API key is configured, and there's message text → answer STRICTLY from the
+    // channel's verified facts. On any miss (no key / error / empty), fall through to the
+    // canned welcome/away/default below. We do NOT consume the greeting cooldown for AI.
+    if (!payloadMatched && !keywordMatched && input.text && ch.aiEnabled && process.env.ANTHROPIC_API_KEY) {
+      const ai = await aiReply(ch.aiFacts, ch.aiVoice, input.text);
+      if (ai) { try { await send(ch.token, senderId, ai); } catch { /* best-effort */ } return; }
+    }
     const newThread = (payloadMatched || keywordMatched) ? false : await isNewThread(externalPageId, senderId);
     const text = decide(ch.rules, input, { inHours: withinHours(ch.hours), isNewThread: newThread });
     if (text) { try { await send(ch.token, senderId, text); } catch { /* best-effort */ } }

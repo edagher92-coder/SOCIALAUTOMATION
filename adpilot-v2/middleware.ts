@@ -35,6 +35,13 @@ export async function middleware(request: NextRequest) {
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
+  // Already signed in? Skip the login screen and land in the Command Center
+  // (keeps the post-auth destination consistent with login + the app shell).
+  if (user && (p === "/login" || p.startsWith("/login/"))) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/command";
+    return NextResponse.redirect(url);
+  }
   return response;
 }
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { researchWithWebSearch, NoKeyError } from "@/lib/ai/claude";
 import { KNOWLEDGE, type KnowledgeDomain } from "@/lib/agents/knowledge";
+import { parseJson } from "@/lib/agents/refresh";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -15,14 +16,6 @@ const DOMAINS: { domain: KnowledgeDomain; topic: string }[] = [
   { domain: "policy", topic: "Meta and TikTok advertising POLICY essentials — prohibited/restricted categories, personal-attribute & claims rules, AI-content labeling, and risky→compliant rewrites" },
   { domain: "seo", topic: "SEO and Answer-Engine-Optimization (AEO) best practices for small businesses — Google Business Profile, local SEO, reviews-as-signals, and AI search visibility" },
 ];
-
-function parseJson(text: string): any | null {
-  const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-  const raw = fence ? fence[1] : text;
-  const start = raw.indexOf("{"), end = raw.lastIndexOf("}");
-  if (start < 0 || end < 0) return null;
-  try { return JSON.parse(raw.slice(start, end + 1)); } catch { return null; }
-}
 
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
@@ -46,17 +39,26 @@ Cross-check at least 3 reputable sources. Return ONLY a JSON object, no prose, n
 {"title":"<short title>","body":"<150-280 words: benchmarks as RANGES with caveats (vary by vertical/geo/season), key thresholds, and failure→action rules — guidance, not guarantees>","sources":["<url>","<url>","<url>"]}`;
       const text = await researchWithWebSearch({ user, maxUses: 5, maxTokens: 2000 });
       const parsed = parseJson(text);
-      if (!parsed?.body) { errors.push(`${domain}: unparseable`); continue; }
-      await admin.from("knowledge_docs").upsert({
+      const body = parsed && typeof parsed.body === "string" ? parsed.body.trim() : "";
+      // Require real content before we overwrite a good baseline doc.
+      if (!body || body.length < 40) { errors.push(`${domain}: unparseable`); continue; }
+      const title = typeof parsed.title === "string" && parsed.title.trim() ? parsed.title.trim() : KNOWLEDGE[domain].title;
+      const sources = Array.isArray(parsed.sources)
+        ? parsed.sources.filter((s: any) => typeof s === "string" && s.trim()).slice(0, 8)
+        : [];
+      const { error } = await admin.from("knowledge_docs").upsert({
         domain,
-        title: parsed.title || KNOWLEDGE[domain].title,
-        body: String(parsed.body).slice(0, 6000),
-        sources: Array.isArray(parsed.sources) ? parsed.sources.slice(0, 8) : [],
+        title: title.slice(0, 200),
+        body: body.slice(0, 6000),
+        sources,
         model: process.env.ANTHROPIC_MODEL || "claude-opus-4-8",
         updated_at: new Date().toISOString(),
       }, { onConflict: "domain" });
+      if (error) { errors.push(`${domain}: ${error.message || "upsert failed"}`); continue; }
       refreshed++;
     } catch (e: any) {
+      // No key ⇒ nothing further can succeed; stop the loop. Any other per-domain
+      // failure is isolated: record it and keep refreshing the remaining domains.
       if (e instanceof NoKeyError) break;
       errors.push(`${domain}: ${e?.message || "failed"}`);
     }

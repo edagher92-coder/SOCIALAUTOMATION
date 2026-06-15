@@ -54,8 +54,19 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (parsed.data.status !== undefined) patch.status = parsed.data.status;
   if (parsed.data.caption !== undefined) patch.caption = parsed.data.caption;
   if (parsed.data.scheduled_at !== undefined) patch.scheduled_at = parsed.data.scheduled_at;
-  if (patch.status === "scheduled" && !patch.scheduled_at && parsed.data.scheduled_at === undefined) {
-    return NextResponse.json({ error: "Scheduling needs a scheduled_at time." }, { status: 400 });
+  // Scheduling requires a future time: a past/now scheduled_at would be picked up by the
+  // very next cron run, which defeats "schedule for later" and risks a surprise publish.
+  if (patch.status === "scheduled") {
+    if (patch.scheduled_at == null) {
+      return NextResponse.json({ error: "Scheduling needs a scheduled_at time." }, { status: 400 });
+    }
+    const when = new Date(patch.scheduled_at).getTime();
+    if (!Number.isFinite(when)) {
+      return NextResponse.json({ error: "scheduled_at is not a valid date." }, { status: 400 });
+    }
+    if (when <= Date.now()) {
+      return NextResponse.json({ error: "scheduled_at must be in the future." }, { status: 400 });
+    }
   }
 
   const { data, error } = await admin.from("content_posts").update(patch)

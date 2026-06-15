@@ -103,13 +103,29 @@ export function knowledgeFor(agentId: string): string {
 
 // Same, but prefers freshly auto-refreshed docs from knowledge_docs (per domain),
 // falling back to the committed baseline. Pass an admin Supabase client.
+//
+// Robustness: a live row only overrides the baseline when it carries a non-empty
+// body — a blank/null body (e.g. a partial upsert) is ignored so the specialist
+// always reads usable guidance. Each domain falls back independently, so one bad
+// row never drops the others. A missing table / query error falls back wholesale.
 export async function knowledgeForAgent(admin: any, agentId: string): Promise<string> {
   const domains = AGENT_KNOWLEDGE[agentId] || [];
   if (!domains.length) return "";
   const live: Record<string, { title: string; body: string; updated: string }> = {};
   try {
-    const { data } = await admin.from("knowledge_docs").select("domain,title,body,updated_at").in("domain", domains);
-    for (const d of data || []) live[(d as any).domain] = { title: (d as any).title, body: (d as any).body, updated: String((d as any).updated_at).slice(0, 10) };
+    const res = await admin?.from?.("knowledge_docs")?.select?.("domain,title,body,updated_at")?.in?.("domain", domains);
+    const data = res?.data;
+    for (const d of (Array.isArray(data) ? data : [])) {
+      const row = d as any;
+      const dom = row?.domain;
+      // Only accept rows for domains this agent actually reads, with real content.
+      if (!dom || !(dom in KNOWLEDGE) || !domains.includes(dom)) continue;
+      const body = typeof row.body === "string" ? row.body.trim() : "";
+      if (!body) continue;
+      const title = typeof row.title === "string" && row.title.trim() ? row.title.trim() : KNOWLEDGE[dom as KnowledgeDomain].title;
+      const updated = row.updated_at ? String(row.updated_at).slice(0, 10) : KNOWLEDGE[dom as KnowledgeDomain].updated;
+      live[dom] = { title, body, updated };
+    }
   } catch { /* table may not exist yet — fall back to baseline */ }
   return domains.map((dom) => {
     const doc = live[dom] || { title: KNOWLEDGE[dom].title, body: KNOWLEDGE[dom].body, updated: KNOWLEDGE[dom].updated };
