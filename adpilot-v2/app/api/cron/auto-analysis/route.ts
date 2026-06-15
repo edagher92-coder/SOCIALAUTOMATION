@@ -15,11 +15,11 @@ function breaches(result: any): string[] {
 // Scheduled scoring + breach alerts. Secured by CRON_SECRET.
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
+  // Fail closed: never run an unauthenticated scoring sweep.
+  if (!secret) return NextResponse.json({ error: "Cron not configured (set CRON_SECRET)." }, { status: 503 });
   const url = new URL(req.url);
-  if (secret) {
-    const ok = req.headers.get("authorization") === `Bearer ${secret}` || url.searchParams.get("key") === secret;
-    if (!ok) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
-  }
+  const ok = req.headers.get("authorization") === `Bearer ${secret}` || url.searchParams.get("key") === secret;
+  if (!ok) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const admin = createAdminClient();
   const { data: orgs } = await admin.from("organisations").select("id,name,average_sale_value,gross_margin");

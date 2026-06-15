@@ -27,16 +27,23 @@ const NAV = [
 function ModeToggle() {
   const { mode, setMode } = useMode();
   return (
-    <div className="rounded-xl border border-[#e3e8ef] bg-white p-1">
+    <div className="rounded-xl border border-border-subtle bg-surface p-1.5">
       <div className="grid grid-cols-2 gap-1 text-xs font-bold">
         {(["beginner", "advanced"] as const).map((m) => (
-          <button key={m} onClick={() => setMode(m)}
-            className={`rounded-lg px-2 py-1.5 capitalize transition ${mode === m ? "bg-brand text-white" : "text-muted hover:bg-[#f4f7fb]"}`}>
+          <button
+            key={m}
+            onClick={() => setMode(m)}
+            aria-pressed={mode === m}
+            className={`rounded-lg px-2 py-1.5 capitalize transition-all duration-150 focus-visible:shadow-ring-brand ${
+              mode === m
+                ? "bg-brand text-white shadow-sm"
+                : "text-muted hover:bg-white hover:text-ink hover:shadow-sm"
+            }`}>
             {m}
           </button>
         ))}
       </div>
-      <p className="px-1 pt-1 text-[11px] text-muted">
+      <p className="px-1 pt-1.5 text-2xs text-muted">
         {mode === "beginner" ? "Simple view — guided, plain English." : "Advanced — full metrics & controls."}
       </p>
     </div>
@@ -46,31 +53,60 @@ function ModeToggle() {
 function Sidebar({ email, onNav }: { email?: string; onNav?: () => void }) {
   const path = usePathname();
   return (
-    <div className="flex h-full flex-col gap-4 p-4">
-      <Link href="/dashboard" className="flex items-center gap-2 px-1 text-lg font-extrabold tracking-tight">
-        <span className="inline-block h-6 w-6 rounded-lg bg-gradient-to-br from-brand to-teal" /> AdPilot OS
-        <span className="ml-1 rounded-full bg-[#eaf1ff] px-2 py-0.5 text-[11px] font-bold text-[#0b3aa6]">V2</span>
+    <div className="flex h-full flex-col gap-3 p-4">
+      {/* Logo */}
+      <Link href="/dashboard" className="flex items-center gap-2.5 px-1 py-1 text-base font-extrabold tracking-tight text-ink transition hover:text-brand">
+        <span className="inline-block h-7 w-7 flex-shrink-0 rounded-xl bg-gradient-to-br from-brand to-teal shadow-sm" />
+        <span>AdPilot OS</span>
+        <span className="ml-0.5 rounded-full bg-brand-50 px-2 py-0.5 text-2xs font-bold text-brand">V2</span>
       </Link>
+
+      {/* Org switcher */}
       <OrgSwitcher />
+
+      {/* Mode toggle */}
       <ModeToggle />
-      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
+
+      {/* Nav */}
+      <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto py-1" aria-label="Main navigation">
         {NAV.map((n) => {
           const active = path === n.href || path?.startsWith(n.href + "/");
           return (
-            <Link key={n.href} href={n.href} onClick={onNav}
-              className={`group rounded-xl px-3 py-2.5 transition ${active ? "bg-brand text-white" : "hover:bg-white"}`}>
-              <div className="flex items-center gap-2.5 font-semibold">
-                <span>{n.icon}</span><span className="text-sm">{n.label}</span>
+            <Link
+              key={n.href}
+              href={n.href}
+              onClick={onNav}
+              aria-current={active ? "page" : undefined}
+              className={`group rounded-xl px-3 py-2 transition-all duration-150 focus-visible:shadow-ring-brand ${
+                active
+                  ? "bg-brand text-white shadow-sm"
+                  : "text-ink hover:bg-white hover:shadow-sm"
+              }`}>
+              <div className="flex items-center gap-2.5">
+                <span className="text-base leading-none" aria-hidden>{n.icon}</span>
+                <span className="text-sm font-semibold">{n.label}</span>
               </div>
-              <div className={`pl-7 text-[11px] ${active ? "text-white/80" : "text-muted"}`}>{n.desc}</div>
+              <div className={`pl-[1.625rem] text-2xs leading-snug ${active ? "text-white/75" : "text-muted"}`}>
+                {n.desc}
+              </div>
             </Link>
           );
         })}
       </nav>
-      <div className="rounded-xl border border-[#f0c36d] bg-[#fff7e6] p-2.5 text-[11px] leading-snug text-[#7a5b00]">
-        🔒 Read-only. Proposals only — never edits a live ad.
+
+      {/* Safety notice */}
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-2xs leading-relaxed text-amber-800">
+        <span aria-hidden>🔒</span>{" "}
+        <strong>Read-only.</strong> Proposals only — never edits a live ad.
       </div>
-      {email && <div className="truncate px-1 text-[11px] text-muted">{email}</div>}
+
+      {/* Email */}
+      {email && (
+        <div className="flex items-center gap-2 truncate rounded-lg px-1 py-0.5 text-2xs text-muted">
+          <span className="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full bg-teal" aria-hidden />
+          <span className="truncate">{email}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -79,16 +115,35 @@ export default function AppShell({ children, email }: { children: React.ReactNod
   const [open, setOpen] = useState(false);
   return (
     <ModeProvider>
-      <div className="min-h-screen md:grid md:grid-cols-[260px_1fr]">
-        {/* mobile top bar */}
-        <div className="flex items-center justify-between border-b border-[#e3e8ef] bg-white px-4 py-3 md:hidden print:hidden">
-          <span className="flex items-center gap-2 font-extrabold"><span className="inline-block h-5 w-5 rounded bg-gradient-to-br from-brand to-teal" /> AdPilot OS</span>
-          <button onClick={() => setOpen(!open)} className="rounded-lg border border-[#e3e8ef] px-3 py-1.5 text-sm font-bold">Menu</button>
+      <div className="min-h-screen bg-surface md:grid md:grid-cols-[260px_1fr]">
+        {/* Mobile top bar */}
+        <div className="flex items-center justify-between border-b border-border-subtle bg-white px-4 py-3 md:hidden print:hidden">
+          <span className="flex items-center gap-2 font-extrabold text-ink">
+            <span className="inline-block h-6 w-6 rounded-lg bg-gradient-to-br from-brand to-teal shadow-sm" aria-hidden />
+            AdPilot OS
+          </span>
+          <button
+            onClick={() => setOpen(!open)}
+            aria-expanded={open}
+            aria-label="Toggle navigation menu"
+            className="rounded-lg border border-border-subtle bg-white px-3 py-1.5 text-sm font-bold text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:shadow-ring-brand">
+            {open ? "Close" : "Menu"}
+          </button>
         </div>
-        <aside className={`${open ? "block" : "hidden"} border-r border-[#e3e8ef] bg-[#eef2f8] md:block print:hidden`}>
-          <div className="md:sticky md:top-0 md:h-screen"><Sidebar email={email} onNav={() => setOpen(false)} /></div>
+
+        {/* Sidebar */}
+        <aside
+          className={`${open ? "block" : "hidden"} border-r border-border-subtle bg-[#eef2f8] md:block print:hidden`}
+          aria-label="Sidebar">
+          <div className="md:sticky md:top-0 md:h-screen">
+            <Sidebar email={email} onNav={() => setOpen(false)} />
+          </div>
         </aside>
-        <main className="min-w-0 p-5 md:p-8">{children}</main>
+
+        {/* Main content */}
+        <main className="min-w-0 p-5 md:p-8">
+          {children}
+        </main>
       </div>
     </ModeProvider>
   );

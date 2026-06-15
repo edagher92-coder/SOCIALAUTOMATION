@@ -8,11 +8,11 @@ export const runtime = "nodejs";
 // or pass ?key=... ). Emails each org with weekly_digest on + an email set.
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
+  // Fail closed: never send digests from an unauthenticated trigger.
+  if (!secret) return NextResponse.json({ error: "Cron not configured (set CRON_SECRET)." }, { status: 503 });
   const url = new URL(req.url);
-  if (secret) {
-    const ok = req.headers.get("authorization") === `Bearer ${secret}` || url.searchParams.get("key") === secret;
-    if (!ok) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
-  }
+  const ok = req.headers.get("authorization") === `Bearer ${secret}` || url.searchParams.get("key") === secret;
+  if (!ok) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const admin = createAdminClient();
   const { data: rules } = await admin.from("notification_rules").select("organisation_id,email,weekly_digest").eq("weekly_digest", true);

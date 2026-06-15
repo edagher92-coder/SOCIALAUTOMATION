@@ -28,6 +28,6 @@ export async function POST(req: Request) {
   await admin.from("memberships").insert({ organisation_id: org.id, user_id: user.id, role: "owner" });
 
   const res = NextResponse.json({ id: org.id });
-  res.cookies.set("active_org", org.id as string, { sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 365, secure: process.env.NODE_ENV === "production" });
+  res.cookies.set("active_org", org.id as string, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 365, secure: process.env.NODE_ENV === "production" });
   return res;
 }

@@ -15,6 +15,12 @@ export async function POST(req: Request) {
   const { priceId } = await req.json().catch(() => ({}));
   if (!priceId) return NextResponse.json({ error: "Missing priceId" }, { status: 400 });
 
+  // Only allow the prices we actually sell — prevents arbitrary price injection.
+  const allowed = [process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER, process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO].filter(Boolean);
+  if (allowed.length && !allowed.includes(priceId)) {
+    return NextResponse.json({ error: "Unknown plan" }, { status: 400 });
+  }
+
   const stripe = new Stripe(key);
   const base = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
   try {

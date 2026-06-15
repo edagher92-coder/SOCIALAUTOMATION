@@ -9,9 +9,10 @@ const BANDC: Record<string, string> = { Green: "#16a34a", Yellow: "#ca8a04", Ora
 
 export default async function ReportDetail({ params }: { params: { id: string } }) {
   const supabase = createClient();
-  const { data: report } = await supabase.from("reports").select("title,period,payload,created_at").eq("id", params.id).maybeSingle();
+  const { data: report } = await supabase.from("reports").select("title,period,payload,created_at,organisation_id").eq("id", params.id).maybeSingle();
   if (!report) notFound();
-  const { data: wl } = await supabase.from("white_label_profiles").select("brand_name,logo_url,primary_color,support_email").limit(1).maybeSingle();
+  // Scope branding to THIS report's org so one client's logo never appears on another's report.
+  const { data: wl } = await supabase.from("white_label_profiles").select("brand_name,logo_url,primary_color,support_email").eq("organisation_id", (report as any).organisation_id).maybeSingle();
   const p: any = (report as any).payload;
   const h = p?.health, s = p?.summary;
 

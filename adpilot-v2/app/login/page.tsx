@@ -26,24 +26,76 @@ export default function Login() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5">
-      <div className="rounded-2xl border border-[#e3e8ef] bg-white p-7 shadow-card">
-        <h1 className="text-xl font-extrabold">{mode === "signin" ? "Sign in" : "Create account"}</h1>
-        <p className="mb-4 mt-1 text-sm text-muted">AdPilot OS V2</p>
-        <form onSubmit={submit} className="space-y-3">
-          <input className="w-full rounded-lg border border-[#e3e8ef] p-2.5" type="email" placeholder="Email"
-            value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <input className="w-full rounded-lg border border-[#e3e8ef] p-2.5" type="password" placeholder="Password"
-            value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
-          <button disabled={busy} className="w-full rounded-lg bg-brand py-2.5 font-bold text-white disabled:opacity-60">
-            {busy ? "…" : mode === "signin" ? "Sign in" : "Sign up"}
-          </button>
-        </form>
-        {msg && <p className="mt-3 text-sm text-band-red">{msg}</p>}
-        <button className="mt-4 text-sm font-semibold text-brand"
-          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}>
-          {mode === "signin" ? "Need an account? Sign up" : "Have an account? Sign in"}
-        </button>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-surface px-5 py-12">
+      {/* Logo */}
+      <div className="mb-8 flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-ink">
+        <span className="inline-block h-8 w-8 rounded-xl bg-gradient-to-br from-brand to-teal shadow-sm" aria-hidden />
+        AdPilot OS
+        <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand">V2</span>
+      </div>
+
+      <div className="w-full max-w-sm">
+        <div className="rounded-2xl border border-border-subtle bg-white p-8 shadow-card">
+          <h1 className="text-2xl font-extrabold tracking-tight text-ink">
+            {mode === "signin" ? "Welcome back" : "Create account"}
+          </h1>
+          <p className="mb-6 mt-1 text-sm text-muted">
+            {mode === "signin" ? "Sign in to your AdPilot OS workspace." : "Start your AdPilot OS free trial."}
+          </p>
+
+          <form onSubmit={submit} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-ink">Email</label>
+              <input
+                id="email"
+                className="w-full rounded-xl border border-border-subtle bg-surface px-3.5 py-2.5 text-sm text-ink shadow-inner-sm transition placeholder:text-muted hover:border-brand-200 focus:border-brand focus:outline-none focus:shadow-ring-brand"
+                type="email"
+                placeholder="you@business.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="mb-1.5 block text-sm font-semibold text-ink">Password</label>
+              <input
+                id="password"
+                className="w-full rounded-xl border border-border-subtle bg-surface px-3.5 py-2.5 text-sm text-ink shadow-inner-sm transition placeholder:text-muted hover:border-brand-200 focus:border-brand focus:outline-none focus:shadow-ring-brand"
+                type="password"
+                placeholder="Min. 8 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                autoComplete={mode === "signin" ? "current-password" : "new-password"}
+              />
+            </div>
+            <button
+              disabled={busy}
+              className="mt-1 w-full rounded-xl bg-brand py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600 focus-visible:shadow-ring-brand disabled:cursor-not-allowed disabled:opacity-60">
+              {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
+            </button>
+          </form>
+
+          {msg && (
+            <div role="alert" className={`mt-4 rounded-xl border px-4 py-3 text-sm font-medium ${msg.includes("Check") ? "border-teal-100 bg-teal-50 text-teal" : "border-red-100 bg-red-50 text-band-red"}`}>
+              {msg}
+            </div>
+          )}
+
+          <div className="mt-6 border-t border-border-subtle pt-5 text-center">
+            <button
+              className="text-sm font-semibold text-brand transition hover:text-brand-700 focus-visible:underline"
+              onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setMsg(""); }}>
+              {mode === "signin" ? "Need an account? Sign up →" : "Already have an account? Sign in →"}
+            </button>
+          </div>
+        </div>
+
+        <p className="mt-6 text-center text-xs text-muted">
+          Read-only · proposals only · your data stays private
+        </p>
       </div>
     </main>
   );
