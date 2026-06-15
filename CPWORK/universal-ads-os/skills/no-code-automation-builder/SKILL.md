@@ -85,3 +85,10 @@ Trigger phrases:
 - After blueprint is approved, hand to milo-ai-automation-builder to guide implementation in the chosen tool.
 - Test protocol must be completed before the flow runs on live data.
 - Document the final flow in /clients/{{client.business_name}}/config/ after approval.
+
+
+## Gotchas (lessons from the v3 build — see ../GOTCHAS.md)
+- Webhook bots: **HMAC-SHA256 over the RAW body** + verify-token handshake; **always 200** (or Meta retry-storms).
+- Crons fail-closed (require a secret). Vercel Hobby = once/day, ~2 crons; sub-daily/hourly needs **Pro**.
+- Idempotent pulls: delete the rolling window then insert; on **partial failure don't advance the cursor**.
+- Multi-channel: Messenger + Instagram share one webhook; WhatsApp is a separate Cloud API shape.
