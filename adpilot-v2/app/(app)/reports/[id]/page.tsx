@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import PrintButton from "@/components/PrintButton";
 
 export const dynamic = "force-dynamic";
 const f2 = (v: number | null) => (v == null ? "N/A" : (Math.round(v * 100) / 100).toLocaleString());
@@ -10,7 +11,7 @@ export default async function ReportDetail({ params }: { params: { id: string } 
   const supabase = createClient();
   const { data: report } = await supabase.from("reports").select("title,period,payload,created_at").eq("id", params.id).maybeSingle();
   if (!report) notFound();
-  const { data: wl } = await supabase.from("white_label_profiles").select("brand_name,logo_url,primary_color,support_email").maybeSingle();
+  const { data: wl } = await supabase.from("white_label_profiles").select("brand_name,logo_url,primary_color,support_email").limit(1).maybeSingle();
   const p: any = (report as any).payload;
   const h = p?.health, s = p?.summary;
 
@@ -23,7 +24,10 @@ export default async function ReportDetail({ params }: { params: { id: string } 
           <span className="ml-auto text-sm opacity-80">Ads Health Report</span>
         </div>
       )}
-      <Link href="/reports" className="text-sm font-semibold text-brand">← All reports</Link>
+      <div className="flex items-center justify-between print:hidden">
+        <Link href="/reports" className="text-sm font-semibold text-brand">← All reports</Link>
+        <PrintButton label="🖨 Download branded PDF" />
+      </div>
       <h1 className="mt-2 text-2xl font-extrabold tracking-tight">{(report as any).title}</h1>
       <p className="mb-5 mt-1 text-muted">{(report as any).period} · saved {new Date((report as any).created_at).toLocaleString()}</p>
 

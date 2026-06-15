@@ -7,10 +7,8 @@ import { getActiveOrgId } from "@/lib/org";
 export const runtime = "nodejs";
 
 const Body = z.object({
-  brand_name: z.string().max(120).optional().or(z.literal("")),
-  logo_url: z.string().url().optional().or(z.literal("")),
-  primary_color: z.string().max(20).optional().or(z.literal("")),
-  support_email: z.string().email().optional().or(z.literal("")),
+  average_sale_value: z.number().positive().max(1_000_000),
+  gross_margin: z.number().min(0.01).max(1),
 });
 
 export async function GET() {
@@ -18,8 +16,9 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
-  const { data } = await supabase.from("white_label_profiles").select("brand_name,logo_url,primary_color,support_email").eq("organisation_id", orgId).maybeSingle();
-  return NextResponse.json({ profile: data || {} });
+  const admin = createAdminClient();
+  const { data } = await admin.from("organisations").select("name,average_sale_value,gross_margin").eq("id", orgId).maybeSingle();
+  return NextResponse.json({ settings: data || { average_sale_value: 200, gross_margin: 0.6 } });
 }
 
 export async function POST(req: Request) {
@@ -28,12 +27,8 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
-
   const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
   const admin = createAdminClient();
-  await admin.from("white_label_profiles").upsert(
-    { organisation_id: orgId, ...parsed.data },
-    { onConflict: "organisation_id" }
-  );
+  await admin.from("organisations").update(parsed.data).eq("id", orgId);
   return NextResponse.json({ ok: true });
 }

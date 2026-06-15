@@ -1,4 +1,5 @@
 import "server-only";
+import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Returns the user's organisation id, creating a personal org + owner membership
@@ -20,3 +21,26 @@ export async function ensureOrg(userId: string, email?: string): Promise<string>
   await admin.from("memberships").insert({ organisation_id: org.id, user_id: userId, role: "owner" });
   return org.id as string;
 }
+
+// Returns the user's ACTIVE org id (from the `active_org` cookie if they're a
+// member of it), else their first org, else bootstraps one. Drives multi-client.
+export async function getActiveOrgId(userId: string, email?: string): Promise<string> {
+  const admin = createAdminClient();
+  const { data: mems } = await admin.from("memberships").select("organisation_id").eq("user_id", userId);
+  const ids = (mems || []).map((m: any) => m.organisation_id as string);
+  if (ids.length === 0) return ensureOrg(userId, email);
+  const want = cookies().get("active_org")?.value;
+  return want && ids.includes(want) ? want : ids[0];
+}
+
+// List the orgs a user belongs to (id, name, role) + the active one.
+export async function listOrgs(userId: string): Promise<{ orgs: { id: string; name: string; role: string }[]; activeId: string }> {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("memberships").select("role, organisation_id, organisations(name)").eq("user_id", userId);
+  const orgs = (data || []).map((m: any) => ({ id: m.organisation_id, name: m.organisations?.name || "Workspace", role: m.role }));
+  const want = cookies().get("active_org")?.value;
+  const activeId = orgs.find((o) => o.id === want)?.id || orgs[0]?.id || "";
+  return { orgs, activeId };
+}
+

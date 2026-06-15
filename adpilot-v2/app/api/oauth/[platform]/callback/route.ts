@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ensureOrg } from "@/lib/org";
+import { getActiveOrgId } from "@/lib/org";
 import { oauthConfig, type Platform } from "@/lib/oauth/config";
 import { encrypt } from "@/lib/crypto";
 
@@ -53,7 +53,7 @@ export async function GET(req: Request, { params }: { params: { platform: string
       accounts = (data.advertiser_ids || []).map((id: string) => ({ id, name: `Advertiser ${id}` }));
     }
 
-    const orgId = await ensureOrg(user.id, user.email ?? undefined);
+    const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
     const admin = createAdminClient();
     const enc = encrypt(accessToken);
     await admin.from("platform_tokens").insert({

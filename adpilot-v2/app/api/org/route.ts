@@ -1,0 +1,33 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { listOrgs } from "@/lib/org";
+
+export const runtime = "nodejs";
+
+export async function GET() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  return NextResponse.json(await listOrgs(user.id));
+}
+
+const Create = z.object({ name: z.string().min(1).max(120) });
+
+export async function POST(req: Request) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  const parsed = Create.safeParse(await req.json().catch(() => ({})));
+  if (!parsed.success) return NextResponse.json({ error: "A client name is required" }, { status: 400 });
+
+  const admin = createAdminClient();
+  const { data: org, error } = await admin.from("organisations").insert({ name: parsed.data.name }).select("id").single();
+  if (error || !org) return NextResponse.json({ error: error?.message || "Create failed" }, { status: 502 });
+  await admin.from("memberships").insert({ organisation_id: org.id, user_id: user.id, role: "owner" });
+
+  const res = NextResponse.json({ id: org.id });
+  res.cookies.set("active_org", org.id as string, { sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 365, secure: process.env.NODE_ENV === "production" });
+  return res;
+}
