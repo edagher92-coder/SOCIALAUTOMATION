@@ -10,23 +10,31 @@ export default function TokenConnect() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [ok, setOk] = useState(false);
+  const [upgrade, setUpgrade] = useState(false);
+
+  const tikTokNeedsAccount = platform === "tiktok" && accountId.trim().length === 0;
+  const canSubmit = token.trim().length >= 10 && !tikTokNeedsAccount;
 
   async function go() {
-    setBusy(true); setMsg(""); setOk(false);
+    if (!canSubmit) return;
+    setBusy(true); setMsg(""); setOk(false); setUpgrade(false);
     try {
       const r = await fetch("/api/connect/token", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ platform, token: token.trim(), accountId: accountId.trim() || undefined }),
       });
-      const j = await r.json();
-      if (!r.ok) { setMsg(j.error || "Connect failed"); }
-      else {
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        setUpgrade(Boolean(j.upgrade)); // 402 → show the Billing link
+        setMsg(j.error || `Connect failed (HTTP ${r.status})`);
+      } else {
         setOk(true);
-        setMsg(`Connected ${j.connected} · ${j.accounts} account(s) · pulled ${j.inserted} rows`
+        const n = j.inserted ?? 0;
+        setMsg(`Connected ${j.connected} · ${j.accounts} account(s) · pulled ${n} row${n === 1 ? "" : "s"}`
           + (j.syncError ? ` (first sync note: ${j.syncError})` : "") + ". Refresh to see it below.");
         setToken("");
       }
-    } catch (e: any) { setMsg(e.message || "Connect failed"); }
+    } catch (e: any) { setMsg(e?.message || "Network error — check your connection and try again."); }
     finally { setBusy(false); }
   }
 
@@ -58,12 +66,20 @@ export default function TokenConnect() {
         <input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Paste read-only token"
           className="w-full rounded-lg border border-[#e3e8ef] p-2.5 font-mono" autoComplete="off" />
       </label>
-      <div className="mt-3 flex items-center gap-3">
-        <button onClick={go} disabled={busy || token.trim().length < 10}
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <button onClick={go} disabled={busy || !canSubmit} aria-busy={busy}
           className="rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white disabled:opacity-50">
           {busy ? "Connecting…" : "Connect & sync"}
         </button>
-        {msg && <span className={`text-xs ${ok ? "text-green-600" : "text-red-600"}`}>{msg}</span>}
+        {tikTokNeedsAccount && !msg && (
+          <span className="text-xs text-muted">Enter the advertiser_id to enable TikTok connect.</span>
+        )}
+        {msg && (
+          <span className={`text-xs ${ok ? "text-green-600" : "text-red-600"}`} role="status">
+            {msg}
+            {upgrade && <a href="/billing" className="ml-1 font-semibold underline">Upgrade</a>}
+          </span>
+        )}
       </div>
       <p className="mt-3 text-xs text-muted">Token is encrypted (AES-256-GCM) before storage and never sent back to the browser. Read-only — we never edit, pause, or create ads.</p>
     </div>

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { parseCsvText, analyse } from "@/lib/engine";
 import { getActiveOrgId } from "@/lib/org";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { refreshOpenRecommendations } from "@/lib/proposals";
 
 export const runtime = "nodejs";
 
@@ -50,10 +51,10 @@ export async function POST(req: Request) {
       organisation_id: orgId, scope: "account", total: result.health.total, band: result.health.band,
       breakdown: result.health.breakdown, data_confidence: (result.health as any).breakdown?.data_confidence?.score ?? null,
     });
-    const recs = result.decisions.map((d: any) => ({
-      organisation_id: orgId, verdict: d.verdict, entity_name: d.name, platform: d.platform, reason: d.reason, proposal: d.proposal,
-    }));
-    if (recs.length) await admin.from("recommendations").insert(recs);
+    // Refresh the open Proposals queue: actionable verdicts only, platform-aware
+    // dedupe, replacing just the 'open' set. Same shared helper the cron uses so a
+    // CSV upload and an auto-sync produce an identical queue.
+    await refreshOpenRecommendations(admin, orgId, result.decisions as any[]);
     const { data: rep } = await admin.from("reports").insert({
       organisation_id: orgId, title: `${business || "Analysis"} — health ${Math.round(result.health.total)}`,
       period: new Date().toISOString().slice(0, 10), payload: result, created_by: user.id,

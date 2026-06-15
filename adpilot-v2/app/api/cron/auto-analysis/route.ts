@@ -16,15 +16,20 @@ export async function GET(req: Request) {
   if (!ok) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const admin = createAdminClient();
-  const { data: orgs } = await admin.from("organisations").select("id,name,average_sale_value,gross_margin");
-  let scored = 0, alerted = 0;
+  const { data: orgs, error: orgsErr } = await admin.from("organisations").select("id,name,average_sale_value,gross_margin");
+  if (orgsErr) return NextResponse.json({ error: "Could not load organisations." }, { status: 502 });
+  let scored = 0, alerted = 0, failed = 0;
 
   for (const org of orgs || []) {
     try {
       const r = await scoreAndAlertOrg(admin, org as any);
       if (r.scored) scored++;
       if (r.alerted) alerted++;
-    } catch { /* per-org isolation: one bad org never kills the sweep */ }
+    } catch {
+      // Per-org isolation: one bad org (bad data / transient DB error) never kills the
+      // sweep — every other org is still scored. Counted so a spike is observable.
+      failed++;
+    }
   }
-  return NextResponse.json({ scored, alerted });
+  return NextResponse.json({ scored, alerted, failed });
 }

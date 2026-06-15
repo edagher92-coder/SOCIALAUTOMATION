@@ -19,17 +19,42 @@ export default async function CommandCenter() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const orgId = user ? await getActiveOrgId(user.id, user.email ?? undefined) : "";
-  const plan = orgId ? await planForOrg(orgId) : "free";
+
+  // Signed-out / no-org: show a calm prompt rather than querying with an empty id.
+  if (!orgId) {
+    return (
+      <div className="animate-fade-in">
+        <div className="rounded-3xl border border-dashed border-border-subtle bg-surface-raised p-10 text-center">
+          <div className="text-3xl">🛰️</div>
+          <p className="mt-2 text-lg font-bold text-ink">Sign in to open your Command Center</p>
+          <p className="mt-1 text-sm text-muted">
+            Your Campaign Health Score and safe proposals live here once you’re signed in.
+          </p>
+          <a href="/login" className="mt-4 inline-block rounded-xl bg-brand px-5 py-2 text-sm font-bold text-white">Sign in</a>
+        </div>
+      </div>
+    );
+  }
+
+  const plan = await planForOrg(orgId);
   const aiEnabled = can(plan, "ai_team");
   const apiEnabled = can(plan, "api_connect");
 
-  const [{ data: org }, { data: score }, { data: openRecs }, { data: accounts }, { data: reports }] = await Promise.all([
+  const [orgRes, scoreRes, openRecsRes, accountsRes, reportsRes] = await Promise.all([
     supabase.from("organisations").select("name,last_synced_at,sync_interval_hours").eq("id", orgId).maybeSingle(),
     supabase.from("health_scores").select("total,band,created_at").eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("recommendations").select("id,verdict,entity_name,platform,proposal").eq("organisation_id", orgId).eq("status", "open").order("created_at", { ascending: false }).limit(100),
     supabase.from("connected_ad_accounts").select("platform,display_name,status").eq("organisation_id", orgId),
     supabase.from("reports").select("id,title,created_at").eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(5),
   ]);
+
+  // Surface a clear banner if the data layer is unreachable, but still render the shell.
+  const loadError = orgRes.error || scoreRes.error || openRecsRes.error || accountsRes.error || reportsRes.error;
+  const org = orgRes.data;
+  const score = scoreRes.data;
+  const openRecs = openRecsRes.data;
+  const accounts = accountsRes.data;
+  const reports = reportsRes.data;
 
   const total = (score as any)?.total != null ? Math.round((score as any).total) : null;
   const band = bandMeta((score as any)?.band);
@@ -42,6 +67,11 @@ export default async function CommandCenter() {
 
   return (
     <div className="animate-fade-in">
+      {loadError && (
+        <div className="mb-4 rounded-2xl border border-band-red/30 bg-band-red/5 p-3 text-sm font-semibold text-band-red">
+          Some live data couldn’t load right now. Showing what we have — refresh to retry.
+        </div>
+      )}
       {/* Control-room hero */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-command via-navy to-command p-6 text-white shadow-card md:p-8">
         <div className="absolute -right-10 -top-10 h-44 w-44 rounded-full bg-brand/30 blur-3xl" aria-hidden />

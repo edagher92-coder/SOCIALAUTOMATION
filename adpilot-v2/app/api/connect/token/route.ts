@@ -24,9 +24,19 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
-  if (!parsed.success) return NextResponse.json({ error: "platform and token are required" }, { status: 400 });
-  const { platform, token } = parsed.data;
-  const accountId = parsed.data.accountId?.replace(/^act_/, "") || "";
+  if (!parsed.success) {
+    // Surface the first validation issue so the UI can tell the user what's actually wrong.
+    const issue = parsed.error.issues[0];
+    const field = issue?.path?.[0];
+    const message =
+      field === "platform" ? "Choose a platform (meta or tiktok)."
+      : field === "token" ? "Paste a valid access token (at least 10 characters)."
+      : "platform and token are required.";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+  const { platform } = parsed.data;
+  const token = parsed.data.token.trim();
+  const accountId = parsed.data.accountId?.trim().replace(/^act_/, "") || "";
 
   try {
     const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
@@ -38,9 +48,13 @@ export async function POST(req: Request) {
     let accounts: { id: string; name: string }[] = [];
     if (platform === "meta") {
       const r = await fetch(`https://graph.facebook.com/v21.0/me/adaccounts?fields=name,account_id&access_token=${encodeURIComponent(token)}`);
-      const j: any = await r.json();
-      if (!r.ok) throw new Error(j.error?.message || "Token rejected by Meta");
-      accounts = (j.data || []).map((a: any) => ({ id: a.account_id || a.id, name: a.name || a.id }));
+      const j: any = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j?.error?.message || `Token rejected by Meta (HTTP ${r.status})`);
+      // Meta returns account_id (numeric, no prefix). Normalise away any act_ prefix.
+      accounts = (j.data || []).map((a: any) => {
+        const id = String(a.account_id || a.id || "").replace(/^act_/, "");
+        return { id, name: a.name || `act_${id}` };
+      }).filter((a: any) => a.id);
       if (accountId) {
         const match = accounts.filter((a) => a.id === accountId);
         accounts = match.length ? match : [{ id: accountId, name: `act_${accountId}` }];

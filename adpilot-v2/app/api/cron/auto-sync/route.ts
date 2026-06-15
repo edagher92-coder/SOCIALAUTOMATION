@@ -31,16 +31,21 @@ export async function GET(req: Request) {
   for (const s of subs || []) if ((s as any).status === "active") planFor.set((s as any).organisation_id, (s as any).plan);
 
   const now = Date.now();
-  let synced = 0, rows = 0, scored = 0, skipped = 0;
+  let synced = 0, rows = 0, scored = 0, skipped = 0, failed = 0;
 
   for (const org of orgs || []) {
     if (!can(normalisePlan(planFor.get(org.id)), "auto_sync")) { skipped++; continue; } // plan gate
 
     const interval = Number((org as any).sync_interval_hours ?? 24);
-    if (!interval || interval <= 0) { skipped++; continue; } // off
+    // 0 = off; non-finite/negative (corrupt value) is treated as off rather than running every hour.
+    if (!Number.isFinite(interval) || interval <= 0) { skipped++; continue; } // off
 
-    const last = (org as any).last_synced_at ? new Date((org as any).last_synced_at).getTime() : 0;
-    const dueMs = interval * 3_600_000 - 300_000; // 5-min slack for cron jitter
+    const lastRaw = (org as any).last_synced_at ? new Date((org as any).last_synced_at).getTime() : 0;
+    const last = Number.isFinite(lastRaw) ? lastRaw : 0; // ignore an unparseable timestamp → due now
+    // Subtract a slack window for cron jitter, but never more than half the interval, so a
+    // 1h cadence doesn't fire after 55min one run and 5min the next.
+    const slackMs = Math.min(300_000, interval * 3_600_000 / 2); // ≤5-min slack
+    const dueMs = interval * 3_600_000 - slackMs;
     if (last && now - last < dueMs) { skipped++; continue; } // not due yet
 
     const { data: accts } = await admin.from("connected_ad_accounts")
@@ -56,13 +61,17 @@ export async function GET(req: Request) {
     }
 
     if (didSync) {
+      // PARTIAL-FAILURE rule: only advance the cadence clock when at least one platform
+      // pull succeeded. If every platform threw (didSync stays false) we leave
+      // last_synced_at untouched so the org stays "due" and retries next run.
       await admin.from("organisations").update({ last_synced_at: new Date().toISOString() }).eq("id", org.id);
       synced++; rows += pulled;
-      try { const r = await scoreAndAlertOrg(admin, org as any); if (r.scored) scored++; } catch { /* isolate */ }
+      try { const r = await scoreAndAlertOrg(admin, org as any); if (r.scored) scored++; } catch { /* per-org isolation: scoring never rolls back the sync */ }
     } else {
-      skipped++;
+      // Was due + had connected accounts, but every pull failed → not advanced, surfaced as failed.
+      failed++;
     }
   }
 
-  return NextResponse.json({ synced, rows, scored, skipped });
+  return NextResponse.json({ synced, rows, scored, skipped, failed });
 }

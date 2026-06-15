@@ -1,6 +1,7 @@
 import "server-only";
 import { analyse } from "@/lib/engine";
 import { sendEmail } from "@/lib/email/resend";
+import { refreshOpenRecommendations } from "@/lib/proposals";
 
 // Shared scheduled scoring + breach-alert logic, used by both the daily
 // auto-analysis cron and the cadence-driven auto-sync cron so they never diverge.
@@ -31,18 +32,9 @@ export async function scoreAndAlertOrg(
 
   // Refresh the open Proposals queue from this analysis (actionable verdicts only, deduped).
   // Approved/dismissed/done history is preserved — we only replace the 'open' set.
-  const ACTIONABLE = new Set(["scale", "kill", "reduce", "refresh", "fix-tracking"]);
-  const seen = new Set<string>();
-  const recs: any[] = [];
-  for (const d of (result.decisions || []) as any[]) {
-    if (!ACTIONABLE.has(d.verdict)) continue;
-    const k = `${d.platform}|${d.name}|${d.verdict}`;
-    if (seen.has(k)) continue;
-    seen.add(k);
-    recs.push({ organisation_id: org.id, verdict: d.verdict, entity_name: d.name, platform: d.platform, reason: d.reason, proposal: d.proposal });
-  }
-  await admin.from("recommendations").delete().eq("organisation_id", org.id).eq("status", "open");
-  if (recs.length) await admin.from("recommendations").insert(recs);
+  // Platform-aware dedupe + insert-then-clear safety live in the shared helper so the
+  // cron path and the CSV scoring route can never diverge.
+  await refreshOpenRecommendations(admin, org.id, (result.decisions || []) as any[]);
 
   let alerted = false;
   const b = breaches(result);
