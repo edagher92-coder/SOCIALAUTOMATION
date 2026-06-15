@@ -1,0 +1,26 @@
+name: AdPilot V2 app CI
+
+on:
+  push:
+    paths: ["adpilot-v2/**", ".github/workflows/adpilot-v2-ci.yml"]
+  pull_request:
+    paths: ["adpilot-v2/**"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: adpilot-v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Engine parity tests (must pass)
+        run: npm test
+      - name: Typecheck (advisory)
+        run: npm run typecheck
+        continue-on-error: true

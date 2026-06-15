@@ -1,0 +1,17 @@
+# dependencies / build
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# secrets — never commit
+.env
+.env.local
+.env*.local
+
+# misc
+.DS_Store
+.vercel
+coverage/
