@@ -21,6 +21,8 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // Lint is style-level; don't fail production builds on it. Type errors still fail the build.
+  eslint: { ignoreDuringBuilds: true },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

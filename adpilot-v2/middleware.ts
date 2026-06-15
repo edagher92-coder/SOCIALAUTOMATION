@@ -13,7 +13,7 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options?: any }[]) {
           cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
         },
       },
@@ -22,8 +22,13 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Protect the app area.
-  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+  // Protect the whole authenticated app area.
+  const appRoutes = [
+    "/dashboard", "/ai-specialists", "/build-dashboard", "/canva-creator",
+    "/claude-api", "/bobby-business-assistant", "/aria-course-creator", "/crm-maintenance",
+  ];
+  const p = request.nextUrl.pathname;
+  if (!user && appRoutes.some((r) => p === r || p.startsWith(r + "/"))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
