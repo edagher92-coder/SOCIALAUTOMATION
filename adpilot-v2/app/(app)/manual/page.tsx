@@ -1,23 +1,23 @@
 import PrintButton from "@/components/PrintButton";
+import PageHeader from "@/components/PageHeader";
 
 function H({ id, children }: { id: string; children: React.ReactNode }) {
-  return <h2 id={id} className="mt-8 border-b border-[#e3e8ef] pb-1 text-xl font-extrabold tracking-tight">{children}</h2>;
+  return <h2 id={id} className="mt-8 border-b border-border-subtle pb-1 text-xl font-extrabold tracking-tight">{children}</h2>;
 }
 function P({ children }: { children: React.ReactNode }) { return <p className="mt-2 text-[15px] leading-relaxed">{children}</p>; }
 function UL({ items }: { items: React.ReactNode[] }) { return <ul className="mt-2 list-disc space-y-1 pl-6 text-[15px]">{items.map((x, i) => <li key={i}>{x}</li>)}</ul>; }
 
 export default function Manual() {
   return (
-    <div className="mx-auto max-w-3xl pb-16">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">AdPilot OS — User Manual</h1>
-          <p className="mt-1 text-muted">Version 2 · Meta &amp; TikTok ads analytics &amp; automation · read-only, safe by design.</p>
-        </div>
-        <PrintButton label="🖨 Download manual (PDF)" />
-      </div>
+    <div className="mx-auto max-w-3xl animate-fade-in pb-16">
+      <PageHeader
+        eyebrow="Documentation"
+        title="AdPilot OS — User Manual"
+        subtitle="Version 2 · Meta & TikTok ads analytics & automation · read-only, safe by design."
+        action={<PrintButton label="🖨 Download manual (PDF)" />}
+      />
 
-      <div className="rounded-xl border border-[#e3e8ef] bg-white p-4 text-sm shadow-card print:hidden">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-4 text-sm shadow-card print:hidden">
         <b>Contents:</b> Overview · Quick start · Connecting platforms (MCP vs API token) · Creative library ·
         Running an analysis · Reading the score · Recommendations &amp; safety · Reports &amp; PDF · Multi-client (agency) ·
         Notifications &amp; alerts · Settings · Prompting guide · Diagnostics · Error reference · Troubleshooting · FAQ ·

@@ -36,7 +36,7 @@ export async function scoreAndAlertOrg(
   const recs: any[] = [];
   for (const d of (result.decisions || []) as any[]) {
     if (!ACTIONABLE.has(d.verdict)) continue;
-    const k = `${d.name}|${d.verdict}`;
+    const k = `${d.platform}|${d.name}|${d.verdict}`;
     if (seen.has(k)) continue;
     seen.add(k);
     recs.push({ organisation_id: org.id, verdict: d.verdict, entity_name: d.name, platform: d.platform, reason: d.reason, proposal: d.proposal });

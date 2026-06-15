@@ -55,8 +55,15 @@ export async function POST(req: Request) {
   async function replyTo(externalPageId: string, senderId: string, input: { text?: string; payload?: string }, send: (token: string, to: string, text: string) => Promise<void>) {
     const ch = await channelFor(externalPageId);
     if (!ch.token) return;
-    const matched = !!input.payload || (input.text ? ch.rules.some((r) => r.trigger_type === "keyword" && (r.trigger || "").split(",").some((k) => input.text!.toLowerCase().includes(k.trim().toLowerCase()))) : false);
-    const newThread = matched ? false : await isNewThread(externalPageId, senderId);
+    // "Matched" = a real intent (a payload rule / GET_STARTED, or a keyword hit) — only then
+    // do we skip the first-message greeting. Unknown payloads fall through to the greeting.
+    const payloadMatched = input.payload
+      ? (ch.rules.some((r) => r.trigger_type === "payload" && (r.trigger || "").toUpperCase() === input.payload!.toUpperCase()) || input.payload.toUpperCase() === "GET_STARTED")
+      : false;
+    const keywordMatched = input.text
+      ? ch.rules.some((r) => r.trigger_type === "keyword" && (r.trigger || "").split(",").some((k) => input.text!.toLowerCase().includes(k.trim().toLowerCase())))
+      : false;
+    const newThread = (payloadMatched || keywordMatched) ? false : await isNewThread(externalPageId, senderId);
     const text = decide(ch.rules, input, { inHours: withinHours(ch.hours), isNewThread: newThread });
     if (text) { try { await send(ch.token, senderId, text); } catch { /* best-effort */ } }
   }

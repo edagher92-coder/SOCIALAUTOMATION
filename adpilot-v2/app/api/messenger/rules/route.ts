@@ -33,7 +33,7 @@ export async function POST(req: Request) {
   const g = await gate(); if (g.res) return g.res;
   const parsed = z.object({
     external_page_id: z.string().min(1),
-    trigger_type: z.enum(["keyword", "payload", "welcome", "default"]),
+    trigger_type: z.enum(["keyword", "payload", "welcome", "away", "default"]),
     trigger: z.string().max(200).optional(),
     reply: z.string().min(1).max(2000),
     priority: z.number().int().min(0).max(999).optional(),

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import PageHeader from "@/components/PageHeader";
 
 export default function ClaudeApi() {
   const [key, setKey] = useState("");
@@ -17,25 +18,28 @@ export default function ClaudeApi() {
   const mask = (k: string) => k.slice(0, 10) + "…" + k.slice(-4);
 
   return (
-    <div className="max-w-2xl">
-      <h1 className="text-2xl font-extrabold tracking-tight">Claude API</h1>
-      <p className="mb-5 mt-1 text-muted">Connect a Claude API key to power live AI generation in Canva Creator, Bobby and Aria.</p>
+    <div className="max-w-2xl animate-fade-in">
+      <PageHeader
+        eyebrow="Integrations"
+        title="Claude API"
+        subtitle="Connect a Claude API key to power live AI generation in Canva Creator, Bobby and Aria."
+      />
 
-      <div className="rounded-2xl border border-[#e3e8ef] bg-white p-5 shadow-card">
-        <div className="mb-3 rounded-xl border border-[#f0c36d] bg-[#fff7e6] p-3 text-sm text-[#7a5b00]">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
+        <div className="mb-3 rounded-xl border border-band-yellow/40 bg-[#fff7e6] p-3 text-sm text-[#7a5b00]">
           🔒 For this browser demo, the key is stored only in <b>your browser</b> (localStorage) and never sent to our servers.
           For production, keys belong on the <b>server</b> (env vars) — never in the browser. Use a key you can rotate.
         </div>
         {saved ? (
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-sm">Connected: <code className="rounded bg-[#f4f7fb] px-1.5 py-0.5">{mask(saved)}</code></div>
-            <button onClick={clear} className="rounded-lg border border-band-red px-3 py-1.5 text-sm font-semibold text-band-red">Disconnect</button>
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-teal/30 bg-teal-50 p-3">
+            <div className="text-sm text-ink">Connected: <code className="rounded bg-surface-raised px-1.5 py-0.5">{mask(saved)}</code></div>
+            <button onClick={clear} className="rounded-lg border border-band-red px-3 py-1.5 text-sm font-semibold text-band-red transition hover:bg-band-red hover:text-white">Disconnect</button>
           </div>
         ) : (
           <div>
             <label className="mb-1 block text-sm font-bold">Claude API key</label>
             <input value={key} onChange={(e) => setKey(e.target.value)} placeholder="sk-ant-…" type="password"
-              className="w-full rounded-lg border border-[#e3e8ef] p-2.5" />
+              className="w-full rounded-lg border border-border-subtle p-2.5" />
             <button onClick={save} disabled={!valid}
               className="mt-3 rounded-lg bg-brand px-5 py-2.5 font-bold text-white disabled:opacity-50">Save key</button>
             {key && !valid && <p className="mt-2 text-sm text-band-red">That doesn't look like a Claude key (expected sk-ant-…).</p>}

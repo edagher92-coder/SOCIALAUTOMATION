@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 const CreateBody = z.object({
   platform: z.enum(["facebook", "instagram", "tiktok"]),
   caption: z.string().max(2200).optional(),
-  media_url: z.string().url().max(2000).optional(),
+  media_url: z.string().url().max(2000).refine((u) => u.startsWith("https://"), "media_url must be https").optional(),
   media_type: z.enum(["image", "video", "reel"]).optional(),
   scheduled_at: z.string().datetime().optional(),
   source: z.enum(["upload", "studio"]).default("upload"),

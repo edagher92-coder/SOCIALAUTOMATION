@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import PageHeader from "@/components/PageHeader";
 
 type Asset = { id: string; kind: string; source: string; provider?: string; title?: string; url: string; linked_campaign?: string };
 
@@ -45,52 +46,55 @@ export default function Creative() {
   }
 
   return (
-    <div className="max-w-4xl">
-      <h1 className="text-2xl font-extrabold tracking-tight">Creative Library</h1>
-      <p className="mb-5 mt-1 text-muted">
-        Bring AI-generated audio, video &amp; photos from <b>any</b> tool — paste the asset link (Midjourney, Sora, Runway,
-        ElevenLabs, Canva, HeyGen…), or upload your own. AdPilot does the rest: organise it, link it to campaigns, and
-        feed it into briefs.
-      </p>
+    <div className="max-w-4xl animate-fade-in">
+      <PageHeader
+        eyebrow="Assets"
+        title="Creative Library"
+        subtitle="Bring AI-generated audio, video & photos from any tool — paste the asset link (Midjourney, Sora, Runway, ElevenLabs, Canva, HeyGen…), or upload your own. AdPilot does the rest: organise it, link it to campaigns, and feed it into briefs."
+      />
 
       <div className="grid gap-4 md:grid-cols-[1fr_280px]">
-        <div className="rounded-2xl border border-[#e3e8ef] bg-white p-5 shadow-card">
-          <h3 className="mb-3 font-bold">Link from your AI tool / creator</h3>
+        <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
+          <h3 className="mb-3 font-bold text-ink">Link from your AI tool / creator</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <div><label className="mb-1 block text-sm font-bold">Type</label>
-              <select value={kind} onChange={(e) => setKind(e.target.value as any)} className="w-full rounded-lg border border-[#e3e8ef] p-2.5"><option value="image">Image</option><option value="video">Video</option><option value="audio">Audio</option></select></div>
+              <select value={kind} onChange={(e) => setKind(e.target.value as any)} className="w-full rounded-lg border border-border-subtle p-2.5"><option value="image">Image</option><option value="video">Video</option><option value="audio">Audio</option></select></div>
             <div><label className="mb-1 block text-sm font-bold">Source / tool</label>
-              <input value={provider} onChange={(e) => setProvider(e.target.value)} placeholder="Midjourney, Sora, ElevenLabs…" className="w-full rounded-lg border border-[#e3e8ef] p-2.5" /></div>
+              <input value={provider} onChange={(e) => setProvider(e.target.value)} placeholder="Midjourney, Sora, ElevenLabs…" className="w-full rounded-lg border border-border-subtle p-2.5" /></div>
             <div className="sm:col-span-2"><label className="mb-1 block text-sm font-bold">Asset URL</label>
-              <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" className="w-full rounded-lg border border-[#e3e8ef] p-2.5" /></div>
+              <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" className="w-full rounded-lg border border-border-subtle p-2.5" /></div>
             <div><label className="mb-1 block text-sm font-bold">Title (optional)</label>
-              <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full rounded-lg border border-[#e3e8ef] p-2.5" /></div>
+              <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full rounded-lg border border-border-subtle p-2.5" /></div>
             <div><label className="mb-1 block text-sm font-bold">Link to campaign (optional)</label>
-              <input value={campaign} onChange={(e) => setCampaign(e.target.value)} className="w-full rounded-lg border border-[#e3e8ef] p-2.5" /></div>
+              <input value={campaign} onChange={(e) => setCampaign(e.target.value)} className="w-full rounded-lg border border-border-subtle p-2.5" /></div>
           </div>
           <button onClick={addLink} disabled={busy} className="mt-3 rounded-lg bg-brand px-5 py-2.5 font-bold text-white disabled:opacity-50">{busy ? "…" : "Add link"}</button>
           {msg && <p className="mt-2 text-sm text-muted">{msg}</p>}
         </div>
 
-        <div className="rounded-2xl border border-dashed border-[#cbd5e1] bg-white p-5 text-center shadow-card">
+        <div className="rounded-2xl border border-dashed border-border-subtle bg-surface-raised p-5 text-center shadow-card">
           <div className="text-3xl">⬆️</div>
-          <h3 className="mt-2 font-bold">Upload your own</h3>
+          <h3 className="mt-2 font-bold text-ink">Upload your own</h3>
           <p className="mb-3 mt-1 text-xs text-muted">Image, video or audio. Stored in your private library.</p>
           <input type="file" accept="image/*,video/*,audio/*" onChange={onUpload} className="w-full text-sm" />
         </div>
       </div>
 
-      <h2 className="mb-2 mt-7 text-lg font-bold">Your assets</h2>
+      <h2 className="mb-2 mt-7 text-lg font-bold text-ink">Your assets</h2>
       {assets.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[#d0d7de] p-8 text-center text-muted">Nothing yet — add a link or upload above.</div>
+        <div className="rounded-2xl border border-dashed border-border-subtle bg-surface-raised p-10 text-center">
+          <div className="text-3xl">🖼️</div>
+          <p className="mt-2 font-semibold text-ink">No creative yet</p>
+          <p className="mt-1 text-sm text-muted">Add a link or upload a file above to start building your library.</p>
+        </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {assets.map((a) => (
-            <div key={a.id} className="overflow-hidden rounded-xl border border-[#e3e8ef] bg-white shadow-card">
+            <div key={a.id} className="overflow-hidden rounded-2xl border border-border-subtle bg-surface-raised shadow-card transition hover:border-brand hover:shadow-card-hover">
               {a.kind === "image" ? <img src={a.url} alt="" className="h-32 w-full object-cover" />
-                : <div className="flex h-32 items-center justify-center bg-[#f4f7fb] text-3xl">{a.kind === "video" ? "🎬" : "🎵"}</div>}
+                : <div className="flex h-32 items-center justify-center bg-surface text-3xl">{a.kind === "video" ? "🎬" : "🎵"}</div>}
               <div className="p-3">
-                <div className="truncate text-sm font-semibold">{a.title || a.kind}</div>
+                <div className="truncate text-sm font-semibold text-ink">{a.title || a.kind}</div>
                 <div className="text-xs text-muted">{a.provider || a.source}{a.linked_campaign ? ` · ${a.linked_campaign}` : ""}</div>
                 <a href={a.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-brand">Open ↗</a>
               </div>

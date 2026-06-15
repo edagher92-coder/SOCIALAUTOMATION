@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
+import PageHeader from "@/components/PageHeader";
 
 const TASKS = [
   "De-duplicate contacts (merge obvious doubles)",
@@ -19,21 +20,29 @@ export default function CrmMaintenance() {
   const pct = useMemo(() => Math.round((Object.values(done).filter(Boolean).length / TASKS.length) * 100), [done]);
 
   return (
-    <div className="max-w-3xl">
-      <h1 className="text-2xl font-extrabold tracking-tight">CRM Maintenance</h1>
-      <p className="mb-5 mt-1 text-muted">A clean CRM = trustworthy numbers. Work the weekly checklist; closed-deal data feeds the lead-quality score.</p>
+    <div className="max-w-3xl animate-fade-in">
+      <PageHeader
+        eyebrow="Data hygiene"
+        title="CRM Maintenance"
+        subtitle="A clean CRM = trustworthy numbers. Work the weekly checklist; closed-deal data feeds the lead-quality score."
+      />
 
-      <div className="rounded-2xl border border-[#e3e8ef] bg-white p-5 shadow-card">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <div className="mb-3 flex items-center gap-3">
-          <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#eef2f7]">
-            <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${pct}%` }} />
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface">
+            <div className={`h-full rounded-full transition-all ${pct === 100 ? "bg-band-green" : "bg-brand"}`} style={{ width: `${pct}%` }} />
           </div>
-          <span className="text-sm font-bold">{pct}%</span>
+          <span className="text-sm font-bold text-ink">{pct}%</span>
         </div>
+        {pct === 100 && (
+          <div className="mb-3 rounded-xl border border-teal/30 bg-teal-50 p-3 text-sm font-semibold text-teal">
+            All clear — your CRM checklist is complete for this week. 🎉
+          </div>
+        )}
         <ul className="space-y-1.5">
           {TASKS.map((t, i) => (
             <li key={i}>
-              <label className="flex cursor-pointer items-start gap-2.5 rounded-lg p-2 text-sm hover:bg-[#f4f7fb]">
+              <label className="flex cursor-pointer items-start gap-2.5 rounded-lg p-2 text-sm transition hover:bg-surface">
                 <input type="checkbox" checked={!!done[i]} onChange={(e) => setDone({ ...done, [i]: e.target.checked })} className="mt-0.5" />
                 <span className={done[i] ? "text-muted line-through" : ""}>{t}</span>
               </label>

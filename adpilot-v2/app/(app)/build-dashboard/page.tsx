@@ -1,3 +1,5 @@
+import PageHeader from "@/components/PageHeader";
+
 const SPECS = [
   { n: "Google Sheets", e: "🟩", d: "Fastest start. Paste exports, formulas compute metrics + health score.", best: "Beginners / DIY" },
   { n: "Looker Studio", e: "📊", d: "Shareable visual report. Connect Sheets/BigQuery; Meta vs TikTok pages.", best: "Client reporting" },
@@ -8,21 +10,24 @@ const SPECS = [
 
 export default function BuildDashboard() {
   return (
-    <div>
-      <h1 className="text-2xl font-extrabold tracking-tight">Build a Dashboard</h1>
-      <p className="mb-5 mt-1 text-muted">Pick a platform and follow the spec — or just use the built-in <b>Ads Health Check</b>.</p>
+    <div className="animate-fade-in">
+      <PageHeader
+        eyebrow="Setup"
+        title="Build a Dashboard"
+        subtitle="Pick a platform and follow the spec — or just use the built-in Ads Health Check."
+      />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {SPECS.map((s) => (
-          <div key={s.n} className="rounded-2xl border border-[#e3e8ef] bg-white p-5 shadow-card">
+          <div key={s.n} className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card transition hover:border-brand hover:shadow-card-hover">
             <div className="mb-2 text-2xl">{s.e}</div>
-            <h3 className="font-bold">{s.n}</h3>
+            <h3 className="font-bold text-ink">{s.n}</h3>
             <p className="mt-1 text-sm text-muted">{s.d}</p>
             <p className="mt-2 text-xs font-semibold text-brand">Best for: {s.best}</p>
           </div>
         ))}
       </div>
-      <div className="mt-6 rounded-2xl border border-[#e3e8ef] bg-white p-5 shadow-card">
-        <h3 className="font-bold">3-step quick start</h3>
+      <div className="mt-6 rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
+        <h3 className="font-bold text-ink">3-step quick start</h3>
         <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted">
           <li>Export at <b>ad level</b>, daily, from Meta &amp; TikTok Ads Manager.</li>
           <li>Map columns to the universal schema (auto-detected in the Ads Health Check).</li>

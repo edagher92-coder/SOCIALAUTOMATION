@@ -34,6 +34,10 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     const { data: post } = await admin.from("content_posts")
       .select("platform,caption,media_url,media_type,status").eq("id", params.id).eq("organisation_id", orgId).maybeSingle();
     if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    // Only an explicitly approved (or scheduled/failed-retry) post may be sent — never a raw draft.
+    if (!["approved", "scheduled", "failed"].includes((post as any).status)) {
+      return NextResponse.json({ error: "Approve the post before publishing." }, { status: 400 });
+    }
     try {
       const res = await publishPost(post as any);
       await admin.from("content_posts").update({ status: "published", published_at: new Date().toISOString(), external_id: res.externalId ?? null, error: null, updated_at: new Date().toISOString() }).eq("id", params.id).eq("organisation_id", orgId);
