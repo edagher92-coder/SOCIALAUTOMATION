@@ -32,7 +32,7 @@ export async function POST(req: Request) {
           organisation_id: orgId,
           stripe_customer_id: String(s.customer ?? ""),
           stripe_subscription_id: String(s.subscription ?? ""),
-          plan: "pro",
+          plan: s.metadata?.plan || "pro",
           status: "active",
         }, { onConflict: "stripe_subscription_id" });
       }

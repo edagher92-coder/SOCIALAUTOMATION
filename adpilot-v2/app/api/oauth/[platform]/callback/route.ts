@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveOrgId } from "@/lib/org";
 import { oauthConfig, type Platform } from "@/lib/oauth/config";
 import { encrypt } from "@/lib/crypto";
+import { syncOrgPlatform } from "@/lib/sync/pull";
 
 export const runtime = "nodejs";
 
@@ -63,6 +64,8 @@ export async function GET(req: Request, { params }: { params: { platform: string
       await admin.from("connected_ad_accounts").insert(
         accounts.map((a) => ({ organisation_id: orgId, platform, external_account_id: a.id, display_name: a.name, status: "connected" }))
       );
+      // Automation-first: pull immediately so data appears with no extra step.
+      try { await syncOrgPlatform(admin, orgId, platform); } catch { /* the scheduled cron will retry */ }
     }
     return redirect(`connected=${platform}`);
   } catch (e: any) {

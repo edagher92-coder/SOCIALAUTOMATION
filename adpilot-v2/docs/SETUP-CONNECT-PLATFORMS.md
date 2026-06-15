@@ -58,6 +58,29 @@ If you run Meta/TikTok via an MCP server (e.g., in Claude), keep using AdPilot's
 
 ---
 
+## Option D — Access token (dev link) — fastest, no OAuth app review
+
+For your own / agency accounts you can skip the OAuth dance and **paste a read-only token**:
+**Connect Accounts → Advanced — connect with an access token**.
+- **Meta:** a token with `ads_read` from the Graph API Explorer, or a Business **System User** token. Leave Account ID blank to connect all visible ad accounts, or paste `act_<id>` for one.
+- **TikTok:** a long-lived token **plus** the `advertiser_id` in the Account ID field.
+
+The token is encrypted (AES-256-GCM) before storage and never returned to the browser. On connect, AdPilot pulls your data immediately. This works in Meta **dev mode** with your own accounts — no App Review needed.
+
+## Automated sync (cadence)
+
+Once an account is connected, AdPilot keeps itself current — **no prompts**. Choose the cadence in
+**Settings → Auto-sync**: Off · Hourly · Every 6/12 hours · Daily · Weekly · or a **custom** number of hours.
+The hourly `auto-sync` cron pulls fresh data when each org's cadence is due, then re-scores and alerts.
+
+> Sub-daily cadences require **Vercel Pro** (Hobby runs crons once per day). The sync is idempotent — it refreshes the rolling 30-day API window, so it never double-counts.
+
+## Plans & feature gating
+
+Connecting via API + automated sync + the AI specialist team are **Pro & Expert** features (the two top tiers).
+**Expert** adds white-label reports and the team-built **expert plugins**. CSV import + Health Score are on every plan.
+The matrix lives in `lib/entitlements.ts` — edit it there to retune what each tier unlocks.
+
 ## After connecting
 - **Settings:** set average sale value + gross margin (defines break-even).
 - **Notifications:** turn on weekly digest + critical alerts.

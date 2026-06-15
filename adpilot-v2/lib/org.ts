@@ -1,6 +1,17 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { normalisePlan, type Plan } from "@/lib/entitlements";
+
+// Active subscription plan for an org (defaults to "free" when none/inactive).
+export async function planForOrg(orgId: string): Promise<Plan> {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("billing_subscriptions").select("plan,status").eq("organisation_id", orgId)
+    .order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (!data || (data as any).status !== "active") return "free";
+  return normalisePlan((data as any).plan);
+}
 
 // Returns the user's organisation id, creating a personal org + owner membership
 // on first use. Server-only (uses the service role).
