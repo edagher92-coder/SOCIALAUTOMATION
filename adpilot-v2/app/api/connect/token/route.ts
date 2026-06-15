@@ -38,6 +38,15 @@ export async function POST(req: Request) {
   const token = parsed.data.token.trim();
   const accountId = parsed.data.accountId?.trim().replace(/^act_/, "") || "";
 
+  // Guard the common mistake of pasting a login email / name into the Account ID box.
+  // Meta ad-account ids are numeric; blank means "discover all".
+  if (platform === "meta" && accountId && !/^\d+$/.test(accountId)) {
+    return NextResponse.json(
+      { error: "Account ID must be a numeric Meta ad-account id (e.g. act_1234567890) or left blank to connect all accounts — not your login email." },
+      { status: 400 },
+    );
+  }
+
   try {
     const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
     if (!can(await planForOrg(orgId), "api_connect")) {
@@ -49,7 +58,13 @@ export async function POST(req: Request) {
     if (platform === "meta") {
       const r = await fetch(`https://graph.facebook.com/v21.0/me/adaccounts?fields=name,account_id&access_token=${encodeURIComponent(token)}`);
       const j: any = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(j?.error?.message || `Token rejected by Meta (HTTP ${r.status})`);
+      if (!r.ok) {
+        // Meta error code 190 = the token is invalid/expired. Graph Explorer tokens last ~1–2h.
+        if (j?.error?.code === 190) {
+          throw new Error("Meta token is invalid or expired — generate a fresh one from the Graph API Explorer (with ads_read) or use a non-expiring Business System User token, then reconnect.");
+        }
+        throw new Error(j?.error?.message || `Token rejected by Meta (HTTP ${r.status})`);
+      }
       // Meta returns account_id (numeric, no prefix). Normalise away any act_ prefix.
       accounts = (j.data || []).map((a: any) => {
         const id = String(a.account_id || a.id || "").replace(/^act_/, "");

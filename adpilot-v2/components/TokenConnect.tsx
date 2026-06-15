@@ -13,7 +13,9 @@ export default function TokenConnect() {
   const [upgrade, setUpgrade] = useState(false);
 
   const tikTokNeedsAccount = platform === "tiktok" && accountId.trim().length === 0;
-  const canSubmit = token.trim().length >= 10 && !tikTokNeedsAccount;
+  // Catch the easy mistake of typing a login email into the ad-account-id box.
+  const accountLooksLikeEmail = platform === "meta" && /@/.test(accountId);
+  const canSubmit = token.trim().length >= 10 && !tikTokNeedsAccount && !accountLooksLikeEmail;
 
   async function go() {
     if (!canSubmit) return;
@@ -57,8 +59,16 @@ export default function TokenConnect() {
         </label>
         <label className="text-sm">
           <span className="mb-1 block font-semibold">Account ID {platform === "tiktok" ? "(advertiser_id, required)" : "(optional)"}</span>
-          <input value={accountId} onChange={(e) => setAccountId(e.target.value)} placeholder={platform === "meta" ? "act_123… (leave blank for all)" : "advertiser_id"}
-            className="w-full rounded-lg border border-[#e3e8ef] p-2.5" />
+          <input value={accountId} onChange={(e) => setAccountId(e.target.value)} placeholder={platform === "meta" ? "act_123… — leave blank for all" : "advertiser_id"}
+            className={`w-full rounded-lg border p-2.5 ${accountLooksLikeEmail ? "border-red-400" : "border-[#e3e8ef]"}`} />
+          <span className="mt-1 block text-xs text-muted">
+            {platform === "meta"
+              ? "Your Meta ad-account id (act_…), not your login email. Leave blank to connect every account the token can see."
+              : "Your TikTok advertiser id (numeric)."}
+          </span>
+          {accountLooksLikeEmail && (
+            <span className="mt-1 block text-xs font-semibold text-red-600">That looks like an email — use an ad-account id (act_…) or leave it blank.</span>
+          )}
         </label>
       </div>
       <label className="mt-3 block text-sm">
