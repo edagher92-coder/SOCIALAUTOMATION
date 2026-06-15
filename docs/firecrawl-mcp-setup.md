@@ -50,10 +50,20 @@ HTTP 403 — Host not in allowlist: api.firecrawl.dev.
 Add this host to your network egress settings to allow access.
 ```
 
-Add `api.firecrawl.dev` to the environment's network egress settings (or select
-a network policy that permits it). See
-https://code.claude.com/docs/en/claude-code-on-the-web for where the network
-policy is configured.
+Add `api.firecrawl.dev` to the environment's network egress allowlist. This is
+done in the Claude web UI when editing the environment — it cannot be changed
+from inside a running session:
+
+1. At https://claude.ai/code, open the environment **for editing** (the cloud
+   icon where you start a session / configure a routine).
+2. Set the **Network access** selector to **Custom**.
+3. In the **Allowed domains** field, add `api.firecrawl.dev` (one host per line).
+4. Tick **"Also include default list of common package managers"** so `npx`
+   can still install `firecrawl-mcp` from the npm registry.
+5. Save and start a fresh session.
+
+See https://code.claude.com/docs/en/claude-code-on-the-web#network-access for
+the full network-policy reference.
 
 ## Notes
 
