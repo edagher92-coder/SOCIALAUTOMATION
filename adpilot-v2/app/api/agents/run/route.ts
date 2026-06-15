@@ -6,6 +6,7 @@ import { getActiveOrgId, planForOrg } from "@/lib/org";
 import { can } from "@/lib/entitlements";
 import { callClaude, NoKeyError } from "@/lib/ai/claude";
 import { getAgent } from "@/lib/agents/registry";
+import { knowledgeFor } from "@/lib/agents/knowledge";
 
 export const runtime = "nodejs";
 
@@ -60,8 +61,9 @@ export async function POST(req: Request) {
   ]);
   const grounding = buildGrounding((rep as any)?.payload, (recs as any[]) || []);
 
+  const kb = knowledgeFor(agent.id);
   const q = parsed.data.question?.trim();
-  const userMsg = `${grounding}\n\n${q ? `The user asks: ${q}` : "Give your top findings and safe, prioritised proposals for this account right now."}`;
+  const userMsg = `${kb ? `REFERENCE KNOWLEDGE (current best practice — guidance, not guarantees; cite ranges, not false precision):\n${kb}\n\n` : ""}${grounding}\n\n${q ? `The user asks: ${q}` : "Give your top findings and safe, prioritised proposals for this account right now."}`;
 
   try {
     const text = await callClaude({ system: agent.system, user: userMsg, maxTokens: 1200 });
