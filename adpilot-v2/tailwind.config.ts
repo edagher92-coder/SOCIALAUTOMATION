@@ -15,6 +15,7 @@ const config: Config = {
           700: "#073db5",
         },
         navy: "#0b1f3a",
+        command: "#0a1430",
         teal: {
           DEFAULT: "#00c2a8",
           50:  "#e6fbf6",
@@ -62,10 +63,15 @@ const config: Config = {
           "0%, 100%": { opacity: "1" },
           "50%":       { opacity: "0.6" },
         },
+        "live-pulse": {
+          "0%, 100%": { opacity: "1", transform: "scale(1)" },
+          "50%":       { opacity: "0.4", transform: "scale(0.85)" },
+        },
       },
       animation: {
         "fade-in":     "fade-in 200ms ease both",
         "pulse-subtle": "pulse-subtle 1.5s ease-in-out infinite",
+        "live-pulse":  "live-pulse 1.8s ease-in-out infinite",
       },
     },
   },

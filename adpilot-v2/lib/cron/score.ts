@@ -29,6 +29,21 @@ export async function scoreAndAlertOrg(
   await admin.from("health_scores").insert({ organisation_id: org.id, scope: "account", total: result.health.total, band: result.health.band, breakdown: result.health.breakdown });
   await admin.from("reports").insert({ organisation_id: org.id, title: `Scheduled — health ${Math.round(result.health.total)}`, period: new Date().toISOString().slice(0, 10), payload: result });
 
+  // Refresh the open Proposals queue from this analysis (actionable verdicts only, deduped).
+  // Approved/dismissed/done history is preserved — we only replace the 'open' set.
+  const ACTIONABLE = new Set(["scale", "kill", "reduce", "refresh", "fix-tracking"]);
+  const seen = new Set<string>();
+  const recs: any[] = [];
+  for (const d of (result.decisions || []) as any[]) {
+    if (!ACTIONABLE.has(d.verdict)) continue;
+    const k = `${d.name}|${d.verdict}`;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    recs.push({ organisation_id: org.id, verdict: d.verdict, entity_name: d.name, platform: d.platform, reason: d.reason, proposal: d.proposal });
+  }
+  await admin.from("recommendations").delete().eq("organisation_id", org.id).eq("status", "open");
+  if (recs.length) await admin.from("recommendations").insert(recs);
+
   let alerted = false;
   const b = breaches(result);
   if (b.length) {

@@ -10,14 +10,14 @@ export default function Landing() {
             <span className="inline-block h-7 w-7 rounded-xl bg-gradient-to-br from-brand to-teal shadow-sm" />
             AdPilot OS
           </Link>
-          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand">V2</span>
+          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand">V3</span>
           <div className="ml-auto flex items-center gap-3 text-sm font-semibold">
             <Link href="#pricing" className="hidden text-muted transition hover:text-ink sm:inline">Pricing</Link>
             <Link href="/login"
               className="rounded-lg border border-brand-200 px-3.5 py-2 text-brand transition hover:border-brand hover:bg-brand-50 focus-visible:shadow-ring-brand">
               Sign in
             </Link>
-            <Link href="/dashboard"
+            <Link href="/command"
               className="rounded-lg bg-brand px-3.5 py-2 text-white shadow-sm transition hover:bg-brand-600 focus-visible:shadow-ring-brand">
               Open app
             </Link>
@@ -45,9 +45,9 @@ export default function Landing() {
             numbers-first recommendations — without ever touching a live ad.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link href="/dashboard"
+            <Link href="/command"
               className="rounded-xl bg-brand px-6 py-3.5 text-base font-bold text-white shadow-sm transition hover:bg-brand-600 hover:shadow-md focus-visible:shadow-ring-brand">
-              Analyse my ads →
+              Open the Command Center →
             </Link>
             <Link href="/login"
               className="rounded-xl border border-border-subtle bg-white px-6 py-3.5 text-base font-bold text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:shadow-ring-brand">
@@ -92,9 +92,9 @@ export default function Landing() {
               items: ["Everything in Starter", "Auto-sync Meta & TikTok", "Weekly digest emails", "UTM builder"],
             },
             {
-              n: "Agency", p: "$1,997+", tag: null,
-              d: "Multi-client, branded reports, white-label.",
-              items: ["Everything in Pro", "Multi-client workspaces", "White-label reports", "Agency dashboard"],
+              n: "Expert", p: "$1,997+", tag: null,
+              d: "All of Pro + white-label and team-built expert plugins.",
+              items: ["Everything in Pro", "White-label reports", "Expert plugins (team-built)", "Multi-client workspaces"],
             },
           ].map((t) => (
             <div key={t.n}
@@ -115,7 +115,7 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <Link href="/dashboard"
+              <Link href="/command"
                 className={`mt-6 block rounded-xl px-4 py-2.5 text-center text-sm font-bold transition ${t.tag ? "bg-brand text-white hover:bg-brand-600" : "border border-border-subtle text-ink hover:border-brand hover:text-brand"}`}>
                 Get started
               </Link>
@@ -129,7 +129,7 @@ export default function Landing() {
         <div className="mx-auto max-w-6xl flex flex-col items-center gap-2 text-center text-sm text-muted sm:flex-row sm:justify-between">
           <span className="flex items-center gap-2 font-semibold text-ink">
             <span className="inline-block h-5 w-5 rounded-lg bg-gradient-to-br from-brand to-teal" />
-            AdPilot OS V2
+            AdPilot OS V3
           </span>
           <span>Numbers-first · safe by design. No earnings or results guarantees.</span>
         </div>
