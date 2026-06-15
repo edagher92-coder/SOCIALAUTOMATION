@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AdPilot OS V2 — Training, Setup &amp; Troubleshooting</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Liberation Sans", Arial, sans-serif; color: #1a2230; font-size: 10.5pt; line-height: 1.5; margin: 0; }
+  h1, h2, h3, h4 { color: #0b3a8f; line-height: 1.25; }
+  h1 { font-size: 21pt; margin: 0 0 4pt; }
+  h2 { font-size: 15pt; margin: 20pt 0 6pt; border-bottom: 2px solid #0b5fff; padding-bottom: 3pt; }
+  h3 { font-size: 12pt; margin: 13pt 0 4pt; color: #14306b; }
+  h4 { font-size: 10.8pt; margin: 9pt 0 3pt; color: #2a4a86; }
+  p { margin: 4pt 0; }
+  ul, ol { margin: 4pt 0 6pt; padding-left: 18pt; }
+  li { margin: 2pt 0; }
+  code { font-family: "Liberation Mono", "Courier New", monospace; background: #eef2fb; color: #0b3a8f; padding: 0 3px; border-radius: 3px; font-size: 9.5pt; }
+  pre { font-family: "Liberation Mono", "Courier New", monospace; background: #0f1b33; color: #dbe6ff; padding: 9pt 11pt; border-radius: 6px; font-size: 9pt; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+  pre code { background: transparent; color: inherit; padding: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 7pt 0 9pt; font-size: 9.3pt; }
+  th, td { border: 1px solid #c7d2e4; padding: 5pt 7pt; text-align: left; vertical-align: top; }
+  th { background: #0b5fff; color: #fff; font-weight: bold; }
+  tr:nth-child(even) td { background: #f3f6fc; }
+  .muted { color: #5a6577; }
+  .callout { border: 1px solid #cfe0ff; background: #eef4ff; border-left: 4px solid #0b5fff; padding: 7pt 11pt; border-radius: 6px; margin: 8pt 0; }
+  .safe { border: 1px solid #b9e6c9; background: #effaf2; border-left: 4px solid #16a34a; padding: 7pt 11pt; border-radius: 6px; margin: 8pt 0; }
+  .warn { border: 1px solid #f4d9a6; background: #fff7e8; border-left: 4px solid #d98a00; padding: 7pt 11pt; border-radius: 6px; margin: 8pt 0; }
+  .page-break { page-break-before: always; }
+  .cover { text-align: center; padding-top: 70pt; }
+  .logo { display: inline-block; width: 54px; height: 54px; border-radius: 14px; background: #0b5fff; vertical-align: middle; }
+  .cover-title { font-size: 30pt; font-weight: bold; color: #0b3a8f; margin: 18pt 0 2pt; }
+  .cover-sub { font-size: 14pt; color: #2a4a86; margin: 0 0 4pt; }
+  .badge { display: inline-block; background: #e6f0ff; color: #0b5fff; font-weight: bold; border-radius: 999px; padding: 3pt 12pt; font-size: 10pt; margin-top: 8pt; }
+  .toc li { margin: 3pt 0; }
+  .kpi { font-weight: bold; color: #0b3a8f; }
+  .small { font-size: 8.8pt; }
+  .footer-note { margin-top: 26pt; font-size: 8.6pt; color: #5a6577; border-top: 1px solid #d8e0ee; padding-top: 7pt; }
+</style>
+</head>
+<body>
+
+<!-- ───────────────── COVER ───────────────── -->
+<div class="cover">
+  <span class="logo"></span>
+  <div class="cover-title">AdPilot OS</div>
+  <div class="cover-sub">V2 — Training, Setup &amp; Troubleshooting Guide</div>
+  <div class="badge">Meta &amp; TikTok Paid-Ads Operating System</div>
+  <p class="muted" style="margin-top:24pt; font-size:11pt;">Read-only &amp; safe by design — it analyses and <b>proposes</b>.<br>It never edits, pauses, or creates ads on your account.</p>
+  <p class="muted small" style="margin-top:40pt;">Document version 2.0 &nbsp;·&nbsp; For agencies, freelancers &amp; in-house teams<br>Live demo: edagher92-coder.github.io/SOCIALAUTOMATION &nbsp;·&nbsp; In-app manual: <code>/manual</code></p>
+</div>
+
+<!-- ───────────────── TOC ───────────────── -->
+<div class="page-break"></div>
+<h1>Contents</h1>
+<ol class="toc">
+  <li><b>Part 1 — Training</b>: what it is, core concepts, the Health Score, daily workflow, reading results, recommendations &amp; safety, creative library, multi-client, reports &amp; PDFs, notifications, AI prompting.</li>
+  <li><b>Part 2 — Setup</b>: deployment essentials, three ways to connect data (CSV / OAuth / MCP) with benefits &amp; drawbacks, Meta app setup, TikTok app setup, post-connect checklist, environment-variable reference, security model.</li>
+  <li><b>Part 3 — Troubleshooting</b>: error reference, diagnostics, common issues &amp; fixes, FAQ, how to report an error.</li>
+  <li><b>Appendix</b>: glossary, the universal CSV schema, break-even maths, where things live.</li>
+</ol>
+
+<div class="safe"><b>The golden rule.</b> AdPilot is <b>read-only</b>. It scores your campaigns and writes plain-English proposals. <b>You</b> decide and you make any change inside Meta/TikTok. Nothing here can spend money or alter a live ad.</div>
+
+<!-- ═════════════════ PART 1 — TRAINING ═════════════════ -->
+<div class="page-break"></div>
+<h1>Part 1 — Training</h1>
+
+<h2>1.1 What AdPilot OS does</h2>
+<p>AdPilot turns raw Meta &amp; TikTok ad data into three things a busy operator actually needs:</p>
+<ul>
+  <li><span class="kpi">A Campaign Health Score (0–100)</span> — one number that tells you if the account is healthy.</li>
+  <li><span class="kpi">Plain-English findings</span> — what's working, what's bleeding money, and why.</li>
+  <li><span class="kpi">Prioritised, safe recommendations</span> — keep / scale / reduce / refresh / fix-tracking / kill — always as proposals.</li>
+</ul>
+<p>It works for a single business or a whole agency: every client lives in its own isolated workspace.</p>
+
+<h2>1.2 Beginner vs Advanced mode</h2>
+<table>
+  <tr><th>Mode</th><th>Who it's for</th><th>What you see</th></tr>
+  <tr><td><b>Beginner</b></td><td>Owners, new staff</td><td>Guided, plain-English view — the score, the headline issues, and the next best actions.</td></tr>
+  <tr><td><b>Advanced</b></td><td>Media buyers, analysts</td><td>Everything in Beginner plus the full 13-factor breakdown (“Why this score?”), per-factor weights and contributions.</td></tr>
+</table>
+<p class="muted">Switch any time with the toggle in the top-left of the sidebar. Your choice is remembered.</p>
+
+<h2>1.3 The Health Score explained</h2>
+<p>The score is a weighted average of <b>13 factors</b>, mapped to a colour band:</p>
+<table>
+  <tr><th>Band</th><th>Score</th><th>What it means</th></tr>
+  <tr><td><b style="color:#16a34a">Green</b></td><td>80–100</td><td>Healthy. Look for scale opportunities.</td></tr>
+  <tr><td><b style="color:#ca8a04">Yellow</b></td><td>60–79</td><td>Workable, but fix the flagged issues.</td></tr>
+  <tr><td><b style="color:#ea580c">Orange</b></td><td>40–59</td><td>Underperforming. Act this week.</td></tr>
+  <tr><td><b style="color:#dc2626">Red</b></td><td>0–39</td><td>Urgent. Money is likely being wasted.</td></tr>
+</table>
+<h4>The 13 factors</h4>
+<p>Tracking quality · CPA vs break-even · spend efficiency · conversion rate · click-through rate (CTR) · lead quality · creative freshness (fatigue) · cost per click (CPC) · naming convention · offer strength · landing-page alignment · budget pacing · data confidence.</p>
+<div class="callout"><b>Data confidence</b> is the honesty factor — if there isn't enough spend/conversions to trust the result, AdPilot says so instead of pretending. In Advanced mode, open <b>“Why this score?”</b> to see each factor's score, weight, and points contributed.</div>
+
+<h2>1.4 Your daily / weekly workflow</h2>
+<ol>
+  <li><b>Sign in</b> → land on <b>Ads Health</b>.</li>
+  <li><b>Get data in</b> — Sync connected accounts, or paste/upload a CSV.</li>
+  <li><b>Confirm economics</b> in <b>Settings</b> (average sale value + gross margin → defines break-even).</li>
+  <li><b>Analyse</b> → read the score, findings and proposals.</li>
+  <li><b>Act in Meta/TikTok</b> on the proposals you agree with.</li>
+  <li><b>Save / send</b> — open the report → <b>Download branded PDF</b> for the client.</li>
+</ol>
+
+<h2>1.5 Reading the results</h2>
+<ul>
+  <li><b>Score hero</b> — the gauge, the band, and a one-line verdict.</li>
+  <li><b>Key metrics</b> — Spend, CPA, break-even CPA, ROAS, break-even ROAS, MER, leads, purchases.</li>
+  <li><b>Findings</b> — severity-tagged (Critical → Info) issues with a short explanation.</li>
+  <li><b>Proposals</b> — per-campaign verdict, the reason, and the exact suggested action.</li>
+</ul>
+
+<h2>1.6 Recommendations &amp; safety</h2>
+<table>
+  <tr><th>Verdict</th><th>Meaning</th></tr>
+  <tr><td><b>keep</b></td><td>Performing to target — leave it running.</td></tr>
+  <tr><td><b>scale</b></td><td>Strong &amp; healthy — consider increasing budget (only suggested when health ≥ 70 and tracking is clean).</td></tr>
+  <tr><td><b>reduce</b></td><td>Slipping — trim budget / tighten targeting.</td></tr>
+  <tr><td><b>refresh</b></td><td>Creative fatigue — rotate in new creative.</td></tr>
+  <tr><td><b>fix-tracking</b></td><td>Conversions/pixel look broken — fix before judging performance.</td></tr>
+  <tr><td><b>kill</b></td><td>Wasting spend with no path to profit — pause it.</td></tr>
+  <tr><td><b>insufficient-data</b></td><td>Not enough signal yet — let it run / gather more.</td></tr>
+</table>
+<div class="safe">Every verdict is a <b>proposal</b>. AdPilot never makes the change for you.</div>
+
+<h2>1.7 Creative library — link or upload</h2>
+<p>Bring AI audio, video and images from <b>any</b> tool — Midjourney, Sora, Runway, Pika, ElevenLabs, Canva, HeyGen, or your own files:</p>
+<ul>
+  <li><b>Link</b> — paste the asset URL (the universal method; works with every creator tool).</li>
+  <li><b>Upload</b> — store your own files in private storage.</li>
+</ul>
+<p>AdPilot organises assets, links them to campaigns, and feeds them into creative briefs. <i>You bring the content — AdPilot does the rest.</i></p>
+
+<h2>1.8 Multi-client (agency)</h2>
+<p>Use the <b>Client</b> selector (top-left) to switch workspaces, or <b>➕ Add client…</b> to create one. Each client is fully isolated — data, connections, reports and branding never cross over (enforced by row-level security in the database).</p>
+
+<h2>1.9 Reports &amp; one-click branded PDF</h2>
+<p>Every analysis auto-saves under <b>Saved Reports</b>. Open one → <b>Download branded PDF</b>. Set your agency logo, colour and support email under <b>White-label</b> so client reports carry <i>your</i> brand.</p>
+
+<h2>1.10 Notifications &amp; alerts</h2>
+<p>Under <b>Notifications</b>: set an email, then enable the <b>weekly digest</b> and <b>critical alerts</b> (CPA blowouts, broken tracking, creative fatigue, Red health). A daily scheduled job scores connected accounts and emails any breaches. Use <b>Send test email</b> to confirm delivery.</p>
+
+<h2>1.11 AI prompting guide (Canva / Bobby / Aria)</h2>
+<p>Connect a Claude API key under <b>Claude API</b> to enable live AI. Then be specific:</p>
+<table>
+  <tr><th>Assistant</th><th>Give it</th></tr>
+  <tr><td><b>Canva Creator</b></td><td>Product + exact audience + the offer + the platform.</td></tr>
+  <tr><td><b>Bobby (Business)</b></td><td>A one-line description of your business + one concrete question.</td></tr>
+  <tr><td><b>Aria (Courses)</b></td><td>Topic + who it's for + the outcome a learner should reach.</td></tr>
+</table>
+<div class="warn">AI assists — <b>you decide</b>. Always review AI output before using it.</div>
+
+<!-- ═════════════════ PART 2 — SETUP ═════════════════ -->
+<div class="page-break"></div>
+<h1>Part 2 — Setup</h1>
+
+<h2>2.1 Deployment essentials (owner / admin)</h2>
+<p>AdPilot V2 runs on <b>Vercel</b> (the app) + <b>Supabase</b> (database, auth, storage). Minimum to go live:</p>
+<ol>
+  <li>Create a Supabase project; run the SQL migrations in <code>adpilot-v2/supabase/migrations</code> (through <code>0004_hardening.sql</code>).</li>
+  <li>Deploy <code>adpilot-v2</code> to Vercel; set the environment variables (see §2.6).</li>
+  <li>Set the two required keys: <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>. Everything else is optional and degrades gracefully.</li>
+</ol>
+<div class="warn"><b>Before going live:</b> rotate any previously-shared API keys (Anthropic, Stripe), set a real <code>SUPPORT_EMAIL</code>, and generate a fresh <code>TOKEN_ENCRYPTION_KEY</code> and <code>CRON_SECRET</code>.</div>
+
+<h2>2.2 Three ways to bring data in</h2>
+<p>Pick what suits you — you can mix them. <b>All paths are read-only.</b></p>
+<table>
+  <tr><th>Method</th><th>Best for</th><th>Benefits</th><th>Drawbacks</th></tr>
+  <tr><td><b>CSV upload</b></td><td>Anyone, instant</td><td>Zero setup, no permissions, fully private, works offline</td><td>Manual; a point-in-time snapshot, not live</td></tr>
+  <tr><td><b>API token (OAuth)</b></td><td>Most users / auto-sync</td><td>One-click connect, scheduled auto-sync + scoring + alerts, least-privilege read scopes, tokens encrypted at rest</td><td>Requires a platform app configured once; tokens expire &amp; refresh; app review for production</td></tr>
+  <tr><td><b>MCP server</b></td><td>Power users / Claude-driven</td><td>Drive it from Claude/agents, scriptable, great for multi-tool orchestration</td><td>More moving parts; you host the MCP; less turnkey</td></tr>
+</table>
+<div class="callout"><b>Recommendation:</b> API token (OAuth) for daily auto-sync, CSV as the always-available fallback, MCP if you already orchestrate via Claude.</div>
+
+<h2>2.3 Option A — CSV (no setup)</h2>
+<p>Export at <b>ad level</b> with a daily breakdown from Meta Ads Manager / TikTok Ads Manager, then paste or upload on the <b>Ads Health</b> page. Columns auto-map to the universal schema (see Appendix B). Keep the header row.</p>
+
+<h2>2.4 Option B — API token (OAuth) — recommended</h2>
+<h4>Server env keys (set once)</h4>
+<pre><code># Meta
+META_APP_ID=...
+META_APP_SECRET=...
+# TikTok
+TIKTOK_APP_ID=...
+TIKTOK_APP_SECRET=...
+# shared
+OAUTH_REDIRECT_BASE=https://your-app.vercel.app   # no trailing slash
+TOKEN_ENCRYPTION_KEY=...   # node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"</code></pre>
+
+<h4>Meta (Facebook / Instagram)</h4>
+<ol>
+  <li>developers.facebook.com → <b>Create App</b> → type <b>Business</b> → add <b>Marketing API</b>.</li>
+  <li>App settings → Basic: copy <b>App ID</b> + <b>App secret</b> → <code>META_APP_ID</code> / <code>META_APP_SECRET</code>.</li>
+  <li>Facebook Login → Settings → <b>Valid OAuth redirect URIs</b>: add <code>https://your-app.vercel.app/api/oauth/meta/callback</code>.</li>
+  <li>Scopes: <code>ads_read</code>, <code>read_insights</code> (request in App Review for production; dev mode works for your own accounts).</li>
+  <li>In AdPilot: <b>Connect Accounts → Connect Meta</b> → approve → ad accounts appear → <b>Sync now</b>.</li>
+</ol>
+
+<h4>TikTok Ads</h4>
+<ol>
+  <li>business-api.tiktok.com → <b>My Apps</b> → create an app; enable <b>Reporting / Ads (read)</b>.</li>
+  <li>Copy <b>App ID</b> + <b>Secret</b> → <code>TIKTOK_APP_ID</code> / <code>TIKTOK_APP_SECRET</code>.</li>
+  <li>Redirect URI: <code>https://your-app.vercel.app/api/oauth/tiktok/callback</code>.</li>
+  <li>Scope: <code>ads.read</code>.</li>
+  <li>In AdPilot: <b>Connect Accounts → Connect TikTok</b> → approve → <b>Sync now</b>.</li>
+</ol>
+<div class="safe">Tokens are encrypted with <b>AES-256-GCM</b> before storage and are never sent to the browser. Scheduled sync &amp; scoring run via the daily cron once connected.</div>
+
+<h2>2.5 Option C — MCP server (Claude-driven)</h2>
+<p>If you run Meta/TikTok through an MCP server, have your agent export insights to the universal schema and push them to <code>POST /api/ingest</code> (authenticated with a session, or a server <code>x-api-key</code> = <code>INGEST_API_KEY</code> plus an <code>organisation_id</code>). It can also score and save in the same call. The schema is documented in <code>docs/MCP-INGEST.md</code>.</p>
+
+<h2>2.6 Environment-variable reference</h2>
+<table>
+  <tr><th>Variable</th><th>Purpose</th><th>Required?</th></tr>
+  <tr><td><code>NEXT_PUBLIC_SUPABASE_URL</code> / <code>..._ANON_KEY</code></td><td>Database &amp; auth</td><td><b>Yes</b></td></tr>
+  <tr><td><code>SUPABASE_SERVICE_ROLE_KEY</code></td><td>Server-side admin writes</td><td>Yes (server)</td></tr>
+  <tr><td><code>ANTHROPIC_API_KEY</code></td><td>AI generation (Canva/Bobby/Aria)</td><td>Optional</td></tr>
+  <tr><td><code>STRIPE_SECRET_KEY</code> / <code>STRIPE_WEBHOOK_SECRET</code></td><td>Billing</td><td>Optional</td></tr>
+  <tr><td><code>NEXT_PUBLIC_STRIPE_PRICE_STARTER</code> / <code>_PRO</code></td><td>Plan price IDs (validated server-side)</td><td>Optional</td></tr>
+  <tr><td><code>META_APP_ID/SECRET</code>, <code>TIKTOK_APP_ID/SECRET</code></td><td>OAuth connect</td><td>Optional</td></tr>
+  <tr><td><code>TOKEN_ENCRYPTION_KEY</code></td><td>Encrypts platform tokens</td><td>If using OAuth</td></tr>
+  <tr><td><code>CRON_SECRET</code></td><td>Secures scheduled jobs (fail-closed if unset)</td><td>If using crons</td></tr>
+  <tr><td><code>RESEND_API_KEY</code> / <code>EMAIL_FROM</code></td><td>Email digests &amp; alerts</td><td>Optional</td></tr>
+  <tr><td><code>INGEST_API_KEY</code></td><td>MCP/automation push to <code>/api/ingest</code></td><td>Optional</td></tr>
+  <tr><td><code>SUPPORT_EMAIL</code></td><td>Shown in the manual / error reporting</td><td>Recommended</td></tr>
+</table>
+
+<h2>2.7 Post-connect checklist</h2>
+<ul>
+  <li><b>Settings</b> — average sale value + gross margin per client.</li>
+  <li><b>Notifications</b> — weekly digest + critical alerts on.</li>
+  <li><b>White-label</b> — logo, colour, support email.</li>
+  <li><b>Crons</b> (in <code>vercel.json</code>) — daily auto-analysis + Friday digest, protected by <code>CRON_SECRET</code>.</li>
+</ul>
+
+<!-- ═════════════════ PART 3 — TROUBLESHOOTING ═════════════════ -->
+<div class="page-break"></div>
+<h1>Part 3 — Troubleshooting</h1>
+
+<h2>3.1 Error reference</h2>
+<table>
+  <tr><th>You see</th><th>It means</th><th>Do this</th></tr>
+  <tr><td>“No rows parsed”</td><td>CSV headers unrecognised</td><td>Export at ad level; keep the header row; use the universal template (Appendix B)</td></tr>
+  <tr><td>“AI generation isn't configured”</td><td>No Claude key</td><td>Set <code>ANTHROPIC_API_KEY</code></td></tr>
+  <tr><td>“Billing isn't configured”</td><td>No Stripe keys</td><td>Set <code>STRIPE_SECRET_KEY</code> + price IDs</td></tr>
+  <tr><td>“No connected {platform} account”</td><td>Not connected</td><td>Connect Accounts → Connect → Sync now</td></tr>
+  <tr><td>“{platform}_not_configured”</td><td>App ID/secret missing</td><td>Set the <code>META_</code>/<code>TIKTOK_</code> <code>APP_ID</code> &amp; <code>SECRET</code></td></tr>
+  <tr><td>“Upload needs Supabase Storage”</td><td>Storage bucket not set up</td><td>Run migration 0003, or paste a link instead</td></tr>
+  <tr><td>“Could not analyse this data”</td><td>Engine rejected the rows (HTTP 422)</td><td>Check columns/values; try a sample CSV</td></tr>
+  <tr><td>401 / redirect to login</td><td>Session expired</td><td>Sign in again</td></tr>
+  <tr><td>Sync “502 … API error”</td><td>Platform rejected the call</td><td>Token expired / rate-limited — reconnect or retry shortly</td></tr>
+  <tr><td>“Cron not configured”</td><td><code>CRON_SECRET</code> unset (fail-closed)</td><td>Set <code>CRON_SECRET</code> in env</td></tr>
+</table>
+
+<h2>3.2 Diagnostics</h2>
+<ul>
+  <li><b>Liveness:</b> <code>/api/health</code>. Host status: Vercel dashboard.</li>
+  <li><b>Engine integrity:</b> a self-test runs on every build, confirming parity with the reference Python engine (30/30 checks).</li>
+  <li><b>Bad score?</b> Open “Why this score?”, check <b>data confidence</b>, and verify the CSV columns.</li>
+  <li><b>Connection issues?</b> Re-check <b>Connect Accounts</b>; reconnect expired tokens.</li>
+</ul>
+
+<h2>3.3 Common issues &amp; fixes</h2>
+<table>
+  <tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr>
+  <tr><td>Analyse does nothing</td><td>Empty CSV / bad headers</td><td>Confirm data &amp; header row; try a built-in sample</td></tr>
+  <tr><td>Score looks wrong</td><td>Economics not set</td><td>Set avg sale value + margin in Settings; check data confidence</td></tr>
+  <tr><td>Seeing the wrong client's data</td><td>Active workspace</td><td>Switch with the <b>Client</b> selector (top-left)</td></tr>
+  <tr><td>PDF layout off</td><td>Print settings</td><td>Print dialog → A4/Letter → Save as PDF → enable “Background graphics”</td></tr>
+  <tr><td>No alert emails</td><td>Email not configured / rule off</td><td>Set <code>RESEND_API_KEY</code> + <code>EMAIL_FROM</code>; enable the rule; Send test email</td></tr>
+</table>
+
+<h2>3.4 FAQ</h2>
+<ul>
+  <li><b>Does it change my ads?</b> No — read-only, proposals only.</li>
+  <li><b>Is my data private?</b> CSVs are processed in-browser; connected data is org-isolated (RLS); tokens are encrypted.</li>
+  <li><b>Meta + TikTok together?</b> Yes — one schema, one combined score plus per-platform splits.</li>
+  <li><b>Do I need to code?</b> No.</li>
+  <li><b>Results guaranteed?</b> No — it surfaces issues and opportunities; performance depends on your execution.</li>
+</ul>
+
+<h2>3.5 How to report an error (so it gets fixed fast)</h2>
+<p>Email your support contact (<code>SUPPORT_EMAIL</code>) with:</p>
+<ol>
+  <li>What you did (the steps).</li>
+  <li>What you expected vs what actually happened.</li>
+  <li>The <b>exact error text</b> (screenshot is ideal).</li>
+  <li>Which client/workspace you were in.</li>
+  <li>A small sample of the CSV columns (no need for full data).</li>
+</ol>
+<p class="muted">For developers: check Vercel &amp; Supabase logs; the build self-test confirms engine integrity.</p>
+
+<!-- ═════════════════ APPENDIX ═════════════════ -->
+<div class="page-break"></div>
+<h1>Appendix</h1>
+
+<h2>A. Glossary</h2>
+<table>
+  <tr><th>Term</th><th>Meaning</th></tr>
+  <tr><td><b>CPA</b></td><td>Cost per acquisition — spend ÷ conversions.</td></tr>
+  <tr><td><b>Break-even CPA</b></td><td>Average sale value × gross margin. Above it, you lose money per sale.</td></tr>
+  <tr><td><b>ROAS</b></td><td>Return on ad spend — revenue ÷ spend.</td></tr>
+  <tr><td><b>Break-even ROAS</b></td><td>1 ÷ gross margin.</td></tr>
+  <tr><td><b>MER</b></td><td>Marketing efficiency ratio — total revenue ÷ total ad spend.</td></tr>
+  <tr><td><b>CTR / CPC / CPM</b></td><td>Click-through rate / cost per click / cost per 1,000 impressions.</td></tr>
+  <tr><td><b>Creative fatigue</b></td><td>Performance decay as an audience sees the same creative too often.</td></tr>
+  <tr><td><b>RLS</b></td><td>Row-level security — database rules that isolate each client's data.</td></tr>
+</table>
+
+<h2>B. Universal CSV schema</h2>
+<p>Columns auto-map; these are the canonical names. Missing columns are handled — provide what you have.</p>
+<pre><code>business_name, platform, campaign_name, date,
+spend, impressions, reach, clicks,
+leads, purchases, revenue,
+three_second_views, thruplays, lead_quality_score,
+utm_source, utm_medium, utm_campaign, tracking_status</code></pre>
+
+<h2>C. Break-even maths</h2>
+<ul>
+  <li><b>Break-even CPA</b> = average sale value × gross margin</li>
+  <li><b>Break-even ROAS</b> = 1 ÷ gross margin</li>
+</ul>
+<p class="muted small">Example: $200 sale × 0.60 margin → break-even CPA $120; break-even ROAS 1.67×.</p>
+
+<h2>D. Where things live</h2>
+<table>
+  <tr><th>Area</th><th>Where</th></tr>
+  <tr><td>Score &amp; analyse</td><td>Ads Health</td></tr>
+  <tr><td>Connect platforms</td><td>Connect Accounts</td></tr>
+  <tr><td>Saved reports / PDF</td><td>Saved Reports</td></tr>
+  <tr><td>Branding</td><td>White-label</td></tr>
+  <tr><td>Economics</td><td>Settings</td></tr>
+  <tr><td>Alerts &amp; digest</td><td>Notifications</td></tr>
+  <tr><td>AI key</td><td>Claude API</td></tr>
+  <tr><td>This guide (in-app)</td><td><code>/manual</code></td></tr>
+</table>
+
+<div class="footer-note">
+  AdPilot OS V2 — Training, Setup &amp; Troubleshooting. Read-only &amp; safe by design: it analyses and proposes; it never edits, pauses, or creates ads. No earnings or results are guaranteed. © AdPilot OS.
+</div>
+
+</body>
+</html>

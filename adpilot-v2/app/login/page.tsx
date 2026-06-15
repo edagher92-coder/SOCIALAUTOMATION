@@ -22,7 +22,7 @@ export default function Login() {
     setBusy(false);
     if (error) { setMsg(error.message); return; }
     if (mode === "signup") { setMsg("Check your email to confirm, then sign in."); return; }
-    router.push("/dashboard");
+    router.push("/command");
   }
 
   return (
@@ -31,7 +31,7 @@ export default function Login() {
       <div className="mb-8 flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-ink">
         <span className="inline-block h-8 w-8 rounded-xl bg-gradient-to-br from-brand to-teal shadow-sm" aria-hidden />
         AdPilot OS
-        <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand">V2</span>
+        <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand">V3</span>
       </div>
 
       <div className="w-full max-w-sm">
