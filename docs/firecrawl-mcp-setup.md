@@ -38,13 +38,26 @@ first time it's used — approve it.
 In a new session, run `/mcp` to confirm the `firecrawl` server is connected and
 its tools are listed.
 
+## Network egress (required for the web environment)
+
+The server makes outbound calls to **`api.firecrawl.dev`**. In the remote web
+environment, outbound traffic is governed by a network egress allowlist. If the
+host isn't allowed, requests are rejected by the environment proxy (not by
+Firecrawl) with:
+
+```
+HTTP 403 — Host not in allowlist: api.firecrawl.dev.
+Add this host to your network egress settings to allow access.
+```
+
+Add `api.firecrawl.dev` to the environment's network egress settings (or select
+a network policy that permits it). See
+https://code.claude.com/docs/en/claude-code-on-the-web for where the network
+policy is configured.
+
 ## Notes
 
 - The server runs via `npx -y firecrawl-mcp` (requires Node, which is already
   available in the web environment).
-- Outbound calls go to `api.firecrawl.dev`. In the remote web environment,
-  reaching it depends on your environment's **network policy** — if outbound
-  access is restricted, the Firecrawl tools will fail to connect. Choose a
-  policy that allows it (docs link above).
 - Alternatively, install the official Firecrawl Claude Code plugin, which
   provides the `/firecrawl:setup` command and the same MCP server.
