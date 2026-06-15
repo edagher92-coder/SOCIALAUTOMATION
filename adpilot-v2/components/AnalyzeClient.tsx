@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useMode } from "./mode";
 
 const BANDC: Record<string, string> = { Green: "#16a34a", Yellow: "#ca8a04", Orange: "#ea580c", Red: "#dc2626" };
 const SEVC: Record<string, string> = { CRITICAL: "#dc2626", HIGH: "#ea580c", MEDIUM: "#ca8a04", LOW: "#16a34a", INFO: "#5a6577" };
@@ -44,6 +45,7 @@ function Gauge({ score, band }: { score: number; band: string }) {
 }
 
 export default function AnalyzeClient() {
+  const { mode } = useMode();
   const [csv, setCsv] = useState(SAMPLES.fatigued);
   const [avg, setAvg] = useState(200);
   const [margin, setMargin] = useState(0.6);
@@ -117,7 +119,8 @@ export default function AnalyzeClient() {
               ))}
             </div>
 
-            <details className="mt-4 rounded-xl border border-[#e3e8ef] p-3">
+            {mode === "advanced" && (
+            <details className="mt-4 rounded-xl border border-[#e3e8ef] p-3" open>
               <summary className="cursor-pointer font-bold">Why this score? — factor breakdown</summary>
               <table className="mt-2 w-full text-sm">
                 <thead><tr className="text-left text-muted"><th className="py-1">Factor</th><th>Score</th><th>Weight</th><th>Contribution</th></tr></thead>
@@ -133,6 +136,7 @@ export default function AnalyzeClient() {
                 </tbody>
               </table>
             </details>
+            )}
 
             <h3 className="mt-4 font-bold">Findings</h3>
             <table className="w-full text-sm">

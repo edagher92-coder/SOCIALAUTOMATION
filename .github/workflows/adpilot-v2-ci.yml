@@ -21,6 +21,9 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Engine parity tests (must pass)
         run: npm test
-      - name: Typecheck (advisory)
-        run: npm run typecheck
-        continue-on-error: true
+      - name: Production build (typechecks pages + app)
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy_anon_key_for_build
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
