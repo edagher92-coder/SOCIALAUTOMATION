@@ -17,6 +17,7 @@ export const KNOWLEDGE: Record<KnowledgeDomain, KnowledgeDoc> = {
       "Creative fatigue: refresh when frequency reaches ~2.5–3.0 OR CTR falls ≥20% from its baseline. CTR can drop ~40% after 4+ exposures — try to keep frequency below ~3.4 on cold audiences.",
       "Creative volume by daily spend: ~10–15 creatives at $100–300/day; 20–30 at $300–1k; 30–50 at $1k–5k; 50–100+ above $5k. Add 3–5 fresh variations weekly.",
       "Advantage+/automated: tends to cut CPA materially vs manual setups and lift CTR via real-time optimization; feed it plenty of creative diversity.",
+      "Click-to-Message (CTWA / Messenger objective): optimise on CONVERSATIONS STARTED, not link CTR. Healthy cost-per-conversation is roughly AUD $3–8; treat >$8/convo as a watch-flag, and ~$67.50 as the qualified-lead reference. Quality signals: reply rate (~70%+ is strong) and depth-3+ replies (real intent, not noise). Exiting Meta's learning phase needs ~50 optimisation events/ad-set/week (≈$40–45/day/ad-set at these costs) — under-funded ad sets stall in learning. Don't judge a starved ad set (<~$3/day) on volume: fund it first, then test ≥3 days before acting; if it still produces ~0 conversations, the issue is creative/offer, not budget.",
       "Failure→action: spend with zero recorded results or flagged tracking ⇒ audit pixel/CAPI/events BEFORE any budget call (never scale/cut blind). High frequency + falling CTR ⇒ fatigue ⇒ launch fresh angles as PAUSED duplicates. Implausibly high ROAS ⇒ treat as a tracking anomaly, verify values.",
     ].join("\n"),
     sources: [
