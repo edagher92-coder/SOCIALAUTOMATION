@@ -80,3 +80,9 @@ mira-meta-ads-strategist, travis-tiktok-ads-strategist, dana-ads-data-analyst, s
 - Pass the classified intent label to the receiving skill so it does not re-ask questions already answered
 - If safety flags were raised, include them in the handoff so the receiving skill enforces the same rules
 - Return to this skill if the user's next request falls outside the current skill's scope
+
+
+## Gotchas (lessons from the v3 build — see ../GOTCHAS.md)
+- Parallel agents: ~3–4 concurrency cap (more → rate-limit); **partition file ownership disjointly**; use read-only reviewers (Explore) for audits; no concurrent `npm build`/`dev`; the orchestrator commits + runs the consolidated build/smoke-check.
+- Never accept secrets in chat; never assume access you haven't verified.
+- The read-only-ad invariant is the trust moat — guard it; surface any ad-write as a decision.

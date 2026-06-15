@@ -75,3 +75,9 @@ mira-meta-ads-strategist (strategy recommendations), atlas-tracking-attribution-
 - If creative fatigue found, hand off to creative-fatigue-detector with frequency and CTR data included
 - If lead quality is suspect, hand off to lead-quality-analyser with CPL and CRM data
 - Return health score to campaign-health-monitor for ongoing monitoring baseline
+
+
+## Gotchas (lessons from the v3 build — see ../GOTCHAS.md)
+- `/me/adaccounts` returns `account_id` **without** the `act_` prefix; the insights endpoint needs `act_<id>` — normalise.
+- Meta errors carry detail in `error.message`, not just the HTTP status — surface both.
+- `business.facebook.com` is a protected site — pull via the Graph API.

@@ -12,8 +12,8 @@ export async function metaPull(token: string, accountId: string, orgId: string) 
   const act = accountId.startsWith("act_") ? accountId : `act_${accountId}`;
   const fields = "campaign_name,spend,impressions,reach,frequency,clicks,ctr,cpc,cpm";
   const r = await fetch(`https://graph.facebook.com/v21.0/${act}/insights?level=campaign&date_preset=last_30d&time_increment=1&fields=${encodeURIComponent(fields)}&access_token=${encodeURIComponent(token)}`);
-  const j: any = await r.json();
-  if (!r.ok) throw new Error(j.error?.message || "Meta API error");
+  const j: any = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j?.error?.message || `Meta API error (HTTP ${r.status})`);
   return (j.data || []).map((d: any) => ({
     organisation_id: orgId, platform: "meta", campaign_name: d.campaign_name, date: d.date_start,
     spend: +d.spend || 0, impressions: +d.impressions || 0, reach: +d.reach || 0, frequency: +d.frequency || 0,
@@ -30,8 +30,10 @@ export async function tiktokPull(token: string, advertiserId: string, orgId: str
     start_date: daysAgo(SYNC_WINDOW_DAYS), end_date: daysAgo(0), page_size: "1000",
   });
   const r = await fetch(`https://business-api.tiktok.com/open_api/v1.3/report/integrated/get/?${qp.toString()}`, { headers: { "Access-Token": token } });
-  const j: any = await r.json();
-  if (j.code !== 0 && j.code !== undefined) throw new Error(j.message || "TikTok API error");
+  const j: any = await r.json().catch(() => ({}));
+  // TikTok signals errors via a non-zero `code` in a 200 body; also fail on HTTP errors.
+  if (!r.ok) throw new Error(j?.message || `TikTok API error (HTTP ${r.status})`);
+  if (typeof j.code === "number" && j.code !== 0) throw new Error(j.message || `TikTok API error (code ${j.code})`);
   return (j.data?.list || []).map((it: any) => {
     const m = it.metrics || {}, dim = it.dimensions || {};
     return {
@@ -58,20 +60,30 @@ export async function syncOrgPlatform(admin: any, orgId: string, platform: Platf
 
   const { data: accts } = await admin.from("connected_ad_accounts")
     .select("external_account_id").eq("organisation_id", orgId).eq("platform", platform).eq("status", "connected");
-  const ids = (accts || []).map((a: any) => String(a.external_account_id)).filter(Boolean);
+  // De-duplicate account ids so the same account isn't pulled twice (would inflate row counts).
+  const ids: string[] = Array.from(new Set(
+    (accts || []).map((a: any) => String(a.external_account_id ?? "").trim()).filter(Boolean),
+  ));
   if (ids.length === 0) throw new Error(`No ${platform} ad account on file.`);
 
   const token = decrypt({ ciphertext: tok.ciphertext, iv: tok.iv, authTag: tok.auth_tag });
+  // Accumulate across every connected account for this platform. If any account's pull
+  // fails we throw — callers (manual sync / auto-sync) decide whether to swallow per-platform.
   let rows: any[] = [];
   for (const id of ids) {
     rows = rows.concat(platform === "meta" ? await metaPull(token, id, orgId) : await tiktokPull(token, id, orgId));
   }
 
   // Idempotent refresh: clear the API-sourced rows in the rolling window, then insert.
-  // CSV-imported rows (source = 'csv') are never touched.
-  await admin.from("campaign_snapshots").delete()
+  // CSV-imported rows (source = 'csv') are never touched. Surface DB errors so a silently
+  // failed delete/insert doesn't report a bogus success.
+  const { error: delErr } = await admin.from("campaign_snapshots").delete()
     .eq("organisation_id", orgId).eq("platform", platform).eq("source", `${platform}_api`)
     .gte("date", daysAgo(SYNC_WINDOW_DAYS));
-  if (rows.length) await admin.from("campaign_snapshots").insert(rows);
+  if (delErr) throw new Error(delErr.message || "Failed to clear stale snapshots");
+  if (rows.length) {
+    const { error: insErr } = await admin.from("campaign_snapshots").insert(rows);
+    if (insErr) throw new Error(insErr.message || "Failed to write snapshots");
+  }
   return rows.length;
 }

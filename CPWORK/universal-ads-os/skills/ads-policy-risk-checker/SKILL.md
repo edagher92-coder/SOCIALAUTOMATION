@@ -93,3 +93,10 @@ Example user phrases:
 - High or Do Not Run scores must be escalated to the human operator; do not proceed without a human decision.
 - ACCC concerns flagged as serious must be escalated to the business owner with a written record of the flag.
 - Completed check reports are filed in /clients/{{client.business_name}}/reports/policy-checks/.
+
+
+## Gotchas (lessons from the v3 build — see ../GOTCHAS.md)
+- Meta personal-attributes policy: don't state/imply a user's health/financial/etc. status; avoid 2nd-person "you" claims (enforcement now catches indirect implications).
+- No guaranteed-income / instant-results / fake-scarcity claims; don't request health or financial info.
+- TikTok: prohibited categories (illegal drugs/weapons/counterfeit); AI-generated realistic depictions must be clearly labelled.
+- Replying to the public (messaging) or running ads needs **App Review** (per-app).

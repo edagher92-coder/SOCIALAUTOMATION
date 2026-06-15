@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
 
   // Protect the whole authenticated app area.
   const appRoutes = [
-    "/command", "/proposals", "/dashboard", "/ai-specialists", "/build-dashboard", "/canva-creator",
+    "/command", "/proposals", "/content", "/messenger", "/dashboard", "/ai-specialists", "/build-dashboard", "/canva-creator",
     "/claude-api", "/bobby-business-assistant", "/aria-course-creator", "/crm-maintenance",
     "/reports", "/billing", "/connect", "/notifications", "/agency",
     "/creative", "/settings", "/manual",
@@ -33,6 +33,13 @@ export async function middleware(request: NextRequest) {
   if (!user && appRoutes.some((r) => p === r || p.startsWith(r + "/"))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+  // Already signed in? Skip the login screen and land in the Command Center
+  // (keeps the post-auth destination consistent with login + the app shell).
+  if (user && (p === "/login" || p.startsWith("/login/"))) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/command";
     return NextResponse.redirect(url);
   }
   return response;

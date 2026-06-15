@@ -79,3 +79,9 @@ travis-tiktok-ads-strategist (strategy and creative recommendations), stella-soc
 - If pixel or UTM issues found, hand off to tracking-attribution-review with specific flags included
 - If frequency is high and CTR is dropping, hand off to creative-fatigue-detector
 - Return health score to campaign-health-monitor for ongoing monitoring baseline
+
+
+## Gotchas (lessons from the v3 build — see ../GOTCHAS.md)
+- TikTok returns errors as a **non-zero `code` inside a 200 body** — check `code`, not just HTTP status.
+- Reporting metric/dimension names differ from Meta's field names — map carefully.
+- Content Posting defaults to `SELF_ONLY` (private) until the app is audited/approved.

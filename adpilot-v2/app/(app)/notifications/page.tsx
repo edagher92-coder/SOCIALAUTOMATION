@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import PageHeader from "@/components/PageHeader";
 
 export default function Notifications() {
   const [email, setEmail] = useState("");
@@ -28,14 +29,17 @@ export default function Notifications() {
   }
 
   return (
-    <div className="max-w-xl">
-      <h1 className="text-2xl font-extrabold tracking-tight">Notifications</h1>
-      <p className="mb-5 mt-1 text-muted">Get a weekly health digest and critical alerts by email.</p>
-      <div className="space-y-4 rounded-2xl border border-[#e3e8ef] bg-white p-5 shadow-card">
+    <div className="max-w-xl animate-fade-in">
+      <PageHeader
+        eyebrow="Alerts"
+        title="Notifications"
+        subtitle="Get a weekly health digest and critical alerts by email."
+      />
+      <div className="space-y-4 rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <div>
           <label className="mb-1 block text-sm font-bold">Send to</label>
           <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="you@business.com.au"
-            className="w-full rounded-lg border border-[#e3e8ef] p-2.5" />
+            className="w-full rounded-lg border border-border-subtle p-2.5" />
         </div>
         <label className="flex items-center gap-2.5 text-sm"><input type="checkbox" checked={weekly} onChange={(e) => setWeekly(e.target.checked)} /> Weekly health digest (Fridays)</label>
         <label className="flex items-center gap-2.5 text-sm"><input type="checkbox" checked={critical} onChange={(e) => setCritical(e.target.checked)} /> Critical alerts (CPA blowouts, broken tracking, fatigue)</label>

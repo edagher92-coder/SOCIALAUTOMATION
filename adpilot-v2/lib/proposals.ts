@@ -31,3 +31,99 @@ export function cadenceText(hours?: number | null): string {
   if (h === 168) return "weekly";
   return `every ${h}h`;
 }
+
+// Only these verdicts are surfaced as actionable proposals. Engine verdicts like
+// "keep", "duplicate" and "insufficient-data" are informational and must never
+// pollute the open Proposals queue.
+export const ACTIONABLE_VERDICTS = new Set([
+  "scale",
+  "kill",
+  "reduce",
+  "refresh",
+  "fix-tracking",
+]);
+
+export interface DecisionLike {
+  verdict: string;
+  name?: string;
+  platform?: string;
+  reason?: string;
+  proposal?: string;
+}
+
+export interface RecommendationRow {
+  organisation_id: string;
+  verdict: string;
+  entity_name: string;
+  platform: string;
+  reason?: string;
+  proposal?: string;
+}
+
+// Turn engine decisions into the de-duplicated, actionable-only recommendation
+// rows that back the Proposals queue. Dedupe is platform-aware so the same
+// campaign name on Meta and TikTok is kept distinct. Pure + deterministic so it
+// can be unit-tested without a database.
+export function buildRecommendationRows(
+  orgId: string,
+  decisions: DecisionLike[] | null | undefined,
+): RecommendationRow[] {
+  const seen = new Set<string>();
+  const rows: RecommendationRow[] = [];
+  for (const d of decisions || []) {
+    if (!d || !ACTIONABLE_VERDICTS.has(d.verdict)) continue;
+    const name = d.name || "(ad)";
+    const platform = d.platform || "?";
+    const k = `${platform}|${name}|${d.verdict}`;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    rows.push({
+      organisation_id: orgId,
+      verdict: d.verdict,
+      entity_name: name,
+      platform,
+      reason: d.reason,
+      proposal: d.proposal,
+    });
+  }
+  return rows;
+}
+
+// Refresh the open Proposals queue for an org from a fresh analysis. Replaces
+// only the 'open' set (approved/dismissed/done history is preserved) and is
+// idempotent: re-running with the same decisions yields the same open queue.
+// Inserts the new rows first, then clears the *previously* open rows, so a
+// failed insert never leaves the user with an empty queue.
+export async function refreshOpenRecommendations(
+  admin: any,
+  orgId: string,
+  decisions: DecisionLike[] | null | undefined,
+): Promise<{ inserted: number; cleared: number }> {
+  const rows = buildRecommendationRows(orgId, decisions);
+
+  // Snapshot the ids that are currently open so we can remove exactly those
+  // after the new set lands (avoids deleting rows we just inserted).
+  const { data: prior } = await admin
+    .from("recommendations")
+    .select("id")
+    .eq("organisation_id", orgId)
+    .eq("status", "open");
+  const priorIds = (prior || []).map((r: any) => r.id);
+
+  let inserted = 0;
+  if (rows.length) {
+    const { error } = await admin.from("recommendations").insert(rows);
+    // If the insert fails, leave the existing queue untouched rather than
+    // wiping it and showing the user nothing.
+    if (error) return { inserted: 0, cleared: 0 };
+    inserted = rows.length;
+  }
+
+  let cleared = 0;
+  if (priorIds.length) {
+    await admin.from("recommendations").delete().in("id", priorIds);
+    cleared = priorIds.length;
+  }
+
+  return { inserted, cleared };
+}

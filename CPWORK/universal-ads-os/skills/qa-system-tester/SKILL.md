@@ -103,3 +103,10 @@ Example user phrases:
 - P2 fixes should be resolved within the same sprint; document as known issues if deferred.
 - QA reports are filed in /docs/qa-reports/ with date stamp after each test run.
 - After a Clean pass, hand the launch-ready verdict to piper-productisation-saas-agent and the human operator to proceed.
+
+
+## Gotchas (lessons from the v3 build — see ../GOTCHAS.md)
+- `import "server-only"` breaks under vitest → alias `server-only` to an empty shim in `vitest.config.ts`.
+- `tsc --noEmit` type-checks TEST files (vitest/esbuild doesn't) — keep test typing clean (`vi.fn` tuple-spread → `const fn: any = vi.fn(...)`).
+- **Next.js route files must export ONLY HTTP handlers + config** — exporting helpers (e.g. `buildGrounding`, `parseJson`) from a route can break the production build; put them in `lib/` and import.
+- The production build needs dummy `NEXT_PUBLIC_SUPABASE_*` env; auth-gated pages can't be click-tested without a live Supabase.

@@ -90,3 +90,12 @@ Example user phrases:
 - The universal schema definition must be shared with dana-ads-data-analyst and dashboard-spec-builder to ensure alignment.
 - Any write-action architecture must be reviewed by the human operator and signed off before the developer proceeds.
 - Completed integration specs are filed in /clients/{{client.business_name}}/config/api-spec/.
+
+
+## Gotchas (lessons from the v3 build — see ../GOTCHAS.md)
+- `business.facebook.com` is a protected site — integrate via the **Graph API**, never the browser.
+- Graph Explorer page tokens are short-lived (~1–2h); exchange for a **non-expiring** page token via the app secret.
+- Webhooks: verify-token handshake on GET + **HMAC-SHA256 over the RAW body** on POST; always return 200.
+- Keyword auto-replies need a webhook bot + **App Review** (`pages_messaging` Advanced Access) — **per-app, not per-page**.
+- WhatsApp is a separate Cloud API (24h reply window); Instagram DM shares the Messenger webhook.
+- Never add ad-write (pause/budget) silently — it breaks the read-only trust moat; gate behind typed-YES + audit.

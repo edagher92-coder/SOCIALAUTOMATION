@@ -13,6 +13,8 @@ const NAV_GROUPS: { title: string | null; items: { href: string; label: string; 
     { href: "/proposals", label: "Proposals", icon: "✅", desc: "Approve safe, prioritised fixes" },
     { href: "/dashboard", label: "Ads Health", icon: "📊", desc: "Score a CSV export" },
     { href: "/connect", label: "Connect & Sync", icon: "🔗", desc: "Meta & TikTok + auto-sync" },
+    { href: "/content", label: "Content Studio", icon: "🎬", desc: "Create, schedule & publish posts" },
+    { href: "/messenger", label: "Messenger Setup", icon: "💬", desc: "Greeting, ice breakers & menu" },
     { href: "/reports", label: "Reports", icon: "🗃️", desc: "Your analysis history" },
   ] },
   { title: "AI Team", items: [

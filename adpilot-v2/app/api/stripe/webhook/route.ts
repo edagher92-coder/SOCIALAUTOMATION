@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureOrg } from "@/lib/org";
+import { normalisePlan } from "@/lib/entitlements";
 
 export const runtime = "nodejs";
 
@@ -27,15 +28,34 @@ export async function POST(req: Request) {
       if (userId) {
         const orgId = await ensureOrg(userId, s.customer_details?.email ?? undefined);
         const admin = createAdminClient();
+        // Normalise the plan from the checkout metadata so a missing/garbled value records a
+        // known tier ("free") rather than silently granting an unintended paid plan. The
+        // checkout route already validated the price→plan mapping before setting this.
+        const plan = normalisePlan(s.metadata?.plan);
         // Upsert keyed on the subscription id so duplicate webhook deliveries are idempotent.
         await admin.from("billing_subscriptions").upsert({
           organisation_id: orgId,
           stripe_customer_id: String(s.customer ?? ""),
           stripe_subscription_id: String(s.subscription ?? ""),
-          plan: s.metadata?.plan || "pro",
+          plan,
           status: "active",
         }, { onConflict: "stripe_subscription_id" });
       }
+    } else if (
+      event.type === "customer.subscription.deleted" ||
+      event.type === "customer.subscription.updated"
+    ) {
+      // Keep entitlements honest when a subscription is cancelled or lapses: flip the stored
+      // status so planForOrg() falls back to "free". Keyed on the Stripe subscription id.
+      const sub = event.data.object as Stripe.Subscription;
+      const status =
+        event.type === "customer.subscription.deleted" || sub.status !== "active"
+          ? "canceled"
+          : "active";
+      const admin = createAdminClient();
+      await admin.from("billing_subscriptions")
+        .update({ status })
+        .eq("stripe_subscription_id", String(sub.id));
     }
   } catch {
     // Return 200 so Stripe doesn't infinitely retry on our internal errors; logged elsewhere.

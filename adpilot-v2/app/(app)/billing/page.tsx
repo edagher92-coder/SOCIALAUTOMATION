@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgId } from "@/lib/org";
 import UpgradeButtons from "@/components/UpgradeButtons";
+import PageHeader from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -15,15 +16,18 @@ export default async function BillingPage() {
   const active = sub && (sub as any).status === "active";
 
   return (
-    <div className="max-w-3xl">
-      <h1 className="text-2xl font-extrabold tracking-tight">Billing</h1>
-      <p className="mb-5 mt-1 text-muted">Manage your plan. Prices in AUD; powered by Stripe.</p>
+    <div className="max-w-3xl animate-fade-in">
+      <PageHeader
+        eyebrow="Account"
+        title="Billing"
+        subtitle="Manage your plan. Prices in AUD; powered by Stripe."
+      />
 
-      <div className="mb-5 rounded-2xl border border-[#e3e8ef] bg-white p-5 shadow-card">
+      <div className="mb-5 rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <div className="text-sm text-muted">Current plan</div>
-        <div className="text-xl font-extrabold capitalize">
+        <div className="text-xl font-extrabold capitalize text-ink">
           {active ? (sub as any).plan : "Free"}
-          {active && <span className="ml-2 rounded-full bg-[#e6fbf6] px-2 py-0.5 text-xs font-bold text-teal">active</span>}
+          {active && <span className="ml-2 rounded-full bg-teal-50 px-2 py-0.5 text-xs font-bold text-teal">active</span>}
         </div>
       </div>
 

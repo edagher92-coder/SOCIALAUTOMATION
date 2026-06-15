@@ -108,3 +108,10 @@ dana-ads-data-analyst (metric inputs for scoring), atlas-tracking-attribution-ag
 - If health <70, route top-issue list to the relevant skill (e.g. low tracking → tracking-attribution-review; low creative freshness → creative-fatigue-detector)
 - If health ≥70 and user wants to scale, pass "scale eligible" confirmation to budget-pacing-monitor
 - Re-run after each major fix to track score improvement over time
+
+
+## Gotchas (lessons from the v3 build — see ../GOTCHAS.md)
+- **Read-only invariant:** analyse + propose; never edit/pause/scale without an explicit typed-YES.
+- Benchmarks are **ranges** that vary by vertical/geo/season — never present as absolutes.
+- Idempotent sync (delete-window + insert, dedupe account ids, partial-failure safe).
+- Spend with zero recorded results / broken tracking → audit pixel/events **first**; never scale or cut blind.

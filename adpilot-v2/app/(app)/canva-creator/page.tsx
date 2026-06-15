@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useMode } from "@/components/mode";
 import AiButton from "@/components/AiButton";
+import PageHeader from "@/components/PageHeader";
 
 export default function CanvaCreator() {
   const { mode } = useMode();
@@ -42,11 +43,14 @@ export default function CanvaCreator() {
   }
 
   return (
-    <div className="max-w-3xl">
-      <h1 className="text-2xl font-extrabold tracking-tight">Canva Creator</h1>
-      <p className="mb-5 mt-1 text-muted">Turn your offer into ready-to-use ad copy, hooks, a visual concept and Canva search terms.</p>
+    <div className="max-w-3xl animate-fade-in">
+      <PageHeader
+        eyebrow="Stella"
+        title="Canva Creator"
+        subtitle="Turn your offer into ready-to-use ad copy, hooks, a visual concept and Canva search terms."
+      />
 
-      <div className="rounded-2xl border border-[#e3e8ef] bg-white p-5 shadow-card">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Product / service" v={product} set={setProduct} />
           <Field label="Audience" v={audience} set={setAudience} />
@@ -54,7 +58,7 @@ export default function CanvaCreator() {
           <div>
             <label className="mb-1 block text-sm font-bold">Platform</label>
             <select value={platform} onChange={(e) => setPlatform(e.target.value as any)}
-              className="w-full rounded-lg border border-[#e3e8ef] p-2.5"><option>Meta</option><option>TikTok</option></select>
+              className="w-full rounded-lg border border-border-subtle p-2.5"><option>Meta</option><option>TikTok</option></select>
           </div>
         </div>
         <button onClick={() => setOut(build())} className="mt-4 rounded-lg bg-brand px-5 py-2.5 font-bold text-white">Generate brief</button>
@@ -83,13 +87,13 @@ export default function CanvaCreator() {
 function Field({ label, v, set }: { label: string; v: string; set: (s: string) => void }) {
   return (
     <div><label className="mb-1 block text-sm font-bold">{label}</label>
-      <input value={v} onChange={(e) => set(e.target.value)} className="w-full rounded-lg border border-[#e3e8ef] p-2.5" /></div>
+      <input value={v} onChange={(e) => set(e.target.value)} className="w-full rounded-lg border border-border-subtle p-2.5" /></div>
   );
 }
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-[#e3e8ef] bg-white p-5 shadow-card">
-      <h3 className="mb-2 font-bold">{title}</h3>{children}
+    <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
+      <h3 className="mb-2 font-bold text-ink">{title}</h3>{children}
     </div>
   );
 }
