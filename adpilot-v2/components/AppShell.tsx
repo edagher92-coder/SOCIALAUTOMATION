@@ -15,6 +15,7 @@ const NAV_GROUPS: { title: string | null; items: { href: string; label: string; 
     { href: "/connect", label: "Connect & Sync", icon: "🔗", desc: "Meta & TikTok + auto-sync" },
     { href: "/content", label: "Content Studio", icon: "🎬", desc: "Create, schedule & publish posts" },
     { href: "/messenger", label: "Messenger Setup", icon: "💬", desc: "Greeting, ice breakers & menu" },
+    { href: "/actions", label: "Ad Actions", icon: "🛠️", desc: "Guarded live changes (Expert)" },
     { href: "/reports", label: "Reports", icon: "🗃️", desc: "Your analysis history" },
   ] },
   { title: "AI Team", items: [

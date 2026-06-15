@@ -14,6 +14,7 @@ export type Feature =
   | "content_publish"  // upload + schedule/publish own organic content (lower tiers up)
   | "creative_studio"  // AI-drafted creative + Canva/Adobe (higher tiers)
   | "messenger_automation" // no-prompt Messenger profile setup via Graph API (premium)
+  | "ad_write"         // GUARDED live ad changes (pause/resume/budget) — top tier, double-gated
   | "multi_client"
   | "white_label"
   | "expert_plugins";  // team-built extras, top tier only
@@ -42,6 +43,7 @@ export const FEATURE_MIN_PLAN: Record<Feature, Plan> = {
   content_publish: "starter", // lower tiers up: upload + schedule/publish own content
   creative_studio: "pro",   // higher tiers: AI-drafted creative + Canva/Adobe
   messenger_automation: "expert", // premium: no-prompt Messenger profile setup
+  ad_write: "expert",       // expert only — and additionally env-gated + typed-YES per action
   multi_client: "pro",
   white_label: "expert",    // expert only
   expert_plugins: "expert", // expert only — team-built additions
@@ -57,6 +59,7 @@ export const FEATURE_LABEL: Record<Feature, string> = {
   content_publish: "Content upload & publishing",
   creative_studio: "AI Creative Studio",
   messenger_automation: "Messenger automation (no-prompt setup)",
+  ad_write: "Guarded ad changes (pause/budget)",
   multi_client: "Multi-client workspaces",
   white_label: "White-label reports",
   expert_plugins: "Expert plugins (team-built)",
