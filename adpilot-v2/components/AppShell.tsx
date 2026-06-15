@@ -6,6 +6,7 @@ import { ModeProvider, useMode } from "./mode";
 
 const NAV = [
   { href: "/dashboard", label: "Ads Health", icon: "📊", desc: "Score & fix your Meta/TikTok ads" },
+  { href: "/connect", label: "Connect Accounts", icon: "🔗", desc: "Meta & TikTok read-only sync" },
   { href: "/ai-specialists", label: "AI Specialists", icon: "🧭", desc: "Your team of ad & business agents" },
   { href: "/build-dashboard", label: "Build a Dashboard", icon: "🧱", desc: "Sheets / Looker / Notion specs" },
   { href: "/canva-creator", label: "Canva Creator", icon: "🎨", desc: "Ad creative briefs & prompts" },
@@ -14,6 +15,8 @@ const NAV = [
   { href: "/crm-maintenance", label: "CRM Maintenance", icon: "🧹", desc: "Keep your pipeline clean" },
   { href: "/reports", label: "Saved Reports", icon: "🗃️", desc: "Your analysis history" },
   { href: "/billing", label: "Billing", icon: "💳", desc: "Plan & subscription" },
+  { href: "/notifications", label: "Notifications", icon: "🔔", desc: "Weekly digest & alerts" },
+  { href: "/agency", label: "White-label", icon: "🏷️", desc: "Brand reports as your agency" },
   { href: "/claude-api", label: "Claude API", icon: "🔌", desc: "Connect AI generation" },
 ];
 

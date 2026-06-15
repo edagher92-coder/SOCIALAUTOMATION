@@ -15,3 +15,6 @@ next-env.d.ts
 .DS_Store
 .vercel
 coverage/
+
+# lockfile (CI uses npm install)
+package-lock.json
