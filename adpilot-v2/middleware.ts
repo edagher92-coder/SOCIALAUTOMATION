@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
 
   // Protect the whole authenticated app area.
   const appRoutes = [
-    "/command", "/proposals", "/dashboard", "/ai-specialists", "/build-dashboard", "/canva-creator",
+    "/command", "/proposals", "/content", "/dashboard", "/ai-specialists", "/build-dashboard", "/canva-creator",
     "/claude-api", "/bobby-business-assistant", "/aria-course-creator", "/crm-maintenance",
     "/reports", "/billing", "/connect", "/notifications", "/agency",
     "/creative", "/settings", "/manual",

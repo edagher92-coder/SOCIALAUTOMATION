@@ -11,6 +11,8 @@ export type Feature =
   | "api_connect"      // OAuth + dev-token connection
   | "auto_sync"        // cadence-based automated pulls
   | "ai_team"          // AI specialist layer
+  | "content_publish"  // upload + schedule/publish own organic content (lower tiers up)
+  | "creative_studio"  // AI-drafted creative + Canva/Adobe (higher tiers)
   | "multi_client"
   | "white_label"
   | "expert_plugins";  // team-built extras, top tier only
@@ -36,6 +38,8 @@ export const FEATURE_MIN_PLAN: Record<Feature, Plan> = {
   api_connect: "pro",       // top two tiers
   auto_sync: "pro",         // top two tiers
   ai_team: "pro",           // top two tiers
+  content_publish: "starter", // lower tiers up: upload + schedule/publish own content
+  creative_studio: "pro",   // higher tiers: AI-drafted creative + Canva/Adobe
   multi_client: "pro",
   white_label: "expert",    // expert only
   expert_plugins: "expert", // expert only — team-built additions
@@ -48,6 +52,8 @@ export const FEATURE_LABEL: Record<Feature, string> = {
   api_connect: "API / dev-link connect",
   auto_sync: "Automated sync (cadence)",
   ai_team: "AI specialist team",
+  content_publish: "Content upload & publishing",
+  creative_studio: "AI Creative Studio",
   multi_client: "Multi-client workspaces",
   white_label: "White-label reports",
   expert_plugins: "Expert plugins (team-built)",
