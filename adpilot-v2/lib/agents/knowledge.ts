@@ -92,11 +92,27 @@ export const AGENT_KNOWLEDGE: Record<string, KnowledgeDomain[]> = {
   paige: ["policy"],
 };
 
-// Compact reference block for a specialist (empty string if none mapped).
+// Compact reference block for a specialist from the committed baseline (sync).
 export function knowledgeFor(agentId: string): string {
   const domains = AGENT_KNOWLEDGE[agentId] || [];
   if (!domains.length) return "";
   return domains
     .map((d) => `## ${KNOWLEDGE[d].title} (current best practice, updated ${KNOWLEDGE[d].updated})\n${KNOWLEDGE[d].body}`)
     .join("\n\n");
+}
+
+// Same, but prefers freshly auto-refreshed docs from knowledge_docs (per domain),
+// falling back to the committed baseline. Pass an admin Supabase client.
+export async function knowledgeForAgent(admin: any, agentId: string): Promise<string> {
+  const domains = AGENT_KNOWLEDGE[agentId] || [];
+  if (!domains.length) return "";
+  const live: Record<string, { title: string; body: string; updated: string }> = {};
+  try {
+    const { data } = await admin.from("knowledge_docs").select("domain,title,body,updated_at").in("domain", domains);
+    for (const d of data || []) live[(d as any).domain] = { title: (d as any).title, body: (d as any).body, updated: String((d as any).updated_at).slice(0, 10) };
+  } catch { /* table may not exist yet — fall back to baseline */ }
+  return domains.map((dom) => {
+    const doc = live[dom] || { title: KNOWLEDGE[dom].title, body: KNOWLEDGE[dom].body, updated: KNOWLEDGE[dom].updated };
+    return `## ${doc.title} (current best practice, updated ${doc.updated})\n${doc.body}`;
+  }).join("\n\n");
 }

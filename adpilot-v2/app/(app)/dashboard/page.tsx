@@ -1,13 +1,14 @@
 import AnalyzeClient from "@/components/AnalyzeClient";
+import PageHeader from "@/components/PageHeader";
 
 export default function DashboardPage() {
   return (
     <div>
-      <h1 className="text-2xl font-extrabold tracking-tight">Ads Health Check</h1>
-      <p className="mb-5 mt-1 text-muted">
-        Paste or upload a Meta / TikTok export — get a Campaign Health Score and safe, prioritised fixes.
-        Switch <b>Beginner / Advanced</b> in the sidebar to show more detail.
-      </p>
+      <PageHeader
+        eyebrow="Ads Health"
+        title="Campaign Health Check"
+        subtitle="Paste or upload a Meta / TikTok export to get a 0–100 Health Score and safe, prioritised fixes — or connect an account on Connect & Sync for automatic, scheduled scoring."
+      />
       <AnalyzeClient />
     </div>
   );
