@@ -4,6 +4,29 @@ All notable changes to the AdPilot OS package. Format: reverse-chronological.
 
 ---
 
+## [2.0.0-demo] — 2026-06-15 — V2 council synthesis + hardened demo
+Acted on the 4-model "council" audit (ChatGPT security/code/perf + Gemini UX/commercial + Claude architecture). Executed the V1 emergency fixes into the public demo and produced the V2 PRD.
+
+**Demo security & trust (docs/index.html)**
+- CSV/formula-injection guard on export (prefix `=,+,-,@,tab,CR` with `'`).
+- `esc()` now escapes quotes (closes attribute-XSS vector).
+- Added Content-Security-Policy + `referrer=no-referrer` meta.
+- Upload caps: 5 MB + `.csv/.txt` only + 5,000-row browser cap with notice.
+- "Read-only / not connected to live ad accounts / private" status messaging + FAQ + disclaimer.
+
+**Demo intelligence (explainability)**
+- "Why this score?" — full 13-factor breakdown (score · weight · contribution, with N/A redistribution noted).
+- Surfaced data-confidence (/100; flags "directional" when <50).
+
+**Repo hygiene**
+- Removed operator-internal `CPWORK_AD_SYSTEM_CURRENT_STATE.md` from the public repo (council CRITICAL: real IDs + secret-incident reference). Resale packager already excluded it.
+
+**New**
+- `product/V2-COUNCIL-SYNTHESIS-AND-PRD.md` — master issues register, ship/no-ship verdict, V2 scope, tech blueprint (Next.js + Supabase + Stripe + Meta/TikTok OAuth), DB schema, agent list, build plan, and the Claude-4.8 implementation checklist.
+
+Engine logic unchanged → JS↔Python parity still 30/30; Python self-test 56/56.
+*(Owner actions outstanding: rotate the exposed Anthropic key + Stripe code; set a real support contact; enable Pages/host to go live.)*
+
 ## [1.4.0] — 2026-06-14 — Drilldown, exports, CI/CD
 - **Per-campaign drilldown:** `audit.score_by_campaign()` scores each campaign
   (worst-first) — surfaced in the CLI report, the web `/api/analyze` response, and a

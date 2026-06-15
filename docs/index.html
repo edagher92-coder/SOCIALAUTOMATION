@@ -1,7 +1,9 @@
 <!doctype html><html lang=en><head>
 <meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
-<title>AdPilot OS — Meta &amp; TikTok Ads Health Check</title>
-<meta name=description content="Audit your Meta &amp; TikTok ads in seconds. Get a Campaign Health Score, find what's leaking money, and get safe, numbers-first recommendations — without ever touching a live ad.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>AdPilot OS V2 — Meta &amp; TikTok Ads Health Check</title>
+<meta name=description content="Audit your Meta &amp; TikTok ads in seconds. Get a Campaign Health Score, see exactly why, find what's leaking money, and get safe, numbers-first recommendations — without ever touching a live ad. Runs 100% in your browser.">
 <style>
  :root{--ink:#0d1626;--muted:#5a6577;--line:#e3e8ef;--bg:#f4f7fb;--card:#fff;
   --brand:#0b5fff;--navy:#0b1f3a;--teal:#00c2a8;
@@ -102,7 +104,7 @@
 </div></nav>
 
 <header class=hero><div class=wrap>
- <span class=badge>Meta &amp; TikTok · numbers-first · safe by design</span>
+ <span class=badge>V2 · Meta &amp; TikTok · explainable · safe by design</span>
  <h1>Know exactly what your ads are <span class=grad>doing to your money.</span></h1>
  <p class=lead>Upload an ad export and get a <b>Campaign Health Score</b>, the findings that are leaking budget, and clear, safe recommendations — in seconds. No logins, no risk to your live campaigns.</p>
  <div class=cta>
@@ -142,7 +144,7 @@
     <div class=placeholder>Pick a sample or paste a CSV, then hit <b style=margin:0_4px>Analyse</b> to see the health score, charts &amp; safe proposals.</div>
   </div>
  </div>
- <div class="safebar top">🔒 <b>Read-only &amp; private.</b> Your CSV is analysed entirely in your browser and never uploaded. This tool proposes changes; it never edits a live ad. Budget moves always need your typed “YES”.</div>
+ <div class="safebar top">🔒 <b>Read-only &amp; private.</b> Your CSV is analysed entirely in your browser and never uploaded. This is a <b>browser demo (CSV analysis only)</b> — it is <b>not connected to live ad accounts</b> and never edits, pauses, or creates ads. It proposes changes only; budget moves always need your typed “YES”.</div>
 </div></section>
 
 <section id=how><div class=wrap>
@@ -179,6 +181,22 @@
  </div>
 </div></section>
 
+<section id=trust style=background:#fff;border-top:1px solid_var(--line);border-bottom:1px solid_var(--line)><div class=wrap>
+ <h2 class=sec>Built to be trusted</h2>
+ <p class=sub>Transparent scoring, private by design, safe by construction.</p>
+ <div class=grid3>
+  <div class=feat><div class=ic>🔍</div><h3>Explainable score</h3><p>Every result opens a full 13-factor breakdown — you see exactly which factors helped or hurt, plus the data-confidence behind the number. No black box.</p></div>
+  <div class=feat><div class=ic>🔒</div><h3>Private by design</h3><p>Your CSV is parsed in your browser and never uploaded. No account, no tracking, no data leaves the page (open your network tab to verify).</p></div>
+  <div class=feat><div class=ic>🛟</div><h3>Safe by construction</h3><p>It only ever proposes changes (keep / kill / scale / refresh / fix-tracking). It cannot and does not edit a live ad; budget moves need your explicit “YES”.</p></div>
+ </div>
+ <h3 class=blk style=margin-top:26px>FAQ</h3>
+ <details class=card><summary style=cursor:pointer;font-weight:700>Does my ad data get uploaded anywhere?</summary><p class=muted>No. All analysis runs locally in your browser. Nothing is sent to any server.</p></details>
+ <details class=card><summary style=cursor:pointer;font-weight:700>Can it change my campaigns?</summary><p class=muted>No — it's read-only. It produces proposals; you decide and act in Ads Manager. Budget changes always require your explicit confirmation.</p></details>
+ <details class=card><summary style=cursor:pointer;font-weight:700>How is the Health Score calculated?</summary><p class=muted>A weighted average of 13 factors (tracking, CPA vs break-even, CTR, creative fatigue, conversion rate, lead quality and more). Run an analysis and open “Why this score?” to see the full breakdown for your data.</p></details>
+ <details class=card><summary style=cursor:pointer;font-weight:700>What can I export?</summary><p class=muted>A CSV (summary, campaigns, findings, proposals) and a Print / Save-as-PDF client-ready report.</p></details>
+ <p class=muted style=margin-top:16px>Disclaimer: AdPilot OS provides analysis and suggestions only. Demo figures are illustrative. This is not financial advice and makes no earnings or results guarantees. You remain responsible for any changes made to your ad accounts.</p>
+</div></section>
+
 <section id=cta><div class=wrap>
  <div class=cta-band>
    <h2>See it on your own ad account</h2>
@@ -203,7 +221,7 @@ const C={Green:'#16a34a',Yellow:'#ca8a04',Orange:'#ea580c',Red:'#dc2626'};
 const SEV={CRITICAL:'#dc2626',HIGH:'#ea580c',MEDIUM:'#ca8a04',LOW:'#16a34a',INFO:'#5a6577'};
 const PLATC={meta:'#0b5fff',tiktok:'#111',unknown:'#5a6577','?':'#5a6577'};
 const f2=v=>v==null?'N/A':(Math.round(v*100)/100).toLocaleString();
-const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const SAMPLES={
  clean:`business_name,platform,campaign_name,date,spend,impressions,reach,clicks,leads,purchases,revenue,three_second_views,thruplays,lead_quality_score,utm_source,utm_medium,utm_campaign,tracking_status
 Example Co,meta,exampleco_hotwater_leads_brisbane_20260601,2026-06-13,600,30000,16000,600,40,12,3600,9000,4000,82,meta,paid_social,exampleco_hotwater_leads_brisbane_20260601,ok
@@ -214,7 +232,10 @@ Example Co,tiktok,summer-sale,2026-06-13,1500,150000,30000,1200,0,8,1200,30000,6
  broken:`business_name,platform,campaign_name,date,spend,impressions,reach,clicks,leads,purchases,revenue,three_second_views,thruplays,utm_source,utm_medium,utm_campaign,tracking_status
 Example Co,meta,promo,2026-06-13,1800,90000,40000,540,0,0,0,12000,3000,,,,broken
 Example Co,meta,promo2,2026-06-13,1200,60000,28000,360,0,0,0,8000,2000,,,,broken`};
-$('file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$('csv').value=r.result;run()};r.readAsText(f)});
+$('file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;
+ if(f.size>5*1024*1024){$('out').innerHTML='<div class=placeholder style=color:#dc2626>File too large (5 MB max for the browser demo). Export a shorter date range, or use the full app.</div>';return;}
+ if(!/\.(csv|txt)$/i.test(f.name)){$('out').innerHTML='<div class=placeholder style=color:#dc2626>Please upload a .csv or .txt export.</div>';return;}
+ const r=new FileReader();r.onload=()=>{$('csv').value=r.result;run()};r.readAsText(f)});
 function loadSample(n){$('csv').value=SAMPLES[n];run();document.getElementById('try').scrollIntoView({behavior:'smooth'});}
 function gauge(score,band){const col=C[band]||'#5a6577';const r=64,cx=75,cy=75,circ=2*Math.PI*r;const off=circ*(1-Math.max(0,Math.min(100,score))/100);
  return '<div class=gauge><svg width=150 height=150 viewBox="0 0 150 150">'+
@@ -226,16 +247,21 @@ function run(){
  const csv=$('csv').value;if(!csv.trim()){$('out').innerHTML='<div class=placeholder>Paste a CSV or pick a sample above.</div>';return}
  let rows;try{rows=AdPilot.parseCsvText(csv,$('plat').value||null)}catch(e){$('out').innerHTML='<div class=placeholder style=color:#dc2626>Could not parse CSV: '+esc(e.message)+'</div>';return}
  if(!rows.length){$('out').innerHTML='<div class=placeholder style=color:#dc2626>No rows parsed — check the headers.</div>';return}
+ let capNote='';if(rows.length>5000){rows=rows.slice(0,5000);capNote='Showing the first 5,000 rows (browser-demo cap). The full app handles larger accounts server-side.';}
  const res=AdPilot.scoreAccount(rows,cfg),agg=res.agg,camps=AdPilot.scoreByCampaign(rows,cfg);
  const decs=rows.map(r=>{const d=AdPilot.decide(r,cfg);return{...d,name:r.ad_name||r.campaign_name||r.ad_id||'(ad)',platform:r.platform||'?'}});
  const be=res.break_even_cpa,beR=AdPilot.metrics.breakEvenRoas(cfg.gross_margin),mer=AdPilot.metrics.mer(agg.revenue,agg.spend);
  const col=C[res.band]||'#5a6577';
+ const dc=(res.breakdown&&res.breakdown.data_confidence&&res.breakdown.data_confidence.score!=null)?Math.round(res.breakdown.data_confidence.score):null;
  window.__last={cfg,summary:{spend:agg.spend,leads:agg.leads,purchases:agg.purchases,revenue:agg.revenue,cpa:agg.cpa,roas:agg.roas,mer,break_even_cpa:be,break_even_roas:beR},health:res,campaigns:camps,decisions:decs};
- let h='<div class=scorerow>'+gauge(res.total,res.band)+
+ let h=(capNote?'<div class=muted style="margin-bottom:10px">⚠ '+esc(capNote)+'</div>':'')+'<div class=scorerow>'+gauge(res.total,res.band)+
   '<div><div class=bandtag style=background:'+col+'>'+res.band+'</div>'+
   '<div style=font-weight:700;margin:8px_0_2px>'+esc(res.guidance)+'</div>'+
-  '<div class=muted>Weakest factors: '+(res.weakest.join(', ')||'—')+'</div></div></div>';
+  '<div class=muted>Weakest factors: '+esc(res.weakest.join(', ')||'—')+'</div>'+
+  (dc!=null?'<div class=muted>Data confidence: <b>'+dc+'/100</b>'+(dc<50?' — limited data, treat as directional':'')+'</div>':'')+
+  '</div></div>';
  h+='<div class=metrics>'+mc('Spend',agg.spend)+mc('CPA',agg.cpa)+mc('Break-even CPA',be)+mc('ROAS',agg.roas)+mc('Break-even ROAS',beR)+mc('MER',mer)+mc('Leads',agg.leads)+mc('Purchases',agg.purchases)+'</div>';
+ h+=factorTable(res.breakdown);
  // charts
  h+='<div class=charts>';
  h+='<div><h3 class=blk>Campaign health (worst-first)</h3>';
@@ -267,7 +293,17 @@ function donut(byP){const tot=Object.values(byP).reduce((a,b)=>a+b,0)||1;let acc
  for(const seg of segs)s+='<div class=muted style=display:flex;align-items:center;gap:7px><span style="width:10px;height:10px;border-radius:3px;background:'+(PLATC[seg.p]||'#5a6577')+';display:inline-block"></span>'+esc(seg.p)+' — '+Math.round(seg.frac*100)+'% ('+f2(byP[seg.p])+')</div>';
  return s+'</div>';}
 const mc=(k,v)=>'<div class=metric><b>'+f2(v)+'</b><span>'+k+'</span></div>';
-function q(v){v=(v==null?'':String(v));return '"'+v.replace(/"/g,'""')+'"';}
+const FACTORLABEL={tracking_quality:'Tracking quality',cpa:'CPA vs break-even',spend_efficiency:'Spend efficiency',conversion_rate:'Conversion rate',ctr:'Click-through rate',lead_quality:'Lead quality',creative_freshness:'Creative freshness (fatigue)',cpc:'Cost per click',naming_quality:'Naming convention',offer_strength:'Offer strength',landing_page_alignment:'Landing-page alignment',budget_pacing:'Budget pacing',data_confidence:'Data confidence'};
+function factorTable(bd){if(!bd)return '';
+ const rows=Object.keys(bd).map(k=>({k,...bd[k]})).sort((a,b)=>b.weight-a.weight);
+ let t='<details class=card style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">Why this score? — full factor breakdown</summary>';
+ t+='<p class=muted style="margin:8px 0">The Health Score is a weighted average of 13 factors. Factors shown as N/A (e.g. lead quality for an ecommerce account) have their weight redistributed across the rest, so the score is always out of 100.</p>';
+ t+='<table><tr><th>Factor</th><th>Your score</th><th>Weight</th><th>Contribution</th></tr>';
+ for(const r of rows){const sc=r.score==null?'<span class=muted>N/A</span>':Math.round(r.score)+'/100';
+   const contrib=r.score==null?'—':(Math.round(r.weighted_points*10)/10)+' pts';
+   t+='<tr><td>'+esc(FACTORLABEL[r.k]||r.k)+'</td><td>'+sc+'</td><td>'+r.weight+'%</td><td>'+contrib+'</td></tr>';}
+ return t+'</table></details>';}
+function q(v){v=(v==null?'':String(v));if(/^[=+\-@\t\r]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"';}
 function downloadCSV(){const j=window.__last;if(!j)return;const L=[['section','name','platform','verdict_or_band','d1','d2','d3'].join(',')];const s=j.summary;
  L.push(['summary','health',j.health.band,Math.round(j.health.total),'CPA='+f2(s.cpa),'ROAS='+f2(s.roas),'MER='+f2(s.mer)].map(q).join(','));
  for(const c of j.campaigns)L.push(['campaign',c.campaign,c.platforms.join('|'),c.band+' '+Math.round(c.health),'spend='+f2(c.spend),'cpa='+f2(c.cpa),'roas='+f2(c.roas)].map(q).join(','));
