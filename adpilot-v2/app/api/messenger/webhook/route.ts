@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decrypt } from "@/lib/crypto";
-import { verifySignature, matchReply, sendMessage, type Rule } from "@/lib/messenger/bot";
+import { verifySignature, decide, withinHours, sendMessage, sendWhatsApp, type Rule, type BusinessHours } from "@/lib/messenger/bot";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
-// Public Messenger webhook (Meta calls this — no auth). Security is signature + verify token.
-// GET: Meta's subscription handshake. POST: inbound events → routed by page id → auto-reply.
+// Public multi-channel webhook (Meta calls this — no auth; secured by verify token + signature).
+// GET: subscription handshake. POST: Messenger / Instagram DM / WhatsApp events → auto-reply.
+const GREET_COOLDOWN_MS = 6 * 3_600_000;
 
 export async function GET(req: Request) {
   const u = new URL(req.url);
@@ -24,43 +26,72 @@ export async function POST(req: Request) {
   }
   let body: any;
   try { body = JSON.parse(raw); } catch { return NextResponse.json({ received: true }); }
-  if (body.object !== "page") return NextResponse.json({ received: true });
 
   const admin = createAdminClient();
-  const tokenCache = new Map<string, string | null>();
-  const rulesCache = new Map<string, Rule[]>();
+  type Channel = { token: string | null; rules: Rule[]; hours?: BusinessHours | null; channel: string };
+  const cache = new Map<string, Channel>();
 
-  async function pageToken(pageId: string): Promise<string | null> {
-    if (tokenCache.has(pageId)) return tokenCache.get(pageId)!;
-    const { data } = await admin.from("messenger_pages").select("ciphertext,iv,auth_tag").eq("external_page_id", pageId).maybeSingle();
-    let tok: string | null = null;
-    try { if (data?.ciphertext) tok = decrypt({ ciphertext: data.ciphertext, iv: data.iv, authTag: data.auth_tag }); } catch { tok = null; }
-    tokenCache.set(pageId, tok);
-    return tok;
+  async function channelFor(externalPageId: string): Promise<Channel> {
+    if (cache.has(externalPageId)) return cache.get(externalPageId)!;
+    const { data: page } = await admin.from("messenger_pages")
+      .select("ciphertext,iv,auth_tag,business_hours,channel").eq("external_page_id", externalPageId).maybeSingle();
+    let token: string | null = null;
+    try { if (page?.ciphertext) token = decrypt({ ciphertext: page.ciphertext, iv: page.iv, authTag: page.auth_tag }); } catch { token = null; }
+    const { data: rules } = await admin.from("messenger_rules").select("trigger_type,trigger,reply,priority").eq("external_page_id", externalPageId);
+    const ch: Channel = { token, rules: (rules || []) as Rule[], hours: (page as any)?.business_hours ?? null, channel: (page as any)?.channel || "messenger" };
+    cache.set(externalPageId, ch);
+    return ch;
   }
-  async function pageRules(pageId: string): Promise<Rule[]> {
-    if (rulesCache.has(pageId)) return rulesCache.get(pageId)!;
-    const { data } = await admin.from("messenger_rules").select("trigger_type,trigger,reply,priority").eq("external_page_id", pageId);
-    const rules = (data || []) as Rule[];
-    rulesCache.set(pageId, rules);
-    return rules;
+
+  // First-message greeting cooldown (per page/channel + sender).
+  async function isNewThread(externalPageId: string, senderId: string): Promise<boolean> {
+    const { data } = await admin.from("messenger_threads").select("last_greeted_at").eq("external_page_id", externalPageId).eq("sender_id", senderId).maybeSingle();
+    const last = data?.last_greeted_at ? new Date(data.last_greeted_at).getTime() : 0;
+    if (last && Date.now() - last < GREET_COOLDOWN_MS) return false;
+    await admin.from("messenger_threads").upsert({ external_page_id: externalPageId, sender_id: senderId, last_greeted_at: new Date().toISOString() }, { onConflict: "external_page_id,sender_id" });
+    return true;
+  }
+
+  async function replyTo(externalPageId: string, senderId: string, input: { text?: string; payload?: string }, send: (token: string, to: string, text: string) => Promise<void>) {
+    const ch = await channelFor(externalPageId);
+    if (!ch.token) return;
+    const matched = !!input.payload || (input.text ? ch.rules.some((r) => r.trigger_type === "keyword" && (r.trigger || "").split(",").some((k) => input.text!.toLowerCase().includes(k.trim().toLowerCase()))) : false);
+    const newThread = matched ? false : await isNewThread(externalPageId, senderId);
+    const text = decide(ch.rules, input, { inHours: withinHours(ch.hours), isNewThread: newThread });
+    if (text) { try { await send(ch.token, senderId, text); } catch { /* best-effort */ } }
   }
 
   try {
-    for (const entry of body.entry || []) {
-      const pageId = String(entry.id);
-      for (const ev of entry.messaging || []) {
-        const senderId = ev.sender?.id;
-        if (!senderId || ev.message?.is_echo) continue;
-        const text: string | undefined = ev.message?.text;
-        const payload: string | undefined = ev.postback?.payload || ev.message?.quick_reply?.payload;
-        if (!text && !payload) continue;
-
-        const reply = matchReply(await pageRules(pageId), { text, payload });
-        if (!reply) continue;
-        const tok = await pageToken(pageId);
-        if (!tok) continue;
-        try { await sendMessage(tok, senderId, reply); } catch { /* best-effort per event */ }
+    const obj = body.object;
+    if (obj === "page" || obj === "instagram") {
+      // Messenger + Instagram DM share the messaging[] shape + Page-token Send API.
+      for (const entry of body.entry || []) {
+        const pageId = String(entry.id);
+        for (const ev of entry.messaging || []) {
+          const senderId = ev.sender?.id;
+          if (!senderId || ev.message?.is_echo) continue;
+          const text: string | undefined = ev.message?.text;
+          const payload: string | undefined = ev.postback?.payload || ev.message?.quick_reply?.payload;
+          if (!text && !payload) continue;
+          await replyTo(pageId, senderId, { text, payload }, (tok, to, t) => sendMessage(tok, to, t));
+        }
+      }
+    } else if (obj === "whatsapp_business_account") {
+      for (const entry of body.entry || []) {
+        for (const change of entry.changes || []) {
+          const value = change.value || {};
+          const phoneId = value.metadata?.phone_number_id;
+          if (!phoneId) continue;
+          for (const msg of value.messages || []) {
+            const from = msg.from;
+            if (!from) continue;
+            let text: string | undefined, payload: string | undefined;
+            if (msg.type === "text") text = msg.text?.body;
+            else if (msg.type === "interactive") payload = msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id;
+            if (!text && !payload) continue;
+            await replyTo(String(phoneId), from, { text, payload }, (tok, to, t) => sendWhatsApp(tok, String(phoneId), to, t));
+          }
+        }
       }
     }
   } catch { /* always 200 so Meta doesn't retry-storm */ }

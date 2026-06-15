@@ -32,7 +32,7 @@ export default async function MessengerPage() {
           <h2 className="mb-2 text-lg font-bold">Entry experience <span className="text-xs font-normal text-muted">(greeting · ice breakers · menu — no prompts)</span></h2>
           <MessengerSetup tokenConfigured={tokenConfigured} />
 
-          <h2 className="mb-2 mt-8 text-lg font-bold">Keyword auto-replies <span className="text-xs font-normal text-muted">(webhook bot — multi-client)</span></h2>
+          <h2 className="mb-2 mt-8 text-lg font-bold">Auto-replies <span className="text-xs font-normal text-muted">(webhook bot — Messenger · Instagram DM · WhatsApp, multi-client, hours-aware)</span></h2>
           <MessengerBot webhookUrl={appUrl ? `${appUrl}/api/messenger/webhook` : ""} verifyConfigured={!!process.env.MESSENGER_VERIFY_TOKEN} appSecretConfigured={!!process.env.META_APP_SECRET} />
         </>
       ) : (
