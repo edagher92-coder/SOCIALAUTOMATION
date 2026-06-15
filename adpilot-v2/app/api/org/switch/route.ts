@@ -20,6 +20,6 @@ export async function POST(req: Request) {
   if (!mem) return NextResponse.json({ error: "Not a member of that workspace" }, { status: 403 });
 
   const res = NextResponse.json({ ok: true });
-  res.cookies.set("active_org", parsed.data.orgId, { sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 365, secure: process.env.NODE_ENV === "production" });
+  res.cookies.set("active_org", parsed.data.orgId, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 365, secure: process.env.NODE_ENV === "production" });
   return res;
 }

@@ -2,64 +2,137 @@ import Link from "next/link";
 
 export default function Landing() {
   return (
-    <main>
-      <nav className="sticky top-0 z-50 border-b border-[#e3e8ef] bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-5">
-          <span className="flex items-center gap-2 text-lg font-extrabold tracking-tight">
-            <span className="inline-block h-6 w-6 rounded-lg bg-gradient-to-br from-brand to-teal" /> AdPilot OS
-          </span>
-          <span className="ml-1 rounded-full bg-[#eaf1ff] px-2 py-0.5 text-xs font-bold text-[#0b3aa6]">V2</span>
-          <div className="ml-auto flex items-center gap-4 text-sm font-semibold text-muted">
-            <Link href="#pricing" className="hidden sm:inline">Pricing</Link>
-            <Link href="/login" className="rounded-lg border border-brand px-3 py-2 text-brand">Sign in</Link>
-            <Link href="/dashboard" className="rounded-lg bg-brand px-3 py-2 text-white">Open app</Link>
+    <main className="min-h-screen bg-surface antialiased">
+      {/* ── Nav ─────────────────────────────────────────────── */}
+      <nav className="sticky top-0 z-50 border-b border-border-subtle bg-white/90 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-5">
+          <Link href="/" className="flex items-center gap-2.5 text-lg font-extrabold tracking-tight text-ink">
+            <span className="inline-block h-7 w-7 rounded-xl bg-gradient-to-br from-brand to-teal shadow-sm" />
+            AdPilot OS
+          </Link>
+          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand">V2</span>
+          <div className="ml-auto flex items-center gap-3 text-sm font-semibold">
+            <Link href="#pricing" className="hidden text-muted transition hover:text-ink sm:inline">Pricing</Link>
+            <Link href="/login"
+              className="rounded-lg border border-brand-200 px-3.5 py-2 text-brand transition hover:border-brand hover:bg-brand-50 focus-visible:shadow-ring-brand">
+              Sign in
+            </Link>
+            <Link href="/dashboard"
+              className="rounded-lg bg-brand px-3.5 py-2 text-white shadow-sm transition hover:bg-brand-600 focus-visible:shadow-ring-brand">
+              Open app
+            </Link>
           </div>
         </div>
       </nav>
 
-      <header className="border-b border-[#e3e8ef] bg-gradient-to-b from-white to-[#f4f7fb] px-5 py-20">
-        <div className="mx-auto max-w-3xl text-center">
-          <span className="mb-5 inline-block rounded-full bg-[#eaf1ff] px-3 py-1 text-sm font-bold text-[#0b3aa6]">
+      {/* ── Hero ─────────────────────────────────────────────── */}
+      <header className="relative overflow-hidden border-b border-border-subtle bg-gradient-to-b from-white via-white to-surface px-5 py-24 sm:py-32">
+        {/* subtle decorative orb */}
+        <div aria-hidden className="pointer-events-none absolute -top-32 left-1/2 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-brand-50 opacity-50 blur-3xl" />
+        <div className="relative mx-auto max-w-3xl text-center">
+          <span className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3.5 py-1.5 text-sm font-semibold text-brand">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand" />
             Meta &amp; TikTok · explainable · safe by design
           </span>
-          <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
+          <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-ink sm:text-6xl">
             Know exactly what your ads are{" "}
-            <span className="bg-gradient-to-r from-brand to-teal bg-clip-text text-transparent">doing to your money.</span>
+            <span className="bg-gradient-to-r from-brand to-teal bg-clip-text text-transparent">
+              doing to your money.
+            </span>
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-muted">
-            An explainable Campaign Health Score, the findings leaking budget, and safe, numbers-first recommendations —
-            without ever touching a live ad.
+          <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted">
+            An explainable Campaign Health Score, the findings leaking budget, and safe,
+            numbers-first recommendations — without ever touching a live ad.
           </p>
-          <div className="mt-7 flex justify-center gap-3">
-            <Link href="/dashboard" className="rounded-xl bg-brand px-5 py-3 font-bold text-white">Analyse my ads</Link>
-            <Link href="/login" className="rounded-xl border border-brand px-5 py-3 font-bold text-brand">Sign in</Link>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link href="/dashboard"
+              className="rounded-xl bg-brand px-6 py-3.5 text-base font-bold text-white shadow-sm transition hover:bg-brand-600 hover:shadow-md focus-visible:shadow-ring-brand">
+              Analyse my ads →
+            </Link>
+            <Link href="/login"
+              className="rounded-xl border border-border-subtle bg-white px-6 py-3.5 text-base font-bold text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:shadow-ring-brand">
+              Sign in
+            </Link>
           </div>
-          <p className="mt-5 text-sm font-semibold text-muted">
-            🔒 Read-only · proposals only · your data stays private
+          <p className="mt-6 flex items-center justify-center gap-1.5 text-sm font-medium text-muted">
+            <span aria-hidden>🔒</span>
+            Read-only · proposals only · your data stays private
           </p>
         </div>
       </header>
 
-      <section id="pricing" className="mx-auto max-w-6xl px-5 py-16">
-        <h2 className="text-center text-3xl font-bold tracking-tight">Simple, honest pricing</h2>
-        <p className="mb-8 mt-2 text-center text-muted">AUD. No results guarantees — just a system that does the work.</p>
-        <div className="grid gap-4 sm:grid-cols-3">
+      {/* ── Trust bar ────────────────────────────────────────── */}
+      <section className="border-b border-border-subtle bg-white px-5 py-6">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-x-10 gap-y-3 text-sm font-semibold text-muted">
+          {["Never touches a live ad", "AES-256 encrypted tokens", "Meta & TikTok read-only", "Numbers-first · no fluff"].map((t) => (
+            <span key={t} className="flex items-center gap-1.5">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-teal" />
+              {t}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Pricing ──────────────────────────────────────────── */}
+      <section id="pricing" className="mx-auto max-w-6xl px-5 py-20">
+        <div className="text-center">
+          <h2 className="text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Simple, honest pricing</h2>
+          <p className="mt-3 text-base text-muted">AUD. No results guarantees — just a system that does the work.</p>
+        </div>
+        <div className="mt-10 grid gap-5 sm:grid-cols-3">
           {[
-            { n: "Starter", p: "$97–297", d: "DIY: dashboard, CSV import, audits." },
-            { n: "Pro", p: "$497–1,497", d: "Automation, alerts, health scoring, UTM builder." },
-            { n: "Agency", p: "$1,997+", d: "Multi-client, branded reports, white-label." },
+            {
+              n: "Starter", p: "$97–297", tag: null,
+              d: "DIY: dashboard, CSV import, full audit suite.",
+              items: ["Campaign Health Score", "CSV import", "Findings & proposals"],
+            },
+            {
+              n: "Pro", p: "$497–1,497", tag: "Most popular",
+              d: "Automation, alerts, health scoring, UTM builder.",
+              items: ["Everything in Starter", "Auto-sync Meta & TikTok", "Weekly digest emails", "UTM builder"],
+            },
+            {
+              n: "Agency", p: "$1,997+", tag: null,
+              d: "Multi-client, branded reports, white-label.",
+              items: ["Everything in Pro", "Multi-client workspaces", "White-label reports", "Agency dashboard"],
+            },
           ].map((t) => (
-            <div key={t.n} className="rounded-2xl border border-[#e3e8ef] bg-white p-6 shadow-card">
-              <h3 className="text-lg font-bold">{t.n}</h3>
-              <div className="my-2 text-2xl font-extrabold">{t.p}</div>
-              <p className="text-sm text-muted">{t.d}</p>
+            <div key={t.n}
+              className={`relative flex flex-col rounded-2xl border bg-white p-7 shadow-card transition hover:shadow-card-hover ${t.tag ? "border-brand ring-1 ring-brand/20" : "border-border-subtle"}`}>
+              {t.tag && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand px-3 py-1 text-xs font-bold text-white shadow-sm">
+                  {t.tag}
+                </span>
+              )}
+              <div className="mb-1 text-sm font-bold uppercase tracking-widest text-muted">{t.n}</div>
+              <div className="text-3xl font-extrabold tracking-tight text-ink">{t.p}</div>
+              <p className="mt-2 text-sm text-muted">{t.d}</p>
+              <ul className="mt-5 flex-1 space-y-2.5">
+                {t.items.map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm text-ink">
+                    <span className="mt-0.5 text-teal" aria-hidden>✓</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/dashboard"
+                className={`mt-6 block rounded-xl px-4 py-2.5 text-center text-sm font-bold transition ${t.tag ? "bg-brand text-white hover:bg-brand-600" : "border border-border-subtle text-ink hover:border-brand hover:text-brand"}`}>
+                Get started
+              </Link>
             </div>
           ))}
         </div>
       </section>
 
-      <footer className="border-t border-[#e3e8ef] py-8 text-center text-sm text-muted">
-        AdPilot OS V2 · numbers-first · safe by design. No earnings or results guarantees.
+      {/* ── Footer ───────────────────────────────────────────── */}
+      <footer className="border-t border-border-subtle bg-white px-5 py-10">
+        <div className="mx-auto max-w-6xl flex flex-col items-center gap-2 text-center text-sm text-muted sm:flex-row sm:justify-between">
+          <span className="flex items-center gap-2 font-semibold text-ink">
+            <span className="inline-block h-5 w-5 rounded-lg bg-gradient-to-br from-brand to-teal" />
+            AdPilot OS V2
+          </span>
+          <span>Numbers-first · safe by design. No earnings or results guarantees.</span>
+        </div>
       </footer>
     </main>
   );

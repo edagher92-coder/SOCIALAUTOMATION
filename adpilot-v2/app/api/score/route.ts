@@ -33,7 +33,12 @@ export async function POST(req: Request) {
   let capped = false;
   if (rows.length > 20000) { rows = rows.slice(0, 20000); capped = true; }
 
-  const result = analyse(rows, { business_name: business, average_sale_value, gross_margin, currency: "AUD" });
+  let result;
+  try {
+    result = analyse(rows, { business_name: business, average_sale_value, gross_margin, currency: "AUD" });
+  } catch (e: any) {
+    return NextResponse.json({ error: "Could not analyse this data — check the CSV columns. " + (e?.message ?? "") }, { status: 422 });
+  }
 
   // Best-effort persistence (saved report + score + recommendations). If the DB
   // isn't configured, analysis still returns — we just don't save.

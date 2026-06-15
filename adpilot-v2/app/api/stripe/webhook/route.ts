@@ -27,13 +27,14 @@ export async function POST(req: Request) {
       if (userId) {
         const orgId = await ensureOrg(userId, s.customer_details?.email ?? undefined);
         const admin = createAdminClient();
-        await admin.from("billing_subscriptions").insert({
+        // Upsert keyed on the subscription id so duplicate webhook deliveries are idempotent.
+        await admin.from("billing_subscriptions").upsert({
           organisation_id: orgId,
           stripe_customer_id: String(s.customer ?? ""),
           stripe_subscription_id: String(s.subscription ?? ""),
           plan: "pro",
           status: "active",
-        });
+        }, { onConflict: "stripe_subscription_id" });
       }
     }
   } catch {

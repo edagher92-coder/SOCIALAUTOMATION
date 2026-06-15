@@ -1,6 +1,9 @@
 # ── Secrets: never commit credentials (see CPWORK/universal-ads-os/SECURITY.md) ──
 .env
 .env.*
+# …but DO ship the non-secret env templates so others can configure the app.
+!.env.example
+!**/.env.example
 *.pem
 *.key
 secrets/
