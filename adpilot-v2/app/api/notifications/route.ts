@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ensureOrg } from "@/lib/org";
+import { getActiveOrgId } from "@/lib/org";
 import { sendEmail, NoEmailKeyError } from "@/lib/email/resend";
 
 export const runtime = "nodejs";
@@ -18,7 +18,8 @@ export async function GET() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
-  const { data } = await supabase.from("notification_rules").select("email,weekly_digest,critical_alerts").maybeSingle();
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const { data } = await supabase.from("notification_rules").select("email,weekly_digest,critical_alerts").eq("organisation_id", orgId).maybeSingle();
   return NextResponse.json({ rule: data || { email: user.email, weekly_digest: true, critical_alerts: true } });
 }
 
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
   const { email, weekly_digest, critical_alerts, test } = parsed.data;
   const addr = email || user.email!;
 
-  const orgId = await ensureOrg(user.id, user.email ?? undefined);
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
   const admin = createAdminClient();
   await admin.from("notification_rules").upsert(
     { organisation_id: orgId, email: addr, weekly_digest, critical_alerts },

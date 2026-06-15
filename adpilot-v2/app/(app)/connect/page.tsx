@@ -1,13 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
+import { getActiveOrgId } from "@/lib/org";
 import SyncButton from "@/components/SyncButton";
 
 export const dynamic = "force-dynamic";
 
 export default async function Connect({ searchParams }: { searchParams: { connected?: string; error?: string } }) {
   const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const orgId = user ? await getActiveOrgId(user.id, user.email ?? undefined) : "";
   const { data: accounts } = await supabase
     .from("connected_ad_accounts").select("platform,display_name,external_account_id,status,created_at")
-    .order("created_at", { ascending: false });
+    .eq("organisation_id", orgId).order("created_at", { ascending: false });
 
   const msg = searchParams.connected ? `✅ Connected ${searchParams.connected}.`
     : searchParams.error ? `⚠ Couldn't connect: ${searchParams.error.replace(/_/g, " ")}` : "";
@@ -47,7 +50,7 @@ export default async function Connect({ searchParams }: { searchParams: { connec
                 <div className="font-semibold">{a.display_name} <span className="text-xs uppercase text-muted">{a.platform}</span></div>
                 <div className="text-xs text-muted">{a.external_account_id} · {a.status}</div>
               </div>
-              {a.platform === "meta" && <SyncButton platform="meta" />}
+              <SyncButton platform={a.platform === "tiktok" ? "tiktok" : "meta"} />
             </div>
           ))}
         </div>

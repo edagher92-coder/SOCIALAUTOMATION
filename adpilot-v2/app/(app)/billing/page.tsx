@@ -1,12 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
+import { getActiveOrgId } from "@/lib/org";
 import UpgradeButtons from "@/components/UpgradeButtons";
 
 export const dynamic = "force-dynamic";
 
 export default async function BillingPage() {
   const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const orgId = user ? await getActiveOrgId(user.id, user.email ?? undefined) : "";
   const { data: sub } = await supabase
-    .from("billing_subscriptions").select("plan,status,current_period_end").order("created_at", { ascending: false }).limit(1).maybeSingle();
+    .from("billing_subscriptions").select("plan,status,current_period_end").eq("organisation_id", orgId)
+    .order("created_at", { ascending: false }).limit(1).maybeSingle();
 
   const active = sub && (sub as any).status === "active";
 

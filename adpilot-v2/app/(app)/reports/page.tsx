@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveOrgId } from "@/lib/org";
 
 export const dynamic = "force-dynamic";
 
 export default async function ReportsPage() {
   const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const orgId = user ? await getActiveOrgId(user.id, user.email ?? undefined) : "";
   const { data: reports } = await supabase
-    .from("reports").select("id,title,period,created_at").order("created_at", { ascending: false }).limit(50);
+    .from("reports").select("id,title,period,created_at").eq("organisation_id", orgId)
+    .order("created_at", { ascending: false }).limit(50);
 
   return (
     <div className="max-w-3xl">

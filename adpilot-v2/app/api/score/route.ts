@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { parseCsvText, analyse } from "@/lib/engine";
-import { ensureOrg } from "@/lib/org";
+import { getActiveOrgId } from "@/lib/org";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
   // isn't configured, analysis still returns — we just don't save.
   let reportId: string | null = null;
   try {
-    const orgId = await ensureOrg(user.id, user.email ?? undefined);
+    const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
     const admin = createAdminClient();
     await admin.from("health_scores").insert({
       organisation_id: orgId, scope: "account", total: result.health.total, band: result.health.band,

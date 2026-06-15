@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ModeProvider, useMode } from "./mode";
+import OrgSwitcher from "./OrgSwitcher";
 
 const NAV = [
   { href: "/dashboard", label: "Ads Health", icon: "📊", desc: "Score & fix your Meta/TikTok ads" },
@@ -10,6 +11,7 @@ const NAV = [
   { href: "/ai-specialists", label: "AI Specialists", icon: "🧭", desc: "Your team of ad & business agents" },
   { href: "/build-dashboard", label: "Build a Dashboard", icon: "🧱", desc: "Sheets / Looker / Notion specs" },
   { href: "/canva-creator", label: "Canva Creator", icon: "🎨", desc: "Ad creative briefs & prompts" },
+  { href: "/creative", label: "Creative Library", icon: "🖼️", desc: "Link or upload audio/video/photo" },
   { href: "/bobby-business-assistant", label: "Bobby — Business", icon: "🤝", desc: "Plain-English business help" },
   { href: "/aria-course-creator", label: "Aria — Courses", icon: "🎓", desc: "Turn expertise into a course" },
   { href: "/crm-maintenance", label: "CRM Maintenance", icon: "🧹", desc: "Keep your pipeline clean" },
@@ -17,7 +19,9 @@ const NAV = [
   { href: "/billing", label: "Billing", icon: "💳", desc: "Plan & subscription" },
   { href: "/notifications", label: "Notifications", icon: "🔔", desc: "Weekly digest & alerts" },
   { href: "/agency", label: "White-label", icon: "🏷️", desc: "Brand reports as your agency" },
+  { href: "/settings", label: "Settings", icon: "⚙️", desc: "Sale value & margin" },
   { href: "/claude-api", label: "Claude API", icon: "🔌", desc: "Connect AI generation" },
+  { href: "/manual", label: "User Manual", icon: "📖", desc: "How-to + download PDF" },
 ];
 
 function ModeToggle() {
@@ -47,6 +51,7 @@ function Sidebar({ email, onNav }: { email?: string; onNav?: () => void }) {
         <span className="inline-block h-6 w-6 rounded-lg bg-gradient-to-br from-brand to-teal" /> AdPilot OS
         <span className="ml-1 rounded-full bg-[#eaf1ff] px-2 py-0.5 text-[11px] font-bold text-[#0b3aa6]">V2</span>
       </Link>
+      <OrgSwitcher />
       <ModeToggle />
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
         {NAV.map((n) => {
@@ -76,11 +81,11 @@ export default function AppShell({ children, email }: { children: React.ReactNod
     <ModeProvider>
       <div className="min-h-screen md:grid md:grid-cols-[260px_1fr]">
         {/* mobile top bar */}
-        <div className="flex items-center justify-between border-b border-[#e3e8ef] bg-white px-4 py-3 md:hidden">
+        <div className="flex items-center justify-between border-b border-[#e3e8ef] bg-white px-4 py-3 md:hidden print:hidden">
           <span className="flex items-center gap-2 font-extrabold"><span className="inline-block h-5 w-5 rounded bg-gradient-to-br from-brand to-teal" /> AdPilot OS</span>
           <button onClick={() => setOpen(!open)} className="rounded-lg border border-[#e3e8ef] px-3 py-1.5 text-sm font-bold">Menu</button>
         </div>
-        <aside className={`${open ? "block" : "hidden"} border-r border-[#e3e8ef] bg-[#eef2f8] md:block`}>
+        <aside className={`${open ? "block" : "hidden"} border-r border-[#e3e8ef] bg-[#eef2f8] md:block print:hidden`}>
           <div className="md:sticky md:top-0 md:h-screen"><Sidebar email={email} onNav={() => setOpen(false)} /></div>
         </aside>
         <main className="min-w-0 p-5 md:p-8">{children}</main>
