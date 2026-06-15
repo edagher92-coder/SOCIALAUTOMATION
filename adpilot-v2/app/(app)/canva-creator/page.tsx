@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useMode } from "@/components/mode";
+import AiButton from "@/components/AiButton";
 
 export default function CanvaCreator() {
   const { mode } = useMode();
@@ -57,6 +58,7 @@ export default function CanvaCreator() {
           </div>
         </div>
         <button onClick={() => setOut(build())} className="mt-4 rounded-lg bg-brand px-5 py-2.5 font-bold text-white">Generate brief</button>
+        <AiButton task="canva" getInputs={() => ({ product, audience, offer, platform })} label="✨ Write with AI (Stella)" />
       </div>
 
       {out && (

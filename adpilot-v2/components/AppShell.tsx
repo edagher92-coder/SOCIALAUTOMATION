@@ -12,6 +12,8 @@ const NAV = [
   { href: "/bobby-business-assistant", label: "Bobby — Business", icon: "🤝", desc: "Plain-English business help" },
   { href: "/aria-course-creator", label: "Aria — Courses", icon: "🎓", desc: "Turn expertise into a course" },
   { href: "/crm-maintenance", label: "CRM Maintenance", icon: "🧹", desc: "Keep your pipeline clean" },
+  { href: "/reports", label: "Saved Reports", icon: "🗃️", desc: "Your analysis history" },
+  { href: "/billing", label: "Billing", icon: "💳", desc: "Plan & subscription" },
   { href: "/claude-api", label: "Claude API", icon: "🔌", desc: "Connect AI generation" },
 ];
 

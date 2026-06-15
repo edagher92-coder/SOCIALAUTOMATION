@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import AiButton from "@/components/AiButton";
 
 export default function Aria() {
   const [topic, setTopic] = useState("Slush machine maintenance for cafés");
@@ -33,6 +34,7 @@ export default function Aria() {
           <L label="Outcome they want" v={outcome} set={setOutcome} />
         </div>
         <button onClick={build} className="mt-4 rounded-lg bg-brand px-5 py-2.5 font-bold text-white">Generate outline</button>
+        <AiButton task="aria" getInputs={() => ({ topic, audience, outcome })} label="✨ Write with AI (Aria)" />
       </div>
 
       {out && (
