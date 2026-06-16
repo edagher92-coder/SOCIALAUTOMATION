@@ -22,7 +22,15 @@ export default async function Connect({ searchParams }: { searchParams: { connec
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-extrabold tracking-tight">Connect ad accounts</h1>
-      <p className="mb-5 mt-1 text-muted">Connect read-only so AdPilot can pull your numbers automatically. We never edit, pause, or create ads.</p>
+      <p className="mb-4 mt-1 text-muted">Connect read-only so AdPilot can pull your numbers automatically. We never edit, pause, or create ads.</p>
+
+      {/* How it works — 3 steps, makes the flow obvious and the safety explicit. */}
+      <div className="mb-5 grid gap-2 rounded-2xl border border-border-subtle bg-surface-raised p-4 text-sm shadow-card sm:grid-cols-3">
+        <div><span className="font-bold text-brand">1 · Connect</span><div className="text-muted">One click (read-only) — or paste a token.</div></div>
+        <div><span className="font-bold text-brand">2 · Auto-sync</span><div className="text-muted">We pull your numbers on your schedule.</div></div>
+        <div><span className="font-bold text-brand">3 · Score &amp; propose</span><div className="text-muted">Health score + safe fixes. Never edits an ad.</div></div>
+      </div>
+      <p className="mb-5 -mt-2 text-xs text-muted">🔒 Read-only access only · tokens encrypted at rest (AES-256-GCM) · never sent to your browser.</p>
 
       {msg && <div className="mb-4 rounded-xl border border-border-subtle bg-white p-3 text-sm shadow-card">{msg}</div>}
       {accounts?.some((a: any) => a.status === "disconnected" || a.status === "error") && (
@@ -42,6 +50,7 @@ export default async function Connect({ searchParams }: { searchParams: { connec
         </div>
       ) : (
         <>
+          <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-muted">Easiest — one click, read-only</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
               <div className="mb-2 text-2xl">🔵</div>
@@ -57,6 +66,7 @@ export default async function Connect({ searchParams }: { searchParams: { connec
             </div>
           </div>
 
+          <h2 className="mb-2 mt-6 text-sm font-bold uppercase tracking-wide text-muted">Or paste an access token — works without app review</h2>
           <TokenConnect />
 
           <p className="mt-4 rounded-xl bg-surface p-3 text-sm text-muted">
