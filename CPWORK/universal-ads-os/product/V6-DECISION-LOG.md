@@ -71,3 +71,14 @@ collected in V6-MASTER-PLAN.md → "Owner decision queue" and surfaced just befo
   lite Settings; a live "wasted-spend found" headline figure on Simple; full-width attention column
   in Simple. NEXT PHASE: **P3 — Diagnostics** (timeseries.ts/stats.ts on the new account_daily_metrics,
   significance-gated verdicts, predictive creative fatigue; split break_even_cpa→break_even_cpl).
+
+## 2026-06-16 — Phase 3 (Diagnostics) IN PROGRESS — engine foundations shipped
+- lib/engine/timeseries.ts (+7 tests): mean/median/MAD, slope, moving avg, WoW delta, robust
+  anomaly detection (median +/- MAD), trend, summariseSeries — over the daily series.
+- lib/engine/stats.ts (+5 tests): Wilson intervals + confidentlyAbove/Below + rateConfidence —
+  for significance-gated verdicts (scale only when lower bound beats target; kill only when upper
+  bound below; else hold).
+- lib/engine/fatigue.ts (+5 tests): predictFatigue -> healthy/watch/fatigued + days-to-fatigue;
+  leading signal = hold-rate decaying while CTR still holds. 449 tests total, green.
+- NEXT in P3 (careful, touches existing-tested code): wire significance into decisions.ts kill/scale
+  gating; split break_even_cpa -> break_even_cpl (+ CTR/100 guard); surface trend + fatigue on the UI.
