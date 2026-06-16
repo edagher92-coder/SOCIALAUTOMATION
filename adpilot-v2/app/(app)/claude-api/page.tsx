@@ -47,7 +47,7 @@ export default function ClaudeApi() {
         )}
         <p className="mt-4 text-xs text-muted">
           Get a key at console.anthropic.com → API Keys. Recommended model for these tools: <code>claude-sonnet-4-6</code> (fast)
-          or <code>claude-opus-4-8</code> (deepest). Live in-app generation ships with the V2 backend (server-side key, rate-limited).
+          or <code>claude-opus-4-8</code> (deepest). Live in-app generation ships with the v4 backend (server-side key, rate-limited).
         </p>
       </div>
     </div>

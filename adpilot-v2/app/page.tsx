@@ -116,7 +116,7 @@ export default function Landing() {
         <div className="mx-auto max-w-6xl flex flex-col items-center gap-2 text-center text-sm text-muted sm:flex-row sm:justify-between">
           <span className="flex items-center gap-2 font-semibold text-ink">
             <span className="inline-block h-5 w-5 rounded-lg bg-gradient-to-br from-brand to-teal" />
-            AdPilot OS V3
+            AdPilot OS V4
           </span>
           <span>Numbers-first · safe by design. No earnings or results guarantees.</span>
           <nav className="flex items-center gap-4">

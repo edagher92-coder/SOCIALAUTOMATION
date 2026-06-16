@@ -13,7 +13,7 @@ export default function Manual() {
       <PageHeader
         eyebrow="Documentation"
         title="AdPilot OS — User Manual"
-        subtitle="Version 2 · Meta & TikTok ads analytics & automation · read-only, safe by design."
+        subtitle="Version 4 · Meta & TikTok ads analytics & automation · read-only, safe by design."
         action={<PrintButton label="🖨 Download manual (PDF)" />}
       />
 

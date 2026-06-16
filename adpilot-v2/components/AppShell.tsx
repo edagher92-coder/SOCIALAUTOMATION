@@ -73,7 +73,7 @@ function Sidebar({ email, onNav }: { email?: string; onNav?: () => void }) {
       <Link href="/command" className="flex items-center gap-2.5 px-1 py-1 text-base font-extrabold tracking-tight text-ink transition hover:text-brand">
         <span className="inline-block h-7 w-7 flex-shrink-0 rounded-xl bg-gradient-to-br from-brand to-teal shadow-sm" />
         <span>AdPilot OS</span>
-        <span className="ml-0.5 rounded-full bg-brand-50 px-2 py-0.5 text-2xs font-bold text-brand">V3</span>
+        <span className="ml-0.5 rounded-full bg-brand-50 px-2 py-0.5 text-2xs font-bold text-brand">V4</span>
       </Link>
 
       {/* Org switcher */}
