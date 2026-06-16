@@ -54,12 +54,12 @@ function ModeToggle() {
             key={m}
             onClick={() => setMode(m)}
             aria-pressed={mode === m}
-            className={`rounded-lg px-2 py-1.5 capitalize transition-all duration-150 focus-visible:shadow-ring-brand ${
+            className={`rounded-lg px-2 py-1.5 transition-all duration-150 focus-visible:shadow-ring-brand ${
               mode === m
                 ? "bg-brand text-white shadow-sm"
                 : "text-muted hover:bg-white hover:text-ink hover:shadow-sm"
             }`}>
-            {m}
+            {m === "beginner" ? "Simple" : "Advanced"}
           </button>
         ))}
       </div>
