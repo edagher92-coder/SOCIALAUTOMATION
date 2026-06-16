@@ -16,6 +16,7 @@ export type Feature =
   | "messenger_automation" // no-prompt Messenger profile setup via Graph API (premium)
   | "ad_write"         // GUARDED live ad changes (pause/resume/budget) — top tier, double-gated
   | "lead_quality_loop" // inbound CRM/lead webhook → populates lead_quality_score
+  | "threshold_alerts" // configurable objective alert rule library (frequency, zero-conv, CTR)
   | "multi_client"
   | "white_label"
   | "expert_plugins";  // team-built extras, top tier only
@@ -46,6 +47,7 @@ export const FEATURE_MIN_PLAN: Record<Feature, Plan> = {
   messenger_automation: "expert", // premium: no-prompt Messenger profile setup
   ad_write: "expert",       // expert only — and additionally env-gated + typed-YES per action
   lead_quality_loop: "pro", // top two tiers: ingest CRM/lead events to score lead quality
+  threshold_alerts: "starter", // configurable alert rule library (basic CRITICAL email stays free)
   multi_client: "pro",
   white_label: "expert",    // expert only
   expert_plugins: "expert", // expert only — team-built additions
@@ -63,6 +65,7 @@ export const FEATURE_LABEL: Record<Feature, string> = {
   messenger_automation: "Messenger automation (no-prompt setup)",
   ad_write: "Guarded ad changes (pause/budget)",
   lead_quality_loop: "Lead-quality / CRM loop",
+  threshold_alerts: "Threshold alerts",
   multi_client: "Multi-client workspaces",
   white_label: "White-label reports",
   expert_plugins: "Expert plugins (team-built)",

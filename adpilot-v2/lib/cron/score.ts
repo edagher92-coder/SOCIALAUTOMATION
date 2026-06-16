@@ -2,6 +2,7 @@ import "server-only";
 import { analyse } from "@/lib/engine";
 import { sendEmail } from "@/lib/email/resend";
 import { refreshOpenRecommendations } from "@/lib/proposals";
+import { evaluateAlertRules } from "@/lib/cron/alerts";
 
 // Shared scheduled scoring + breach-alert logic, used by both the daily
 // auto-analysis cron and the cadence-driven auto-sync cron so they never diverge.
@@ -38,8 +39,21 @@ export async function scoreAndAlertOrg(
   // cron path and the CSV scoring route can never diverge.
   await refreshOpenRecommendations(admin, org.id, (result.decisions || []) as any[]);
 
+  // Threshold-alert rule library (read-only signal): evaluate the synced snapshots and upsert
+  // open hits, deduped per (org, rule+campaign). Best-effort — never blocks scoring.
+  const hits = evaluateAlertRules(snaps as any[]);
+  if (hits.length) {
+    try {
+      await admin.from("alert_events").upsert(
+        hits.map((h) => ({ organisation_id: org.id, rule_id: h.rule_id, severity: h.severity, campaign_name: h.campaign_name, metric: h.metric, value: h.value, threshold: h.threshold, message: h.message, status: "open", dedupe_key: h.dedupe_key })),
+        { onConflict: "organisation_id,dedupe_key" },
+      );
+    } catch { /* alert log is best-effort */ }
+  }
+
   let alerted = false;
-  const b = breaches(result);
+  // Fold critical rule hits into the breach list so they reach the alert email too.
+  const b = Array.from(new Set([...breaches(result), ...hits.filter((h) => h.severity === "critical").map((h) => h.message)]));
   if (b.length) {
     const { data: rule } = await admin.from("notification_rules").select("email,critical_alerts").eq("organisation_id", org.id).maybeSingle();
     if (rule?.critical_alerts && rule.email) {
