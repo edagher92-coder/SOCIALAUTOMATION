@@ -129,3 +129,14 @@ read-only/auto-sync UI chips + first-score card.
 NEEDS-CARE (own commits, tested): prompt caching (claude.ts) ~25-30% token cut · HMAC-signed OAuth
 state · right-to-erasure deletion job (the REAL privacy P0) · tier feature keys + data-consent clause.
 OWNER-GATED: prices · auto-execute green-light · Meta System User token · solicitor legal text.
+
+## 2026-06-16 — Dependency-vuln triage (executed: npm audit; honest result)
+- Ran `npm audit`: 10 vulns (1 critical / 6 high / 3 moderate) — ALL in Next.js 14 (+ its postcss dep):
+  CSP-nonce XSS, RSC cache poisoning, beforeInteractive XSS, image-optimization DoS, WebSocket-upgrade
+  SSRF, Pages-Router i18n middleware bypass. The ONLY remediation is `npm audit fix --force` ->
+  next@16 (MAJOR breaking change). NO safe non-breaking fix. Did NOT run --force (would break the app).
+- Applicability triage (real exposure < raw severity): no next/image (image-DoS N/A); App Router +
+  no i18n config (Pages-Router bypass N/A); no CSP nonces (nonce-XSS N/A — only a crypto nonce in
+  data-deletion). Residual: RSC cache poisoning + WebSocket-upgrade SSRF + beforeInteractive XSS — limited.
+- DECISION: remediate via a PLANNED, fully-tested Next 14->16 migration (own dedicated effort; App
+  Router API changes + re-test 65 routes). Top dependency-security item. NOT rushed at depth.
