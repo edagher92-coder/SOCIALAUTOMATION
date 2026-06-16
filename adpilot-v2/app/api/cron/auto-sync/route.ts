@@ -32,63 +32,78 @@ export async function GET(req: Request) {
   for (const s of subs || []) if ((s as any).status === "active") planFor.set((s as any).organisation_id, (s as any).plan);
 
   const now = Date.now();
-  let synced = 0, rows = 0, scored = 0, skipped = 0, failed = 0;
+  const START = now;
+  // V6 P1 — fan-out fix. The sweep was a sequential org×platform loop that, past ~10 orgs,
+  // blew Vercel's 60s cap and got KILLED mid-loop: remaining orgs silently never synced and it
+  // looked like "low activity", not an error. Now: bounded org concurrency + per-org parallel
+  // platform pulls + a time-budget guard that DEFERS the rest and reports it (no silent truncation).
+  const TIME_BUDGET_MS = 50_000; // headroom under maxDuration=60s to flush the response
+  const CONCURRENCY = 4;
 
-  for (const org of orgs || []) {
-    if (!can(normalisePlan(planFor.get(org.id)), "auto_sync")) { skipped++; continue; } // plan gate
+  type Outcome = { outcome: "skipped" | "synced" | "failed"; rows: number; scored: number };
 
-    const interval = Number((org as any).sync_interval_hours ?? 24);
+  async function processOrg(org: any): Promise<Outcome> {
+    if (!can(normalisePlan(planFor.get(org.id)), "auto_sync")) return { outcome: "skipped", rows: 0, scored: 0 }; // plan gate
+    const interval = Number(org.sync_interval_hours ?? 24);
     // 0 = off; non-finite/negative (corrupt value) is treated as off rather than running every hour.
-    if (!Number.isFinite(interval) || interval <= 0) { skipped++; continue; } // off
-
-    const lastRaw = (org as any).last_synced_at ? new Date((org as any).last_synced_at).getTime() : 0;
-    const last = Number.isFinite(lastRaw) ? lastRaw : 0; // ignore an unparseable timestamp → due now
-    // Subtract a slack window for cron jitter, but never more than half the interval, so a
-    // 1h cadence doesn't fire after 55min one run and 5min the next.
-    const slackMs = Math.min(300_000, interval * 3_600_000 / 2); // ≤5-min slack
+    if (!Number.isFinite(interval) || interval <= 0) return { outcome: "skipped", rows: 0, scored: 0 };
+    const lastRaw = org.last_synced_at ? new Date(org.last_synced_at).getTime() : 0;
+    const last = Number.isFinite(lastRaw) ? lastRaw : 0; // unparseable timestamp → due now
+    // Slack for cron jitter, capped at half the interval so a 1h cadence doesn't fire 55min/5min.
+    const slackMs = Math.min(300_000, interval * 3_600_000 / 2);
     const dueMs = interval * 3_600_000 - slackMs;
-    if (last && now - last < dueMs) { skipped++; continue; } // not due yet
+    if (last && now - last < dueMs) return { outcome: "skipped", rows: 0, scored: 0 }; // not due yet
 
     const { data: accts } = await admin.from("connected_ad_accounts")
       .select("platform").eq("organisation_id", org.id).eq("status", "connected");
     const connected = new Set((accts || []).map((a: any) => a.platform));
-    if (connected.size === 0) { skipped++; continue; }
+    if (connected.size === 0) return { outcome: "skipped", rows: 0, scored: 0 };
 
+    // Pull every connected platform in parallel (they're independent).
+    const targets = PLATFORMS.filter((p) => connected.has(p));
+    const settled = await Promise.allSettled(targets.map((p) => syncOrgPlatform(admin, org.id, p)));
     let pulled = 0, didSync = false;
-    for (const p of PLATFORMS) {
-      if (!connected.has(p)) continue;
-      try { pulled += await syncOrgPlatform(admin, org.id, p); didSync = true; }
-      catch (e: any) {
-        // Only an AUTH/token failure should mark the account disconnected (so the UI can
-        // prompt a reconnect). Be specific: a bare "token" substring would wrongly disconnect
-        // on transient errors (e.g. "rate limit on token endpoint"). Require auth-shaped signals.
-        const m = String(e?.message || "").toLowerCase();
-        const authFail =
-          /\b(401|403)\b/.test(m) ||                                                   // HTTP unauthorised/forbidden
-          /\bcode\W*190\b/.test(m) ||                                                   // Meta: expired/invalid access token
-          /invalid_grant|reauthenticate|re-?authori[sz]e/.test(m) ||
-          /(access[\s_-]?token|oauth|session|credential)\W{0,24}(expired|invalid|revoked|denied)/.test(m) ||
-          /(expired|invalid|revoked)\W{0,24}(access[\s_-]?token|oauth|session|credential)/.test(m);
-        if (authFail) {
-          await admin.from("connected_ad_accounts").update({ status: "disconnected" })
-            .eq("organisation_id", org.id).eq("platform", p);
-        }
-        /* transient/other errors: skip this platform, others still run */
+    for (let i = 0; i < targets.length; i++) {
+      const r = settled[i];
+      if (r.status === "fulfilled") { pulled += r.value as number; didSync = true; continue; }
+      // Only an AUTH/token failure marks the account disconnected (so the UI can prompt reconnect).
+      // A bare "token" substring would wrongly disconnect on transient errors — require auth signals.
+      const m = String((r.reason as any)?.message || "").toLowerCase();
+      const authFail =
+        /\b(401|403)\b/.test(m) ||
+        /\bcode\W*190\b/.test(m) ||
+        /invalid_grant|reauthenticate|re-?authori[sz]e/.test(m) ||
+        /(access[\s_-]?token|oauth|session|credential)\W{0,24}(expired|invalid|revoked|denied)/.test(m) ||
+        /(expired|invalid|revoked)\W{0,24}(access[\s_-]?token|oauth|session|credential)/.test(m);
+      if (authFail) {
+        await admin.from("connected_ad_accounts").update({ status: "disconnected" })
+          .eq("organisation_id", org.id).eq("platform", targets[i]);
       }
     }
 
-    if (didSync) {
-      // PARTIAL-FAILURE rule: only advance the cadence clock when at least one platform
-      // pull succeeded. If every platform threw (didSync stays false) we leave
-      // last_synced_at untouched so the org stays "due" and retries next run.
-      await admin.from("organisations").update({ last_synced_at: new Date().toISOString() }).eq("id", org.id);
-      synced++; rows += pulled;
-      try { const r = await scoreAndAlertOrg(admin, org as any); if (r.scored) scored++; } catch { /* per-org isolation: scoring never rolls back the sync */ }
-    } else {
-      // Was due + had connected accounts, but every pull failed → not advanced, surfaced as failed.
-      failed++;
-    }
+    // PARTIAL-FAILURE rule: advance the cadence clock only if ≥1 platform pull succeeded.
+    if (!didSync) return { outcome: "failed", rows: 0, scored: 0 };
+    await admin.from("organisations").update({ last_synced_at: new Date().toISOString() }).eq("id", org.id);
+    let scored = 0;
+    try { const sr = await scoreAndAlertOrg(admin, org); if (sr.scored) scored = 1; } catch { /* per-org isolation: scoring never rolls back the sync */ }
+    return { outcome: "synced", rows: pulled, scored };
   }
 
-  return NextResponse.json({ synced, rows, scored, skipped, failed });
+  let synced = 0, rows = 0, scored = 0, skipped = 0, failed = 0, deferred = 0, truncated = false;
+  const list = orgs || [];
+  for (let i = 0; i < list.length; i += CONCURRENCY) {
+    // Time-budget guard: stop starting new work before the function is killed; report the rest.
+    if (Date.now() - START > TIME_BUDGET_MS) { deferred = list.length - i; truncated = true; break; }
+    const batch = list.slice(i, i + CONCURRENCY);
+    const outcomes = await Promise.all(batch.map((o) => processOrg(o).catch((): Outcome => ({ outcome: "failed", rows: 0, scored: 0 }))));
+    for (const r of outcomes) {
+      if (r.outcome === "synced") { synced++; rows += r.rows; scored += r.scored; }
+      else if (r.outcome === "failed") failed++;
+      else skipped++;
+    }
+  }
+  // Make truncation LOUD instead of silent (the bug this phase fixes).
+  if (truncated) console.error(`auto-sync: time budget hit — deferred ${deferred} org(s) to the next run (processed ${list.length - deferred}/${list.length}).`);
+
+  return NextResponse.json({ synced, rows, scored, skipped, failed, deferred, truncated, durationMs: Date.now() - START });
 }

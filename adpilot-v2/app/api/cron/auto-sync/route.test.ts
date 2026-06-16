@@ -274,3 +274,28 @@ describe("partial-failure handling", () => {
     expect(updates.find((u) => u.table === "connected_ad_accounts")).toBeTruthy(); // flagged for reconnect
   });
 });
+
+describe("fan-out + telemetry (V6 P1)", () => {
+  it("processes multiple due orgs in one sweep and reports non-truncated telemetry", async () => {
+    DB = {
+      organisations: [
+        { id: "o1", sync_interval_hours: 24, last_synced_at: null },
+        { id: "o2", sync_interval_hours: 24, last_synced_at: null },
+        { id: "o3", sync_interval_hours: 24, last_synced_at: null },
+      ],
+      billing_subscriptions: [
+        { organisation_id: "o1", plan: "pro", status: "active" },
+        { organisation_id: "o2", plan: "pro", status: "active" },
+        { organisation_id: "o3", plan: "pro", status: "active" },
+      ],
+      connected_ad_accounts: [{ platform: "meta" }],
+    };
+    syncOrgPlatform.mockResolvedValue(2);
+    const r = await GET(req({ key: SECRET }));
+    const j = await r.json();
+    expect(j.synced).toBe(3);          // all three orgs processed in the fan-out
+    expect(j.truncated).toBe(false);   // well under the time budget
+    expect(j.deferred).toBe(0);
+    expect(typeof j.durationMs).toBe("number");
+  });
+});
