@@ -150,3 +150,14 @@ OWNER-GATED: prices · auto-execute green-light · Meta System User token · sol
 - Verified: tsc clean, 455 tests, next build green (65 routes). Committed 9c0434f, pushed.
 - WATCH: first Vercel build on Next 16 (a framework major can differ from local build).
 - Note: Next 16 renames the middleware label to "Proxy" in build output (cosmetic).
+
+## 2026-06-16 — EXECUTED: prompt caching (AI efficiency) + Next 16 build hygiene
+- claude.ts cacheSystem option (cache_control:ephemeral on the system block); agents/run moves the
+  static prefix (persona + knowledge + context pack) into the cached system, volatile grounding +
+  question stay in the user message. Repeat same-specialist calls reuse the prefix at ~10% input
+  cost — audit est. ~25-30% blended token/credit saving on the AI specialist team.
+- (app)/layout force-dynamic: Next 16 was erroring on static prerender of cookie-reading pages
+  (non-fatal fallback, but noisy/wasteful) — one segment-level line fixed all of them.
+- Verified: tsc clean, 455 tests, next build clean (0 dynamic-server errors). Pushed.
+- Still queued: right-to-erasure deletion job (privacy P0, destructive — awaiting owner go-ahead);
+  Haiku routing for light assistants; dev-dep audit cleanup (vitest v3); tier features + data-consent.
