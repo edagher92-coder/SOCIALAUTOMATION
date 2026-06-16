@@ -13,6 +13,7 @@ const NAV_GROUPS: { title: string | null; items: { href: string; label: string; 
     { href: "/proposals", label: "Proposals", icon: "✅", desc: "Approve safe, prioritised fixes" },
     { href: "/dashboard", label: "Ads Health", icon: "📊", desc: "Score a CSV export" },
     { href: "/connect", label: "Connect & Sync", icon: "🔗", desc: "Meta & TikTok + auto-sync" },
+    { href: "/utm-builder", label: "UTM Builder", icon: "🏷️", desc: "Consistent names & tagged URLs" },
     { href: "/content", label: "Content Studio", icon: "🎬", desc: "Create, schedule & publish posts" },
     { href: "/messenger", label: "Messenger Setup", icon: "💬", desc: "Greeting, ice breakers & menu" },
     { href: "/actions", label: "Ad Actions", icon: "🛠️", desc: "Guarded live changes (Expert)" },
@@ -20,6 +21,7 @@ const NAV_GROUPS: { title: string | null; items: { href: string; label: string; 
   ] },
   { title: "AI Team", items: [
     { href: "/ai-specialists", label: "AI Specialists", icon: "🧭", desc: "Agents grounded in your numbers" },
+    { href: "/policy-check", label: "Policy Check", icon: "🛡️", desc: "Paige checks copy for policy risk" },
     { href: "/canva-creator", label: "Canva Creator", icon: "🎨", desc: "Ad creative briefs & prompts" },
     { href: "/creative", label: "Creative Library", icon: "🖼️", desc: "Link or upload audio/video/photo" },
     { href: "/bobby-business-assistant", label: "Bobby — Business", icon: "🤝", desc: "Plain-English business help" },
@@ -33,7 +35,6 @@ const NAV_GROUPS: { title: string | null; items: { href: string; label: string; 
     { href: "/agency", label: "White-label", icon: "🏷️", desc: "Brand reports as your agency" },
     { href: "/settings", label: "Settings", icon: "⚙️", desc: "Economics & auto-sync" },
     { href: "/claude-api", label: "Claude API", icon: "🔌", desc: "Connect AI generation" },
-    { href: "/demo-guide", label: "Demo Guide", icon: "🗺️", desc: "Guided tour of the demo accounts" },
     { href: "/manual", label: "User Manual", icon: "📖", desc: "How-to + download PDF" },
   ] },
 ];
@@ -69,9 +70,9 @@ function Sidebar({ email, onNav }: { email?: string; onNav?: () => void }) {
   return (
     <div className="flex h-full flex-col gap-3 p-4">
       {/* Logo */}
-      <Link href="/command" className="flex items-center gap-2.5 px-1 py-1 text-base font-extrabold tracking-tight text-ink transition hover:opacity-90">
-        <span className="inline-block h-7 w-7 flex-shrink-0 rounded-xl bg-brand-gradient shadow-glow" />
-        <span className="text-gradient">AdPilot OS</span>
+      <Link href="/command" className="flex items-center gap-2.5 px-1 py-1 text-base font-extrabold tracking-tight text-ink transition hover:text-brand">
+        <span className="inline-block h-7 w-7 flex-shrink-0 rounded-xl bg-gradient-to-br from-brand to-teal shadow-sm" />
+        <span>AdPilot OS</span>
         <span className="ml-0.5 rounded-full bg-brand-50 px-2 py-0.5 text-2xs font-bold text-brand">V3</span>
       </Link>
 
@@ -98,7 +99,7 @@ function Sidebar({ email, onNav }: { email?: string; onNav?: () => void }) {
                   aria-current={active ? "page" : undefined}
                   className={`group rounded-xl px-3 py-2 transition-all duration-150 focus-visible:shadow-ring-brand ${
                     active
-                      ? "bg-brand-gradient text-white shadow-glow"
+                      ? "bg-brand text-white shadow-sm"
                       : "text-ink hover:bg-white hover:shadow-sm"
                   }`}>
                   <div className="flex items-center gap-2.5">
@@ -140,8 +141,8 @@ export default function AppShell({ children, email }: { children: React.ReactNod
         {/* Mobile top bar */}
         <div className="flex items-center justify-between border-b border-border-subtle bg-white px-4 py-3 md:hidden print:hidden">
           <span className="flex items-center gap-2 font-extrabold text-ink">
-            <span className="inline-block h-6 w-6 rounded-lg bg-brand-gradient shadow-glow" aria-hidden />
-            <span className="text-gradient">AdPilot OS</span>
+            <span className="inline-block h-6 w-6 rounded-lg bg-gradient-to-br from-brand to-teal shadow-sm" aria-hidden />
+            AdPilot OS
           </span>
           <button
             onClick={() => setOpen(!open)}
@@ -154,7 +155,7 @@ export default function AppShell({ children, email }: { children: React.ReactNod
 
         {/* Sidebar */}
         <aside
-          className={`${open ? "block" : "hidden"} border-r border-border-subtle bg-[#f5efe8] md:block print:hidden`}
+          className={`${open ? "block" : "hidden"} border-r border-border-subtle bg-[#eef2f8] md:block print:hidden`}
           aria-label="Sidebar">
           <div className="md:sticky md:top-0 md:h-screen">
             <Sidebar email={email} onNav={() => setOpen(false)} />

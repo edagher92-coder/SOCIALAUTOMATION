@@ -54,6 +54,7 @@ export const KNOWLEDGE: Record<KnowledgeDomain, KnowledgeDoc> = {
       "Meta data/claims: don't request financial info (income, debt, card/account numbers) or health info without permission. No misleading/unsupported claims — guaranteed income, instant weight loss, fake scarcity/reviews, unrealistic 'before/after' transformations.",
       "TikTok prohibited (absolute): illegal/controlled drugs & paraphernalia, weapons/explosives, counterfeit goods. No exaggerated/guaranteed results. AI-generated realistic depictions of people/scenes must be clearly labelled; misleading AI content is banned. Don't use tracking to collect health data.",
       "Rewrite risky→compliant: turn 'Struggling with [condition]?' into a product-focused, non-personal claim; remove guarantees/absolutes ('cure', 'guaranteed', '#1'); replace with substantiated, qualified language. Paige has final say on any copy.",
+      "ACCC / Australian Consumer Law: no misleading or deceptive representations about savings, prices, results or outcomes — every claim (e.g. '$X saved', 'X% off', 'results in Y days') must be substantiated and able to be backed up, or omit it.",
     ].join("\n"),
     sources: [
       "https://transparency.meta.com/policies/ad-standards/",
