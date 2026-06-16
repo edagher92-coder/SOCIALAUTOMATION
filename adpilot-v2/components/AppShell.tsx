@@ -32,6 +32,7 @@ const NAV_GROUPS: { title: string | null; items: { href: string; label: string; 
   { title: "Account", items: [
     { href: "/billing", label: "Billing", icon: "💳", desc: "Plan & subscription" },
     { href: "/notifications", label: "Notifications", icon: "🔔", desc: "Weekly digest & alerts" },
+    { href: "/portfolio", label: "Portfolio", icon: "🗂️", desc: "All clients, health & spend at a glance" },
     { href: "/agency", label: "White-label", icon: "🏷️", desc: "Brand reports as your agency" },
     { href: "/settings", label: "Settings", icon: "⚙️", desc: "Economics & auto-sync" },
     { href: "/claude-api", label: "Claude API", icon: "🔌", desc: "Connect AI generation" },
