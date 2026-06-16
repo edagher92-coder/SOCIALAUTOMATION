@@ -7,6 +7,7 @@ import { can } from "@/lib/entitlements";
 import { callClaude, NoKeyError } from "@/lib/ai/claude";
 import { getAgent } from "@/lib/agents/registry";
 import { knowledgeForAgent } from "@/lib/agents/knowledge";
+import { contextPackGrounding } from "@/lib/agents/context-pack";
 import { buildGrounding } from "@/lib/agents/grounding";
 
 export const runtime = "nodejs";
@@ -42,8 +43,10 @@ export async function POST(req: Request) {
   // knowledgeForAgent already falls back to baseline internally; guard the call
   // itself so an unexpected throw can't break grounding.
   const kb = await knowledgeForAgent(admin, agent.id).catch(() => "");
+  // Private business context-pack grounding (env-gated; "" in the sellable default build).
+  const pack = contextPackGrounding(agent.id);
   const q = parsed.data.question?.trim();
-  const userMsg = `${kb ? `REFERENCE KNOWLEDGE (current best practice — guidance, not guarantees; cite ranges, not false precision):\n${kb}\n\n` : ""}${grounding}\n\n${q ? `The user asks: ${q}` : "Give your top findings and safe, prioritised proposals for this account right now."}`;
+  const userMsg = `${kb ? `REFERENCE KNOWLEDGE (current best practice — guidance, not guarantees; cite ranges, not false precision):\n${kb}\n\n` : ""}${pack ? `ACTIVE BUSINESS CONTEXT (private — honour these rules; they tighten the guardrails, never loosen them):\n${pack}\n\n` : ""}${grounding}\n\n${q ? `The user asks: ${q}` : "Give your top findings and safe, prioritised proposals for this account right now."}`;
 
   try {
     const text = await callClaude({ system: agent.system, user: userMsg, maxTokens: 1200 });
