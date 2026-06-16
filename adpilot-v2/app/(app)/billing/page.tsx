@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgId } from "@/lib/org";
 import UpgradeButtons from "@/components/UpgradeButtons";
+import PlanMatrix from "@/components/PlanMatrix";
 import PageHeader from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +33,9 @@ export default async function BillingPage() {
       </div>
 
       <UpgradeButtons />
+
+      <h2 className="mb-2 mt-8 text-lg font-bold">Compare plans</h2>
+      <PlanMatrix />
 
       <p className="mt-4 text-xs text-muted">
         After upgrading, Stripe redirects you back here. Subscription state updates via webhook

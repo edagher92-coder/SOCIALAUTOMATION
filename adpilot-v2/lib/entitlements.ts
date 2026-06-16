@@ -79,3 +79,8 @@ export function can(plan: Plan, feature: Feature): boolean {
 export function requiredPlan(feature: Feature): Plan {
   return FEATURE_MIN_PLAN[feature];
 }
+
+/** All features a plan can use, in declaration order — drives the tier comparison matrix. */
+export function featuresFor(plan: Plan): Feature[] {
+  return (Object.keys(FEATURE_MIN_PLAN) as Feature[]).filter((f) => can(plan, f));
+}

@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ModeProvider, useMode } from "./mode";
 import OrgSwitcher from "./OrgSwitcher";
-import { can, type Feature, type Plan } from "@/lib/entitlements";
+import { can, requiredPlan, PLAN_LABEL, FEATURE_LABEL, type Feature, type Plan } from "@/lib/entitlements";
 
 // V6 P2 dual-mode nav. `advanced` items show only in Advanced mode; `feature` items show only
 // when the plan unlocks them — so Simple stays a calm ~6-item view and locked clutter disappears.
@@ -74,8 +74,10 @@ function Sidebar({ email, plan, onNav }: { email?: string; plan: Plan; onNav?: (
   const path = usePathname();
   const { mode } = useMode();
   const advanced = mode === "advanced";
-  // Mode + plan filter: hide Advanced-only items in Simple, and hide anything the plan can't use.
-  const visible = (n: NavItem) => (advanced || !n.advanced) && (!n.feature || can(plan, n.feature));
+  const isLocked = (n: NavItem) => !!n.feature && !can(plan, n.feature);
+  // Two distinct concerns: mode-gating is a HARD hide (keeps Simple calm); plan-gating is hidden
+  // in Simple but shown-as-LOCKED in Advanced (visible upsell — owner's "entice upgrades" ask).
+  const visible = (n: NavItem) => (advanced || !n.advanced) && (advanced || !isLocked(n));
   const groups = NAV_GROUPS
     .map((g) => ({ ...g, items: g.items.filter(visible) }))
     .filter((g) => g.items.length > 0);
@@ -102,6 +104,20 @@ function Sidebar({ email, plan, onNav }: { email?: string; plan: Plan; onNav?: (
               <div className="px-3 pb-0.5 pt-2 text-2xs font-bold uppercase tracking-widest text-muted/70">{group.title}</div>
             )}
             {group.items.map((n) => {
+              // Visible-but-locked (Advanced only): route to billing + show the required tier.
+              if (isLocked(n)) {
+                const need = requiredPlan(n.feature!);
+                return (
+                  <Link key={n.href} href="/billing" onClick={onNav}
+                    title={`${FEATURE_LABEL[n.feature!]} — included in ${PLAN_LABEL[need]}`}
+                    aria-label={`${n.label}, locked — upgrade to ${PLAN_LABEL[need]}`}
+                    className="group flex items-center gap-2.5 rounded-xl px-3 py-2 text-muted/80 transition-all duration-150 hover:bg-white/60 hover:text-ink focus-visible:shadow-ring-brand">
+                    <span className="text-base leading-none opacity-70" aria-hidden>{n.icon}</span>
+                    <span className="text-sm font-semibold">{n.label}</span>
+                    <span className="ml-auto flex items-center gap-1 rounded-full bg-brand-50 px-1.5 py-0.5 text-2xs font-bold text-brand" aria-hidden>🔒 {PLAN_LABEL[need]}</span>
+                  </Link>
+                );
+              }
               const active = path === n.href || path?.startsWith(n.href + "/");
               return (
                 <Link

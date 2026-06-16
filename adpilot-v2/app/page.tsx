@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PLANS, planPriceLabel } from "@/lib/plans";
 import { FEATURE_LABEL } from "@/lib/entitlements";
+import PlanMatrix from "@/components/PlanMatrix";
 
 export default function Landing() {
   return (
@@ -108,6 +109,7 @@ export default function Landing() {
             </div>
           ))}
         </div>
+        <div className="mt-8"><PlanMatrix /></div>
         <p className="mt-4 text-center text-xs text-muted">All plans billed monthly in AUD via Stripe. Current pricing is shown at checkout. No earnings or results guarantees.</p>
       </section>
 
