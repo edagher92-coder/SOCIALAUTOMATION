@@ -53,10 +53,14 @@ export async function POST(req: Request) {
   const reportInstruction = agent.id === "riley" && isReportKind(kind)
     ? `\n\n${buildRileyReportInstruction(payload, { kind, periodLabel: "the latest period" })}`
     : "";
-  const userMsg = `${kb ? `REFERENCE KNOWLEDGE (current best practice — guidance, not guarantees; cite ranges, not false precision):\n${kb}\n\n` : ""}${pack ? `ACTIVE BUSINESS CONTEXT (private — honour these rules; they tighten the guardrails, never loosen them):\n${pack}\n\n` : ""}${grounding}\n\n${q ? `The user asks: ${q}` : "Give your top findings and safe, prioritised proposals for this account right now."}${reportInstruction}`;
+  // Cacheable static prefix (persona + reference knowledge + private pack) — stable across calls.
+  // The volatile, account-specific grounding + question go in the user message, so repeat calls to
+  // the same specialist reuse the prefix at ~10% input cost (prompt caching).
+  const systemPrompt = `${agent.system}${kb ? `\n\nREFERENCE KNOWLEDGE (current best practice — guidance, not guarantees; cite ranges, not false precision):\n${kb}` : ""}${pack ? `\n\nACTIVE BUSINESS CONTEXT (private — honour these rules; they tighten the guardrails, never loosen them):\n${pack}` : ""}`;
+  const userMsg = `${grounding}\n\n${q ? `The user asks: ${q}` : "Give your top findings and safe, prioritised proposals for this account right now."}${reportInstruction}`;
 
   try {
-    const text = await callClaude({ system: agent.system, user: userMsg, maxTokens: 1200 });
+    const text = await callClaude({ system: systemPrompt, user: userMsg, maxTokens: 1200, cacheSystem: true });
     if (!text || !text.trim())
       return NextResponse.json({ error: "The specialist returned an empty answer. Please try again.", code: "EMPTY" }, { status: 502 });
     return NextResponse.json({ text, agent: { id: agent.id, name: agent.name } });

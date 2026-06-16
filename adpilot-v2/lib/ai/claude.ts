@@ -8,16 +8,23 @@ export class NoKeyError extends Error {
   constructor() { super("NO_KEY"); this.name = "NoKeyError"; }
 }
 
-export async function callClaude(opts: { system?: string; user: string; model?: string; maxTokens?: number }): Promise<string> {
+export async function callClaude(opts: { system?: string; user: string; model?: string; maxTokens?: number; cacheSystem?: boolean }): Promise<string> {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) throw new NoKeyError();
+  // Prompt caching: when the system prefix is large + static (persona + reference knowledge), mark
+  // it cacheable so repeat calls reuse it at ~10% input cost (GA; needs a ≥1024–2048-tok prefix).
+  const system = opts.system
+    ? (opts.cacheSystem
+        ? [{ type: "text", text: opts.system, cache_control: { type: "ephemeral" } }]
+        : opts.system)
+    : undefined;
   const res = await fetch(API, {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
     body: JSON.stringify({
       model: opts.model || process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6",
       max_tokens: opts.maxTokens ?? 1000,
-      ...(opts.system ? { system: opts.system } : {}),
+      ...(system ? { system } : {}),
       messages: [{ role: "user", content: opts.user }],
     }),
   });

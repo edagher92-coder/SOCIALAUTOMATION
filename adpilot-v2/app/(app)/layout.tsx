@@ -3,6 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
 import AppShell from "@/components/AppShell";
 
+// Every authenticated (app) page reads the user/org via cookies → inherently per-request.
+// Force-dynamic at the segment level so Next 16 doesn't attempt (and error on) static prerender.
+export const dynamic = "force-dynamic";
+
 export default async function AppGroupLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
