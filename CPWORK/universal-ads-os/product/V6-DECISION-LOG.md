@@ -60,3 +60,14 @@ collected in V6-MASTER-PLAN.md → "Owner decision queue" and surfaced just befo
   existing mode toggle + `can(plan,feature)`. 432 tests, build green (65 pages).
 - NEXT in P2: Simple 10-second Home (score + money-impact + 3 fixes + 1 CTA), formalised
   `<ModeAware>`/`<FeatureGate>` primitives, lite Settings, optional Cmd-K palette for the long tail.
+- ✅ DONE — `<ModeAware>` primitive (components/ModeAware.tsx) + mode toggle relabelled Simple/Advanced.
+- ✅ DONE — Simple-mode Command Center: hero (score+band+verdicts) + "Needs your attention" stay;
+  detail right-rail wrapped in `<ModeAware only="advanced">`. 432 tests, build green.
+
+## 2026-06-16 — Phase 2 (Dual-mode UX) CORE COMPLETE
+- Shipped: mode+plan-aware nav declutter (24→~6 in Simple, plan-filtered); ModeAware primitive +
+  Simple/Advanced labels; Simple-mode Command Center (10-second answer). The owner's #1 ask is met.
+- Deferred P2 polish (non-blocking, later increment): Cmd-K command palette for the long tail;
+  lite Settings; a live "wasted-spend found" headline figure on Simple; full-width attention column
+  in Simple. NEXT PHASE: **P3 — Diagnostics** (timeseries.ts/stats.ts on the new account_daily_metrics,
+  significance-gated verdicts, predictive creative fatigue; split break_even_cpa→break_even_cpl).
