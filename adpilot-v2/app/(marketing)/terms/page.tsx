@@ -42,6 +42,10 @@ export default function TermsPage() {
           <h2 className="text-lg font-bold text-ink">6. Liability &amp; governing law</h2>
           <p className="text-muted">[Placeholder — solicitor to supply: limitation of liability and the governing law of an Australian jurisdiction.]</p>
         </div>
+        <div>
+          <h2 className="text-lg font-bold text-ink">7. Data use &amp; model improvement</h2>
+          <p className="text-muted">[Placeholder — solicitor to supply. Intended position: AdPilot may use account and ad-performance data to operate, improve, and train its models so the system becomes more accurate and efficient over time. Any training or evaluation uses <b>de-identified and/or aggregated</b> data only; your data is never exposed to another customer (strict tenant isolation), and identifiable lead PII is excluded. You may opt out of model-improvement use without losing core functionality, and erasure requests are honoured (see the Privacy Policy).]</p>
+        </div>
       </section>
     </article>
   );
