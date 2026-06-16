@@ -161,3 +161,16 @@ OWNER-GATED: prices · auto-execute green-light · Meta System User token · sol
 - Verified: tsc clean, 455 tests, next build clean (0 dynamic-server errors). Pushed.
 - Still queued: right-to-erasure deletion job (privacy P0, destructive — awaiting owner go-ahead);
   Haiku routing for light assistants; dev-dep audit cleanup (vitest v3); tier features + data-consent.
+
+## 2026-06-16 — EXECUTED: right-to-erasure job + data-use/training consent clause
+- Right-to-erasure (privacy P0 #2): lib/erasure.ts eraseUserData(admin,userId) scoped to caller's
+  own data — sole-member orgs deleted (FK cascade), shared orgs preserved (membership-only removal),
+  user rows + auth identity removed. POST /api/account/erase (session-auth + typed confirm, scrubbed
+  errors). 3 scoping tests. 458 tests green, build clean.
+- Data-use/model-training consent: Terms §7 + Privacy §7 placeholder clauses (DRAFT banner intact)
+  encoding the guardrails (de-identified/aggregated only, tenant-isolated, lead PII excluded, opt-out,
+  erasure honoured). Fulfils the owner's earlier T&C ask. Solicitor finalises the binding text.
+- STATUS: both privacy P0s closed (Next 16 + erasure); efficiency (prompt caching) done; data-consent
+  done. REMAINING V6 build (specced/agreed, queued): tier feature keys + their features/GUI; diagnostics
+  UI wiring (significance into decisions, trend/fatigue cards, break_even_cpl split); connect wizard
+  builds; Simple-Home money strip; Haiku routing; dev-dep audit cleanup (vitest v3).
