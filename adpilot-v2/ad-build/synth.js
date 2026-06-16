@@ -5,7 +5,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const SR = 44100, DUR = 50.6, N = Math.floor(SR * DUR);
+const SR = 44100, DUR = 60.6, N = Math.floor(SR * DUR);
 const BPM = 120, SPB = 60 / BPM;            // 0.5s / beat
 const TAU = Math.PI * 2;
 const m2f = m => 440 * Math.pow(2, (m - 69) / 12);
@@ -22,11 +22,16 @@ const clampf = v => v < -1 ? -1 : v > 1 ? 1 : v;
 
 // section energy by time (matches the 11-scene board)
 function sect(t) {
-  if (t < 4.5) return { pad: 0.55 + 0.35 * (t / 4.5), bass: 0.55, kick: 0, hat: 0, arp: 0, riser: 0 };       // hook build
-  if (t < 18) return { pad: 0.8, bass: 1, kick: 1, hat: 0.7, arp: 0.85, riser: 0 };                          // energy (Café→verdicts→approve)
-  if (t < 23) { const k = t < 22.3 ? 0 : (t - 22.3) / 0.7; return { pad: 0.65 * (1 - 0.4 * k), bass: 0.25, kick: 0, hat: 0, arp: 0, riser: k }; } // read-only calm + riser
-  if (t < 42) return { pad: 0.85, bass: 1, kick: 1, hat: 0.85, arp: 1, riser: 0 };                           // peak (Maya→money→specialists→tiers)
-  if (t < 45) return { pad: 0.82, bass: 0.85, kick: 1, hat: 0.6, arp: 0.7, riser: 0 };                       // receipts
+  if (t < 10) {                                                                                              // INTRO — catchy explainer groove
+    if (t < 2) return { pad: 0.4 + 0.28 * (t / 2), bass: 0.2, kick: 0, hat: 0, arp: 0.25 * (t / 2), riser: 0 }; // title card
+    const b = Math.min(1, (t - 2) / 1.4); return { pad: 0.7, bass: 0.7 * b, kick: 0.7 * b, hat: 0.5 * b, arp: 0.7 * b, riser: 0 };
+  }
+  const u = t - 10;                                                                                          // ad timeline (shifted by the 10s intro)
+  if (u < 4.5) return { pad: 0.55 + 0.35 * (u / 4.5), bass: 0.5, kick: 0, hat: 0, arp: 0, riser: 0 };        // hook build
+  if (u < 18) return { pad: 0.8, bass: 1, kick: 1, hat: 0.7, arp: 0.85, riser: 0 };                          // energy (Café→verdicts→approve)
+  if (u < 23) { const k = u < 22.3 ? 0 : (u - 22.3) / 0.7; return { pad: 0.65 * (1 - 0.4 * k), bass: 0.25, kick: 0, hat: 0, arp: 0, riser: k }; } // read-only calm + riser
+  if (u < 42) return { pad: 0.85, bass: 1, kick: 1, hat: 0.85, arp: 1, riser: 0 };                           // peak (Maya→money→specialists→tiers)
+  if (u < 45) return { pad: 0.82, bass: 0.85, kick: 1, hat: 0.6, arp: 0.7, riser: 0 };                       // receipts
   return { pad: 0.8, bass: 0.6, kick: 0.45, hat: 0.25, arp: 0.35, riser: 0 };                                // end card
 }
 
@@ -70,7 +75,7 @@ for (let i = 0; i < N; i++) {
 
   // IMPACTS — at the Maya flip (23.0s) and the end card (45.0s)
   let imp = 0;
-  for (const it of [23.0, 45.0]) { if (t >= it && t < it + 0.6) { const td = t - it; imp += (Math.sin(TAU * 60 * td) * Math.exp(-td * 8) * 0.5 + noise() * Math.exp(-td * 14) * 0.25); } }
+  for (const it of [33.0, 55.0]) { if (t >= it && t < it + 0.6) { const td = t - it; imp += (Math.sin(TAU * 60 * td) * Math.exp(-td * 8) * 0.5 + noise() * Math.exp(-td * 14) * 0.25); } }
 
   // fades
   let env = 1;

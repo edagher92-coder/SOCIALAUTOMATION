@@ -163,8 +163,7 @@ function s2(lt) { // CAFÉ diagnosis — 58 Orange
   ctx.globalAlpha = clamp(seg(lt, 1.2, 0.4) * 2); ctx.fillStyle = C.mutedD; ctx.font = `500 30px ${UI}`; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
   ctx.fillText("ROAS 1.04  ·  $4,068 spend → $4,250 rev  ·  CPA $32.54 vs $21.08", 540, 1300);
   ctx.globalAlpha = 1;
-  captionPill([{ t: "Spending " }, { t: "$32.54", pill: C.red }, { t: " to make a $21 sale." }], 1480, seg(lt, 1.4, 0.4), true);
-  progress(lt + 4.5, 50.5); demoTag(true);
+  captionPill([{ t: "Spending " }, { t: "$32.54", pill: C.red }, { t: " to make a $21 sale." }], 1480, seg(lt, 1.4, 0.4), true); demoTag(true);
 }
 
 function s3(lt) { // 5 verdicts
@@ -173,8 +172,7 @@ function s3(lt) { // 5 verdicts
   ctx.fillText("THEN: EXACTLY", 540, 360); richLine([{ t: "WHAT TO ", c: C.white }, { t: "DO", c: C.coral }], 540, 432, `66px ${DISP}`); ctx.globalAlpha = 1;
   const items = [["fix", "FIX TRACKING", null], ["kill", "KILL", C.red], ["reduce", "REDUCE", null], ["refresh", "REFRESH", null], ["scale", "SCALE", null]];
   const pw = 600, ph = 118, x = 540 - pw / 2; let y = 560;
-  for (let i = 0; i < items.length; i++) { verdictPill(x, y, pw, ph, items[i][0], items[i][1], items[i][2], seg(lt, 0.3 + i * 0.14, 0.5)); y += ph + 22; }
-  progress(lt + 9.5, 50.5); demoTag(true);
+  for (let i = 0; i < items.length; i++) { verdictPill(x, y, pw, ph, items[i][0], items[i][1], items[i][2], seg(lt, 0.3 + i * 0.14, 0.5)); y += ph + 22; } demoTag(true);
 }
 
 function s4(lt) { // Approve -> kill bleeder
@@ -199,8 +197,7 @@ function s4(lt) { // Approve -> kill bleeder
   ctx.fillStyle = C.white; ctx.font = `800 38px ${UI}`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(approved ? "Approved" : "Approve fix", bx + bw / 2, by + bh / 2 + 2); ctx.restore();
   ctx.restore();
   if (lt > 1.9 && lt < 2.6) { const rp = (lt - 1.9) / 0.7; ctx.save(); ctx.globalAlpha = (1 - rp) * 0.5; ctx.strokeStyle = C.green; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(540, y + 345, rp * 460, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
-  captionPill(approved ? [{ t: "That's it. " }, { t: "Done.", pill: C.green }] : [{ t: "You tap " }, { t: "Approve", pill: C.coral }, { t: "." }], 1500, seg(lt, 0.8, 0.4), true);
-  progress(lt + 14.5, 50.5); demoTag(true);
+  captionPill(approved ? [{ t: "That's it. " }, { t: "Done.", pill: C.green }] : [{ t: "You tap " }, { t: "Approve", pill: C.coral }, { t: "." }], 1500, seg(lt, 0.8, 0.4), true); demoTag(true);
 }
 
 function s5(lt) { // read-only trust
@@ -213,7 +210,7 @@ function s5(lt) { // read-only trust
   ctx.font = `600 44px ${UI}`; ctx.fillText("It proposes — you approve.", 540, 1130);
   richLine([{ t: "It ", c: C.white }, { t: "never", c: C.command }, { t: " touches a live ad.", c: C.white }], 540, 1200, `800 44px ${UI}`, true);
   ctx.globalAlpha = clamp(seg(lt, 0.9, 0.4) * 2); ctx.fillStyle = "rgba(255,255,255,0.85)"; ctx.font = `600 34px ${UI}`; ctx.fillText("Your data stays private.", 540, 1290);
-  ctx.globalAlpha = 1; progress(lt + 18, 50.5);
+  ctx.globalAlpha = 1;
 }
 
 function s6(lt) { // Account two — Maya 80 Green (surface light)
@@ -227,8 +224,7 @@ function s6(lt) { // Account two — Maya 80 Green (surface light)
   ctx.fillStyle = C.mutedL; ctx.font = `48px ${DISP}`; ctx.fillText("/ 100", 540, 1040);
   const sp = easeOutBack(clamp(seg(lt, 1.05, 0.4)));
   if (sp > 0) { ctx.save(); ctx.globalAlpha = clamp(seg(lt, 1.05, 0.3) * 2); ctx.translate(540, 1220); ctx.scale(sp, sp); ctx.translate(-540, -1220); const w = 320, h = 78, x = 540 - w / 2, y = 1220 - h / 2; ctx.fillStyle = C.green; rr(x, y, w, h, h / 2); ctx.fill(); ctx.fillStyle = C.white; ctx.font = `800 36px ${UI}`; ctx.textBaseline = "middle"; ctx.fillText("HEALTHY", 540, 1222); ctx.restore(); }
-  captionPill([{ t: "Green. " }, { t: "Scale-eligible.", pill: C.green }], 1480, seg(lt, 1.3, 0.4), false);
-  progress(lt + 23, 50.5); demoTag(false);
+  captionPill([{ t: "Green. " }, { t: "Scale-eligible.", pill: C.green }], 1480, seg(lt, 1.3, 0.4), false); demoTag(false);
 }
 
 function s7(lt) { // Maya money (surface light)
@@ -249,8 +245,7 @@ function s7(lt) { // Maya money (surface light)
   function chip(cx, cy, w, txt, pr) { if (pr <= 0) return; ctx.save(); ctx.globalAlpha = clamp(pr * 1.6); ctx.translate(cx, cy); ctx.scale(easeOutBack(clamp(pr)), easeOutBack(clamp(pr))); ctx.translate(-cx, -cy); ctx.fillStyle = C.green; rr(cx - w / 2, cy - 36, w, 72, 36); ctx.fill(); vIcon("scale", cx - w / 2 + 40, cy, 30, C.white); ctx.fillStyle = C.white; ctx.font = `800 28px ${UI}`; ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillText(txt, cx - w / 2 + 70, cy + 2); ctx.restore(); }
   chip(540, 1080, 560, "Scale: Day-1 Hook Reel", c1);
   chip(540, 1170, 520, "Scale: Free Guide Optin", c2);
-  captionPill([{ t: "$9,924 in → " }, { t: "$21,716", pill: C.green }, { t: " out." }], 1500, seg(lt, 0.5, 0.4), false);
-  progress(lt + 28, 50.5); demoTag(false);
+  captionPill([{ t: "$9,924 in → " }, { t: "$21,716", pill: C.green }, { t: " out." }], 1500, seg(lt, 0.5, 0.4), false); demoTag(false);
 }
 
 function s8(lt) { // 12 specialists
@@ -258,8 +253,7 @@ function s8(lt) { // 12 specialists
   ctx.globalAlpha = clamp(seg(lt, 0.05, 0.3) * 2); ctx.textAlign = "center"; ctx.textBaseline = "alphabetic"; richLine([{ t: "12 ", c: C.coral }, { t: "AI SPECIALISTS", c: C.white }], 540, 320, `60px ${DISP}`); ctx.fillStyle = C.mutedD; ctx.font = `600 30px ${UI}`; ctx.fillText("grounded in your real numbers", 540, 366); ctx.globalAlpha = 1;
   const team = [["M", "Mira", "Meta"], ["T", "Travis", "TikTok"], ["D", "Dana", "Data"], ["S", "Stella", "Creative"], ["Ti", "Titan", "Offer"], ["Mi", "Milo", "Auto"], ["A", "Atlas", "Tracking"], ["R", "Riley", "Reports"], ["P", "Paige", "Policy"], ["Pi", "Piper", "Product"], ["Q", "Quinn", "QA"], ["◆", "Command", "Router"]];
   const cols = 3, r = 82, sx = 230, stx = 310, sy = 560, sty = 330;
-  for (let i = 0; i < 12; i++) { const col = i % cols, row = (i / cols) | 0; avatar(sx + col * stx, sy + row * sty, r, team[i][0], team[i][1], team[i][2], seg(lt, 0.25 + i * 0.06, 0.5), true); }
-  progress(lt + 33, 50.5); demoTag(true);
+  for (let i = 0; i < 12; i++) { const col = i % cols, row = (i / cols) | 0; avatar(sx + col * stx, sy + row * sty, r, team[i][0], team[i][1], team[i][2], seg(lt, 0.25 + i * 0.06, 0.5), true); } demoTag(true);
 }
 
 function s9(lt) { // plan tiers (surface light)
@@ -284,7 +278,6 @@ function s9(lt) { // plan tiers (surface light)
     ctx.restore();
   }
   captionPill([{ t: "Pro = auto-sync + 12 agents + studio." }], 1500, seg(lt, 0.7, 0.4), false);
-  progress(lt + 37, 50.5);
 }
 
 function s10(lt) { // receipts
@@ -298,7 +291,7 @@ function s10(lt) { // receipts
   ctx.fillText("~6 months of Meta & TikTok data", 540, 935);
   ctx.fillText("scored by the real 13-factor engine", 540, 990);
   ctx.fillStyle = C.mutedD; ctx.font = `500 26px ${UI}`; ctx.fillText("182 days · ~910 snapshots/account · read-only", 540, 1060);
-  ctx.restore(); ctx.globalAlpha = 1; progress(lt + 42, 50.5);
+  ctx.restore(); ctx.globalAlpha = 1;
 }
 
 function s11(lt) { // end card
@@ -316,9 +309,90 @@ function s11(lt) { // end card
   ctx.globalAlpha = clamp(seg(lt, 0.8, 0.4) * 2); ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.font = `600 28px ${UI}`; ctx.textAlign = "center"; ctx.fillText("Read-only · Meta + TikTok · from $97 AUD · no results guaranteed", 540, 1320); ctx.globalAlpha = 1;
 }
 
-const SCENES = [[s1, 4.5], [s2, 5.0], [s3, 5.0], [s4, 3.5], [s5, 5.0], [s6, 5.0], [s7, 5.0], [s8, 4.0], [s9, 5.0], [s10, 3.0], [s11, 5.5]];
+// ===================== INTRO (scroll through a loaded business) =====================
+function s0(lt) {
+  fill(C.surface);
+  const DUR0 = 10, PAGE_H = 3000;
+  const sy = (PAGE_H - H) * clamp((lt - 1.9) / (DUR0 - 2.5)); // dashboard scrolls after the title card
+  const TAU2 = Math.PI * 2;
+  ctx.save(); ctx.translate(0, -sy);
+  const card = (x, y, w, h, r = 22) => { shadow("rgba(28,23,38,0.07)", 20, 0, 10); ctx.fillStyle = C.white; rr(x, y, w, h, r); ctx.fill(); noShadow(); };
+
+  // top bar
+  ctx.fillStyle = gradH(60, 66, 78, 78); rr(60, 66, 78, 78, 20); ctx.fill();
+  ctx.fillStyle = C.ink; ctx.font = `800 52px ${UI}`; ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillText("AdPilot OS", 160, 106);
+  const wm = ctx.measureText("AdPilot OS").width; ctx.fillStyle = C.coral; ctx.font = `800 26px ${UI}`; ctx.fillText("V3", 160 + wm + 14, 100);
+  ctx.fillStyle = C.mutedL; ctx.font = `500 30px ${UI}`; ctx.textBaseline = "alphabetic"; ctx.fillText("Bean & Bloom Café  ·  Meta · TikTok connected", 60, 198);
+
+  // health card
+  card(60, 234, 960, 300);
+  ctx.fillStyle = C.mutedL; ctx.font = `700 26px ${UI}`; ctx.textAlign = "left"; ctx.fillText("CAMPAIGN HEALTH", 100, 308);
+  ctx.fillStyle = C.orange; ctx.font = `150px ${DISP}`; ctx.fillText("58", 100, 462);
+  ctx.fillStyle = C.mutedL; ctx.font = `46px ${DISP}`; ctx.fillText("/100", 268, 462);
+  ctx.fillStyle = C.orange; rr(100, 482, 250, 50, 25); ctx.fill(); ctx.fillStyle = C.white; ctx.font = `800 26px ${UI}`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("ORANGE · AT RISK", 225, 508);
+  ctx.textAlign = "right"; ctx.textBaseline = "alphabetic"; ctx.fillStyle = C.ink; ctx.font = `88px ${DISP}`; ctx.fillText("1.04×", 980, 400); ctx.fillStyle = C.mutedL; ctx.font = `500 26px ${UI}`; ctx.fillText("ROAS · $4,068 → $4,250", 980, 448);
+
+  // proposals
+  ctx.textAlign = "left"; ctx.fillStyle = C.ink; ctx.font = `800 40px ${UI}`; ctx.fillText("Needs your attention", 60, 612);
+  const props = [["kill", C.red, "Kill · Menu Reel A", "Budget bleeder · $1,250 spent, 18 sales"], ["fix", C.coral, "Fix tracking · Loyalty Promo", "$780 spent · 0 conversions · tracking broken"], ["reduce", C.orange, "Reduce · Catering Lead Form", "CPA above break-even — trim spend"], ["scale", C.green, "Scale · Brunch Carousel", "Strong ROAS — pour fuel on the winner"]];
+  let py = 652;
+  for (const [k, col, title, reason] of props) {
+    card(60, py, 960, 150); ctx.fillStyle = col; rr(92, py + 35, 80, 80, 20); ctx.fill(); vIcon(k, 132, py + 75, 44, C.white);
+    ctx.fillStyle = C.ink; ctx.font = `800 34px ${UI}`; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.fillText(title, 204, py + 70);
+    ctx.fillStyle = C.mutedL; ctx.font = `500 27px ${UI}`; ctx.fillText(reason, 204, py + 112); py += 170;
+  }
+
+  // connected accounts
+  ctx.fillStyle = C.ink; ctx.font = `800 40px ${UI}`; ctx.fillText("Connected accounts", 60, py + 36); py += 76;
+  for (const [plat, handle] of [["Meta", "Bean & Bloom Café"], ["TikTok", "@beanandbloom"]]) {
+    card(60, py, 960, 108); ctx.fillStyle = C.ink; ctx.font = `700 32px ${UI}`; ctx.fillText(handle, 104, py + 52); ctx.fillStyle = C.mutedL; ctx.font = `500 26px ${UI}`; ctx.fillText(plat, 104, py + 86);
+    ctx.fillStyle = C.green; ctx.beginPath(); ctx.arc(828, py + 56, 9, 0, TAU2); ctx.fill(); ctx.font = `700 24px ${UI}`; ctx.textAlign = "left"; ctx.fillText("synced", 848, py + 64); py += 128;
+  }
+
+  // campaigns table
+  ctx.fillStyle = C.ink; ctx.font = `800 40px ${UI}`; ctx.fillText("Campaigns · last 30 days", 60, py + 36); py += 76;
+  card(60, py, 960, 318);
+  const rows = [["Weekend Brunch Promo", "$900", "2.4×", C.green], ["New Menu Launch", "$1,250", "0.5×", C.red], ["Loyalty App Installs", "$780", "—", C.mutedL], ["Catering Enquiries", "$640", "1.4×", C.green]];
+  let ry = py + 78;
+  for (const [n, sp, ro, c] of rows) { ctx.fillStyle = C.ink; ctx.font = `600 30px ${UI}`; ctx.textAlign = "left"; ctx.fillText(n, 100, ry); ctx.fillStyle = C.mutedL; ctx.textAlign = "right"; ctx.fillText(sp, 760, ry); ctx.fillStyle = c; ctx.fillText(ro, 980, ry); ry += 74; }
+  ctx.restore();
+
+  // ---- fixed overlays ----
+  let tg = ctx.createLinearGradient(0, 0, 0, 250); tg.addColorStop(0, "rgba(250,247,244,0.97)"); tg.addColorStop(1, "rgba(250,247,244,0)"); ctx.fillStyle = tg; ctx.fillRect(0, 0, W, 250);
+  let bs = ctx.createLinearGradient(0, H - 540, 0, H); bs.addColorStop(0, "rgba(250,247,244,0)"); bs.addColorStop(1, "rgba(250,247,244,0.98)"); ctx.fillStyle = bs; ctx.fillRect(0, H - 540, W, 540);
+
+  // title card (clean) for the first ~2.2s — a surface scrim hides the dashboard so nothing overlaps
+  const scrimA = 1 - clamp(seg(lt, 1.5, 0.7));
+  if (scrimA > 0.01) { ctx.save(); ctx.globalAlpha = scrimA; ctx.fillStyle = C.surface; ctx.fillRect(0, 0, W, H); ctx.restore(); vignette(540, 780, 720, C.coral, 0.07 * scrimA); }
+  const ti = clamp(seg(lt, 0.1, 0.25)) * (1 - clamp(seg(lt, 1.55, 0.55)));
+  if (ti > 0.01) {
+    ctx.save(); ctx.globalAlpha = ti; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = gradH(540 - 46, 590, 92, 92); rr(540 - 46, 590, 92, 92, 24); ctx.fill();
+    ctx.fillStyle = C.ink; ctx.font = `62px ${DISP}`; ctx.fillText("MEET", 540, 800);
+    richLine([{ t: "ADPILOT ", c: C.ink }, { t: "OS", c: C.coral }], 540, 905, `116px ${DISP}`);
+    ctx.fillStyle = C.mutedL; ctx.font = `600 36px ${UI}`; ctx.fillText("Your read-only ads co-pilot", 540, 975);
+    ctx.restore();
+  }
+  // explainer captions once the dashboard is scrolling
+  if (lt > 2.2) {
+    const beats = ["Reads every Meta & TikTok campaign", "Scores your account 0–100", "Finds what's leaking — and the fix"];
+    const L0 = lt - 2.3, SW = 2.5, bi = Math.min(beats.length - 1, Math.floor(L0 / SW)), bl = L0 - bi * SW;
+    const bp = clamp(bl / 0.4) * (1 - clamp((bl - 2.0) / 0.3));
+    captionPill([{ t: beats[bi] }], 1650, bp, false);
+  }
+  demoTag(false);
+}
+
+const SCENES = [[s0, 10.0], [s1, 4.5], [s2, 5.0], [s3, 5.0], [s4, 3.5], [s5, 5.0], [s6, 5.0], [s7, 5.0], [s8, 4.0], [s9, 5.0], [s10, 3.0], [s11, 5.5]];
 const TOTAL = SCENES.reduce((a, s) => a + s[1], 0);
-function renderAt(gt) { ctx.clearRect(0, 0, W, H); let acc = 0; for (const [fn, d] of SCENES) { if (gt < acc + d || fn === SCENES[SCENES.length - 1][0] && gt >= acc) { fn(gt - acc); return; } acc += d; } }
+function renderAt(gt) {
+  ctx.clearRect(0, 0, W, H);
+  let acc = 0;
+  for (let i = 0; i < SCENES.length; i++) { const [fn, d] = SCENES[i]; if (gt < acc + d || i === SCENES.length - 1) { fn(gt - acc); break; } acc += d; }
+  const p = clamp(gt / TOTAL);
+  ctx.fillStyle = "rgba(140,140,150,0.18)"; ctx.fillRect(0, H - 8, W, 8);
+  ctx.fillStyle = gradH(0, H - 8, W * p, 8); ctx.fillRect(0, H - 8, W * p, 8);
+}
 
 const mode = process.argv[2] || "preview";
 if (mode === "preview") { const dir = path.join(__dirname, "preview-v3"); fs.mkdirSync(dir, { recursive: true }); let acc = 0, i = 1; for (const [, d] of SCENES) { renderAt(acc + d * 0.62); fs.writeFileSync(path.join(dir, `s${i}.png`), canvas.toBuffer("image/png")); acc += d; i++; } console.log(`preview-v3: ${i - 1} scenes (total ${TOTAL}s)`); }
