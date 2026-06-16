@@ -140,3 +140,13 @@ OWNER-GATED: prices · auto-execute green-light · Meta System User token · sol
   data-deletion). Residual: RSC cache poisoning + WebSocket-upgrade SSRF + beforeInteractive XSS — limited.
 - DECISION: remediate via a PLANNED, fully-tested Next 14->16 migration (own dedicated effort; App
   Router API changes + re-test 65 routes). Top dependency-security item. NOT rushed at depth.
+
+## 2026-06-16 — EXECUTED: Next.js 14->16 + React 19 security migration (owner chose this first)
+- Upgraded next 14.2.35 -> 16.2.9, react 18 -> 19, eslint 8 -> 9. Used @next/codemod
+  next-async-request-api (8 page files). Fixed cookies() async (supabase/server kept sync via async
+  cookie callbacks; lib/org awaited) + 2 route tests (params -> Promise.resolve).
+- RESULT: production audit 10 vulns (1 crit/6 high/3 mod) -> 2 MODERATE (build-time postcss only).
+  ALL critical + high PRODUCTION vulns eliminated. Remaining dev-only (vitest/vite/esbuild).
+- Verified: tsc clean, 455 tests, next build green (65 routes). Committed 9c0434f, pushed.
+- WATCH: first Vercel build on Next 16 (a framework major can differ from local build).
+- Note: Next 16 renames the middleware label to "Proxy" in build output (cosmetic).
