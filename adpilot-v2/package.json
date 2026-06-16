@@ -10,7 +10,10 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed:demo": "tsx scripts/seed-demo.ts",
+    "seed:demo:dry": "tsx scripts/seed-demo.ts --dry-run",
+    "seed:demo:clean": "tsx scripts/seed-demo.ts --clean"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
@@ -30,6 +33,7 @@
     "eslint-config-next": "^14.2.35",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.13",
+    "tsx": "^4.19.2",
     "typescript": "^5.6.2",
     "vitest": "^2.1.2"
   },
