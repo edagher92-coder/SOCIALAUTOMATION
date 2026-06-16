@@ -52,3 +52,11 @@ collected in V6-MASTER-PLAN.md → "Owner decision queue" and surfaced just befo
   later pass (non-blocking): a hard vitest coverage-threshold gate (risks CI friction now) and the
   full Sentry/queue (QStash/Inngest) — scheduled for when org volume grows.
 - All P1 work on-branch (PR #22), green, pushed. NEXT: **Phase 2 — Dual-mode UX** (owner's #1 ask).
+
+## 2026-06-16 — Phase 2 (Dual-mode UX) STARTED
+- ✅ DONE — mode+plan-aware nav (the core de-clutter): nav items carry optional `advanced`/`feature`
+  metadata; Sidebar filters by mode (Simple hides advanced items + drops descriptions) AND plan
+  (locked items hidden); empty groups collapse; plan flows layout→AppShell→Sidebar. Reused the
+  existing mode toggle + `can(plan,feature)`. 432 tests, build green (65 pages).
+- NEXT in P2: Simple 10-second Home (score + money-impact + 3 fixes + 1 CTA), formalised
+  `<ModeAware>`/`<FeatureGate>` primitives, lite Settings, optional Cmd-K palette for the long tail.
