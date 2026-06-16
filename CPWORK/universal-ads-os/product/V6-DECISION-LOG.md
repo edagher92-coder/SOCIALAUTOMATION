@@ -82,3 +82,11 @@ collected in V6-MASTER-PLAN.md → "Owner decision queue" and surfaced just befo
   leading signal = hold-rate decaying while CTR still holds. 449 tests total, green.
 - NEXT in P3 (careful, touches existing-tested code): wire significance into decisions.ts kill/scale
   gating; split break_even_cpa -> break_even_cpl (+ CTR/100 guard); surface trend + fatigue on the UI.
+
+## 2026-06-16 — Tier differentiation: visible-but-locked (owner ask, PM-approved)
+- Owner: clearly differentiate the 3 paid tiers; show features LOCKED (not hidden) to entice upgrades.
+- PM panel APPROVED-WITH-CHANGES; reconciled with the P2 declutter: mode-gate = hard hide (Simple
+  stays calm); plan-gate = show-but-locked in ADVANCED only.
+- Implemented: AppShell renders locked nav items muted with a 🔒 + required-tier badge linking to
+  /billing; new PlanMatrix (Free/Starter/Pro/Expert × features, driven by PLANS+entitlements) on
+  /billing + landing; featuresFor() helper + coherence test. Prices stay owner-gated. 453 tests green.
