@@ -59,6 +59,17 @@ describe("stripe webhook", () => {
     expect(up!.values.status).toBe("active");
   });
 
+  it("does NOT write when a valid-plan checkout has no subscription id (logs, 200)", async () => {
+    constructEvent.mockReturnValue({
+      type: "checkout.session.completed",
+      data: { object: { id: "sess_1", customer: "cus_1", subscription: "", metadata: { user_id: "u1", plan: "pro" } } },
+    });
+    const r = await POST(post());
+    expect(r.status).toBe(200);
+    expect((await r.json()).warning).toBe("no_subscription");
+    expect(writes.length).toBe(0);
+  });
+
   it("flips status to canceled on subscription deletion", async () => {
     constructEvent.mockReturnValue({ type: "customer.subscription.deleted", data: { object: { id: "sub_1", status: "canceled" } } });
     const r = await POST(post());

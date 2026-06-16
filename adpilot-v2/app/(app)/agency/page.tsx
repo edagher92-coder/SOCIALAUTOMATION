@@ -43,8 +43,8 @@ export default function Agency() {
         <div>
           <label className="mb-1 block text-sm font-bold">Primary colour</label>
           <div className="flex items-center gap-2">
-            <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="h-10 w-12 rounded border border-border-subtle" />
-            <input value={color} onChange={(e) => setColor(e.target.value)} className="w-full rounded-lg border border-border-subtle p-2.5" />
+            <input type="color" aria-label="Primary brand colour" value={color} onChange={(e) => setColor(e.target.value)} className="h-10 w-12 rounded border border-border-subtle" />
+            <input aria-label="Primary brand colour (hex)" value={color} onChange={(e) => setColor(e.target.value)} className="w-full rounded-lg border border-border-subtle p-2.5" />
           </div>
         </div>
         <Field label="Support email" v={support} set={setSupport} ph="hello@apexdigital.com.au" />
@@ -55,7 +55,7 @@ export default function Agency() {
       <div className="mt-5 rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <div className="text-xs font-bold text-muted">PREVIEW — client report header</div>
         <div className="mt-2 flex items-center gap-3 rounded-xl p-3 text-white" style={{ background: color || "#0b5fff" }}>
-          {logo ? <img src={logo} alt="" className="h-7 w-7 rounded bg-white object-contain" /> : <span className="inline-block h-7 w-7 rounded bg-white/30" />}
+          {logo ? <img src={logo} alt={`${brand || "Your Agency"} logo`} className="h-7 w-7 rounded bg-white object-contain" /> : <span className="inline-block h-7 w-7 rounded bg-white/30" />}
           <b>{brand || "Your Agency"}</b><span className="ml-auto text-sm opacity-80">Ads Health Report</span>
         </div>
       </div>
