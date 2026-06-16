@@ -7,6 +7,10 @@ export interface Cfg {
   currency?: string;
   average_sale_value: number;
   gross_margin: number;
+  // Optional month context for the budget_pacing factor (caller-supplied; account-level).
+  pacing?: { monthlyBudget: number | null; spendToDate: number; daysElapsed: number; daysInMonth: number };
+  // Optional account-level lead-quality average (0–100), e.g. derived from CRM lead_events.
+  lead_quality_avg?: number | null;
 }
 
 export interface FactorBreakdown {

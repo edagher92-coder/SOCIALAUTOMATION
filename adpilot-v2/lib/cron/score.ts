@@ -16,7 +16,7 @@ function breaches(result: any): string[] {
 
 export async function scoreAndAlertOrg(
   admin: any,
-  org: { id: string; name?: string; average_sale_value?: number; gross_margin?: number },
+  org: { id: string; name?: string; average_sale_value?: number; gross_margin?: number; monthly_budget?: number | null },
 ): Promise<{ scored: boolean; alerted: boolean }> {
   const since = new Date(Date.now() - 14 * 864e5).toISOString().slice(0, 10);
   const { data: snaps } = await admin.from("campaign_snapshots")
@@ -24,11 +24,28 @@ export async function scoreAndAlertOrg(
     .eq("organisation_id", org.id).gte("date", since).limit(5000);
   if (!snaps || snaps.length === 0) return { scored: false, alerted: false };
 
+  // Budget pacing context (account-level, current month) — null budget => neutral factor.
+  const now = new Date();
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString().slice(0, 10);
+  const daysInMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
+  const monthlyBudget = Number(org.monthly_budget) > 0 ? Number(org.monthly_budget) : null;
+  let spendToDate = 0;
+  const [{ data: monthSnaps }, { data: leadRows }] = await Promise.all([
+    monthlyBudget ? admin.from("campaign_snapshots").select("spend").eq("organisation_id", org.id).gte("date", monthStart).limit(10000) : Promise.resolve({ data: [] }),
+    admin.from("lead_events").select("lead_quality_score").eq("organisation_id", org.id).gte("created_at", new Date(Date.now() - 30 * 864e5).toISOString()).limit(10000),
+  ]);
+  for (const r of (monthSnaps || [])) spendToDate += Number((r as any).spend) || 0;
+  // lead_events.lead_quality_score is 0–10; scale to the 0–100 factor space.
+  const lqScores: number[] = (leadRows || []).map((r: any) => Number(r.lead_quality_score)).filter((v: number) => v > 0);
+  const leadQualityAvg = lqScores.length ? Math.min(100, (lqScores.reduce((a: number, b: number) => a + b, 0) / lqScores.length) * 10) : null;
+
   const result = analyse(snaps as any, {
     // Guard against a stored 0/negative (nullish-coalescing wouldn't catch 0) — a non-positive
     // average-sale-value or margin would produce garbage break-even/ROAS economics.
     average_sale_value: Number(org.average_sale_value) > 0 ? Number(org.average_sale_value) : 200,
     gross_margin: Number(org.gross_margin) > 0 ? Number(org.gross_margin) : 0.6, currency: "AUD",
+    pacing: { monthlyBudget, spendToDate, daysElapsed: now.getUTCDate(), daysInMonth },
+    lead_quality_avg: leadQualityAvg,
   });
   await admin.from("health_scores").insert({ organisation_id: org.id, scope: "account", total: result.health.total, band: result.health.band, breakdown: result.health.breakdown });
   await admin.from("reports").insert({ organisation_id: org.id, title: `Scheduled — health ${Math.round(result.health.total)}`, period: new Date().toISOString().slice(0, 10), payload: result });

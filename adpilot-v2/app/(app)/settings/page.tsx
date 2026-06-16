@@ -13,6 +13,7 @@ const CADENCE_PRESETS = [
 export default function Settings() {
   const [avg, setAvg] = useState(200);
   const [margin, setMargin] = useState(0.6);
+  const [budget, setBudget] = useState<number | "">("");
   const [name, setName] = useState("");
   const [syncHours, setSyncHours] = useState(24);
   const [customMode, setCustomMode] = useState(false);
@@ -23,6 +24,7 @@ export default function Settings() {
     fetch("/api/org-settings").then((r) => r.json()).then((j) => {
       const s = j.settings || {};
       setAvg(s.average_sale_value ?? 200); setMargin(s.gross_margin ?? 0.6); setName(s.name || "");
+      setBudget(s.monthly_budget ?? "");
       const h = s.sync_interval_hours ?? 24;
       setSyncHours(h);
       setCustomMode(!CADENCE_PRESETS.some((p) => p.v === h));
@@ -35,7 +37,7 @@ export default function Settings() {
   async function save() {
     setBusy(true); setMsg("");
     try {
-      const r = await fetch("/api/org-settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ average_sale_value: +avg, gross_margin: +margin, sync_interval_hours: cleanHours }) });
+      const r = await fetch("/api/org-settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ average_sale_value: +avg, gross_margin: +margin, sync_interval_hours: cleanHours, monthly_budget: budget === "" ? null : +budget }) });
       setMsg(r.ok ? "Saved ✅ — scoring + auto-sync now use these." : "Couldn't save — check the values and try again.");
     } catch {
       setMsg("Network error — try again.");
@@ -62,6 +64,10 @@ export default function Settings() {
         <div className="rounded-lg bg-surface p-3 text-sm text-muted">
           Break-even CPA: <b>${beCpa.toFixed(2)}</b> · Break-even ROAS: <b>{beRoas.toFixed(2)}</b>
         </div>
+        <div><label className="mb-1 block text-sm font-bold">Monthly ad budget (AUD) — optional</label>
+          <input type="number" min={0} value={budget} onChange={(e) => setBudget(e.target.value === "" ? "" : +e.target.value)} placeholder="Leave blank to skip pacing"
+            className="w-full rounded-lg border border-border-subtle p-2.5" />
+          <p className="mt-1 text-xs text-muted">Set this to activate the <b>budget-pacing</b> health factor (pro-rata target vs spend, month-end projection). Left blank, pacing stays neutral.</p></div>
 
         <div className="border-t border-border-subtle pt-4">
           <label className="mb-1 block text-sm font-bold">Auto-sync cadence</label>

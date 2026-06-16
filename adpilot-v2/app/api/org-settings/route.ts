@@ -11,6 +11,8 @@ const Body = z.object({
   gross_margin: z.number().min(0.01).max(1),
   // Auto-sync cadence in hours: 0 = off, 1 = hourly, 24 = daily, 168 = weekly, or custom.
   sync_interval_hours: z.number().int().min(0).max(8760).optional(),
+  // Optional monthly ad budget (AUD) — powers the budget_pacing health factor. 0/absent = off.
+  monthly_budget: z.number().min(0).max(100_000_000).nullable().optional(),
 });
 
 export async function GET() {
@@ -19,8 +21,8 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
   const admin = createAdminClient();
-  const { data } = await admin.from("organisations").select("name,average_sale_value,gross_margin,sync_interval_hours").eq("id", orgId).maybeSingle();
-  return NextResponse.json({ settings: data || { average_sale_value: 200, gross_margin: 0.6, sync_interval_hours: 24 } });
+  const { data } = await admin.from("organisations").select("name,average_sale_value,gross_margin,sync_interval_hours,monthly_budget").eq("id", orgId).maybeSingle();
+  return NextResponse.json({ settings: data || { average_sale_value: 200, gross_margin: 0.6, sync_interval_hours: 24, monthly_budget: null } });
 }
 
 export async function POST(req: Request) {
