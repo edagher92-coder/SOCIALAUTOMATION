@@ -24,8 +24,10 @@ export async function scoreAndAlertOrg(
   if (!snaps || snaps.length === 0) return { scored: false, alerted: false };
 
   const result = analyse(snaps as any, {
-    average_sale_value: org.average_sale_value ?? 200,
-    gross_margin: org.gross_margin ?? 0.6, currency: "AUD",
+    // Guard against a stored 0/negative (nullish-coalescing wouldn't catch 0) — a non-positive
+    // average-sale-value or margin would produce garbage break-even/ROAS economics.
+    average_sale_value: Number(org.average_sale_value) > 0 ? Number(org.average_sale_value) : 200,
+    gross_margin: Number(org.gross_margin) > 0 ? Number(org.gross_margin) : 0.6, currency: "AUD",
   });
   await admin.from("health_scores").insert({ organisation_id: org.id, scope: "account", total: result.health.total, band: result.health.band, breakdown: result.health.breakdown });
   await admin.from("reports").insert({ organisation_id: org.id, title: `Scheduled — health ${Math.round(result.health.total)}`, period: new Date().toISOString().slice(0, 10), payload: result });

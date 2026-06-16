@@ -25,6 +25,11 @@ export async function GET(req: Request, { params }: { params: { platform: string
   const cookieState = cookies().get("oauth_state")?.value;
   if (!code) return redirect(`error=${platform}_no_code`);
   if (!state || state !== cookieState) return redirect(`error=${platform}_bad_state`);
+  // Bind the flow to the signed-in user: the state encodes the user id; reject a mismatch so a
+  // captured callback can't be replayed against a different session (the cookie is httpOnly+lax).
+  let stateUser = "";
+  try { stateUser = JSON.parse(Buffer.from(state, "base64url").toString())?.u || ""; } catch { /* malformed state */ }
+  if (stateUser !== user.id) return redirect(`error=${platform}_bad_state`);
 
   const cfg = oauthConfig(platform, url.origin);
   if (!cfg.configured) return redirect(`error=${platform}_not_configured`);
@@ -69,6 +74,8 @@ export async function GET(req: Request, { params }: { params: { platform: string
     }
     return redirect(`connected=${platform}`);
   } catch (e: any) {
-    return redirect(`error=${platform}_${encodeURIComponent((e.message || "failed").slice(0, 40))}`);
+    // Don't leak raw upstream/platform error text into the redirect URL; log server-side.
+    console.error(`OAuth ${platform} callback failed:`, e?.message || e);
+    return redirect(`error=${platform}_failed`);
   }
 }

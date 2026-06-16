@@ -22,7 +22,7 @@ export default async function ContentPage() {
       </p>
 
       {!canPublish ? (
-        <div className="rounded-2xl border border-border-subtle bg-gradient-to-br from-[#eef4ff] to-white p-6 shadow-card">
+        <div className="rounded-2xl border border-border-subtle bg-gradient-to-br from-brand-50 to-surface-raised p-6 shadow-card">
           <div className="mb-1 text-2xl">🔒</div>
           <h3 className="font-bold">Content publishing is a paid feature</h3>
           <p className="mb-3 mt-1 text-sm text-muted">Your plan ({PLAN_LABEL[plan]}) includes analysis. Upgrade to upload, approve, schedule and publish content — and unlock the AI Creative Studio on Pro &amp; Expert.</p>

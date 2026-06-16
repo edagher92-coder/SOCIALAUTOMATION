@@ -36,7 +36,7 @@ export default async function MessengerPage() {
           <MessengerBot webhookUrl={appUrl ? `${appUrl}/api/messenger/webhook` : ""} verifyConfigured={!!process.env.MESSENGER_VERIFY_TOKEN} appSecretConfigured={!!process.env.META_APP_SECRET} />
         </>
       ) : (
-        <div className="rounded-2xl border border-border-subtle bg-gradient-to-br from-[#eef4ff] to-white p-6 shadow-card">
+        <div className="rounded-2xl border border-border-subtle bg-gradient-to-br from-brand-50 to-surface-raised p-6 shadow-card">
           <div className="mb-1 text-2xl">🔒</div>
           <h3 className="font-bold">Messenger automation is a Premium (Expert) feature</h3>
           <p className="mb-3 mt-1 text-sm text-muted">Your plan ({PLAN_LABEL[plan]}) doesn't include it. Upgrade to set up Messenger across client pages with no browser and no prompts.</p>

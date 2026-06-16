@@ -15,7 +15,10 @@ _Last updated: 2026-06-15._
 ## 1. Supabase (database + auth)
 1. Create a new Supabase project. Note the **Project URL**, **anon key**, **service_role key** (Settings → API).
 2. SQL Editor → run the migrations in order from `adpilot-v2/supabase/migrations/`:
-   `0001_init.sql` → `0002_phase3.sql` → `0003_phase4.sql` → `0004_hardening.sql` → `0005_auto_sync.sql`.
+   `0001_init.sql` → `0002_phase3.sql` → `0003_phase4.sql` → `0004_hardening.sql` → `0005_auto_sync.sql`
+   → `0006_content.sql` → `0007_knowledge.sql` → `0008_messenger_bot.sql` → `0009_messenger_multichannel.sql`
+   → `0010_messenger_ai.sql` → `0011_ad_actions.sql`. **Run all 11, in order** — skipping any breaks the
+   features it adds (Content Studio, knowledge, Messenger, ad-actions).
 3. Auth → Providers → keep **Email** on (password sign-in is wired).
 
 ## 2. Generate the token-encryption key

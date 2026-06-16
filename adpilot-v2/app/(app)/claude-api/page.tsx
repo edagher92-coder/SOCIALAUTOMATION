@@ -26,7 +26,7 @@ export default function ClaudeApi() {
       />
 
       <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
-        <div className="mb-3 rounded-xl border border-band-yellow/40 bg-[#fff7e6] p-3 text-sm text-[#7a5b00]">
+        <div className="mb-3 rounded-xl border border-band-yellow/40 bg-amber-50 p-3 text-sm text-amber-800">
           🔒 For this browser demo, the key is stored only in <b>your browser</b> (localStorage) and never sent to our servers.
           For production, keys belong on the <b>server</b> (env vars) — never in the browser. Use a key you can rotate.
         </div>
