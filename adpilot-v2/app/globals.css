@@ -18,21 +18,40 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  background-color: #f7f9fc;
-  color: #0d1626;
+  background-color: #faf7f4;
+  color: #1c1726;
 }
 
 /* ── Focus-visible ring (keyboard only) ───────────────────────── */
 :focus-visible {
-  outline: 2px solid #0b5fff;
+  outline: 2px solid #f9603f;
   outline-offset: 2px;
   border-radius: 4px;
 }
 
 /* ── Text selection ───────────────────────────────────────────── */
 ::selection {
-  background-color: #bfd4ff;
-  color: #0b1f3a;
+  background-color: #ffe4db;
+  color: #c2391c;
+}
+
+/* ── Warm brand gradient helpers (creator energy × modern) ────── */
+.bg-brand-gradient {
+  background-image: linear-gradient(135deg, #f9603f 0%, #ffb224 100%);
+}
+.text-gradient {
+  background: linear-gradient(120deg, #f9603f 0%, #ff8a3d 45%, #ffb224 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+/* Soft warm "mesh" backdrop for hero / login / empty states. */
+.bg-mesh {
+  background-color: #faf7f4;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(249, 96, 63, .10) 0, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(255, 178, 36, .12) 0, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(249, 96, 63, .05) 0, transparent 55%);
 }
 
 /* ── Smooth transitions on interactive elements ───────────────── */
@@ -50,11 +69,11 @@ a, button, [role="button"] {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d0d7e3;
+  background: #ded6cc;
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #b0bac8;
+  background: #c4b9ab;
 }
 
 /* ── Sidebar nav scrollbar invisible until hover ──────────────── */
