@@ -13,9 +13,12 @@ export function parseKey(raw: string | undefined | null): Buffer {
   if (!s) throw new Error("TOKEN_ENCRYPTION_KEY not set");
   const tries: Buffer[] = [];
   if (/^[0-9a-fA-F]{64}$/.test(s)) tries.push(Buffer.from(s, "hex")); // 64-char hex
-  // base64 / base64url, repairing url-safe chars and a '+' that became a space:
-  const b64 = s.replace(/ /g, "+").replace(/-/g, "+").replace(/_/g, "/");
+  // base64 / base64url, repairing url-safe chars and a '+' that became a space. Build the
+  // repair candidate from a version that strips only newlines/tabs (NOT spaces), so a
+  // '+'-turned-space at the very start/end isn't lost to trimming (that dropped a byte).
+  const b64 = (raw || "").replace(/[\r\n\t]+/g, "").replace(/ /g, "+").replace(/-/g, "+").replace(/_/g, "/");
   tries.push(Buffer.from(b64, "base64"));
+  tries.push(Buffer.from(s.replace(/ /g, "+").replace(/-/g, "+").replace(/_/g, "/"), "base64"));
   tries.push(Buffer.from(s, "base64"));
   const k = tries.find((b) => b.length === 32);
   if (!k) {
