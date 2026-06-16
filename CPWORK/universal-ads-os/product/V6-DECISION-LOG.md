@@ -35,3 +35,10 @@ collected in V6-MASTER-PLAN.md → "Owner decision queue" and surfaced just befo
 - Beginning with the #1 scale risk: the auto-sync cron fan-out (sequential, unqueued, >60s at ~10
   orgs, fails silently). Implemented on the live branch (has all Wave A/B work), not a worktree
   (worktree base predates Wave A/B and would clobber score.ts/auto-sync).
+- ✅ DONE — cron fan-out fix: bounded org concurrency (4) + per-org parallel platform pulls + 50s
+  time-budget guard that DEFERS the remainder and reports `deferred/truncated/durationMs` (+ loud
+  console.error). All cadence/partial-failure/auth-disconnect semantics preserved. 432 tests green.
+  Decision: worktree agents branch from pre-Wave-A `main`, so V6 phases touching already-modified
+  files (score.ts, cron, engine) are done on-branch, not via worktree, to avoid clobbering.
+- NEXT in P1: trend data model (index health_scores for time-series; add account_daily_metrics) +
+  the missing indexes the architecture stream flagged (migration 0021).
