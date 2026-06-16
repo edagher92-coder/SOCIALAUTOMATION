@@ -33,6 +33,7 @@ const NAV_GROUPS: { title: string | null; items: { href: string; label: string; 
     { href: "/agency", label: "White-label", icon: "🏷️", desc: "Brand reports as your agency" },
     { href: "/settings", label: "Settings", icon: "⚙️", desc: "Economics & auto-sync" },
     { href: "/claude-api", label: "Claude API", icon: "🔌", desc: "Connect AI generation" },
+    { href: "/demo-guide", label: "Demo Guide", icon: "🗺️", desc: "Guided tour of the demo accounts" },
     { href: "/manual", label: "User Manual", icon: "📖", desc: "How-to + download PDF" },
   ] },
 ];
