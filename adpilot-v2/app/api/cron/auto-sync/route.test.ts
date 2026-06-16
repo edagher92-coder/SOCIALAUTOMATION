@@ -33,7 +33,12 @@ function makeAdmin() {
         select() { return api; },
         eq(col: string, val: any) { filters[col] = val; return api; },
         update(values: any) {
-          return { eq: (_c: string, id: any) => { updates.push({ table, values, id }); return Promise.resolve({ error: null }); } };
+          // chainable .eq() (Supabase supports .eq().eq()…), awaitable; records once on resolve
+          const u: any = {
+            eq(c: string, v: any) { filters[c] = v; return u; },
+            then(resolve: any, reject: any) { updates.push({ table, values, id: filters.id }); return Promise.resolve({ error: null }).then(resolve, reject); },
+          };
+          return u;
         },
         then(resolve: any, reject: any) {
           // resolve a select chain with the configured rows for the table
@@ -243,5 +248,29 @@ describe("partial-failure handling", () => {
     expect(j.synced).toBe(1);
     expect(j.scored).toBe(0);
     expect(updates.find((u) => u.table === "organisations")).toBeTruthy();
+  });
+
+  it("does NOT disconnect the account on a transient (non-auth) error that merely contains 'token'", async () => {
+    DB = {
+      organisations: [{ id: "o1", sync_interval_hours: 24, last_synced_at: null }],
+      billing_subscriptions: proSub,
+      connected_ad_accounts: [{ platform: "meta" }],
+    };
+    syncOrgPlatform.mockRejectedValue(new Error("429 rate limit on the token endpoint — retry later"));
+    const r = await GET(req({ key: SECRET }));
+    expect((await r.json()).failed).toBe(1);
+    expect(updates.find((u) => u.table === "connected_ad_accounts")).toBeUndefined(); // not wrongly disconnected
+  });
+
+  it("marks the account disconnected on a real auth failure (Meta code 190 / token expired)", async () => {
+    DB = {
+      organisations: [{ id: "o1", sync_interval_hours: 24, last_synced_at: null }],
+      billing_subscriptions: proSub,
+      connected_ad_accounts: [{ platform: "meta" }],
+    };
+    syncOrgPlatform.mockRejectedValue(new Error("OAuthException code 190: access token has expired"));
+    const r = await GET(req({ key: SECRET }));
+    expect((await r.json()).failed).toBe(1);
+    expect(updates.find((u) => u.table === "connected_ad_accounts")).toBeTruthy(); // flagged for reconnect
   });
 });

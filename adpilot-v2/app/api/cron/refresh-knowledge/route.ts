@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cronAuthorized } from "@/lib/cron-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { researchWithWebSearch, NoKeyError } from "@/lib/ai/claude";
 import { KNOWLEDGE, type KnowledgeDomain } from "@/lib/agents/knowledge";
@@ -21,7 +22,7 @@ export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
   if (!secret) return NextResponse.json({ error: "Cron not configured (set CRON_SECRET)." }, { status: 503 });
   const url = new URL(req.url);
-  const ok = req.headers.get("authorization") === `Bearer ${secret}` || url.searchParams.get("key") === secret;
+  const ok = cronAuthorized(req, secret);
   if (!ok) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json({ error: "Knowledge refresh needs ANTHROPIC_API_KEY (web search); using committed baseline.", refreshed: 0 }, { status: 503 });

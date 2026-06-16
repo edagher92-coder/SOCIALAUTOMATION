@@ -34,7 +34,7 @@ is **trust** — read-only, proposals only, never touches a live ad.
 | 5 | 16.5–23.0 | Proposal → tap Approve | "Tap APPROVE. That's it. Done." |
 | 6 | 23.0–28.5 | Read-only safety lock | "READ-ONLY. It never touches your live ads." |
 | 7 | 28.5–33.5 | 12 AI specialists grid | "12 AI specialists — reading YOUR real numbers." |
-| 8 | 33.5–37.5 | Price card | "From $97 — pays for itself the first leak it catches." |
+| 8 | 33.5–37.5 | Price card | "From $97 — could pay for itself the first leak it catches." |
 | 9 | 37.5–41.0 | Logo + CTA | "Run your free audit." |
 
 ## Optional voiceover (sound-on)
@@ -45,7 +45,7 @@ is **trust** — read-only, proposals only, never touches a live ad.
 5. "Each one's a proposal — you just approve the safe fixes. Done."
 6. "It's read-only. It proposes fixes — it never touches your live ads. Your data stays private."
 7. "Plus twelve AI specialists — Meta, TikTok, tracking, creative — all reading your actual data."
-8. "It starts at ninety-seven dollars — and pays for itself the first time it catches a budget leak."
+8. "It starts at ninety-seven dollars — and could pay for itself the first time it catches a budget leak."
 9. "Know exactly what your ads are doing to your money. Run your free audit today."
 
 ## Music direction
@@ -59,6 +59,6 @@ your editor over the cut.)
 ## Post copy (caption next to the upload)
 **A — Fear/curiosity:** Your Meta & TikTok ads are spending money right now — do you actually know why? AdPilot OS audits your account, scores it 0–100, and tells you exactly what to kill, cut, and scale. Read-only — it never touches your live ads. Run your free audit. `#smallbusinesstips #metaads #tiktokads #adspend #marketingtips #contentcreator`
 
-**B — Creator/relatable:** POV: you've been boosting posts for months with NO idea what's working. This reads every campaign for you, ranks your fixes, and you just tap approve. From $97 — pays for itself the first budget leak it catches. 🚀 `#creatortips #digitalmarketing #facebookads #tiktokmarketing #smallbiz #socialmediamarketing`
+**B — Creator/relatable:** POV: you've been boosting posts for months with NO idea what's working. This reads every campaign for you, ranks your fixes, and you just tap approve. From $97 — could pay for itself the first budget leak it catches. 🚀 `#creatortips #digitalmarketing #facebookads #tiktokmarketing #smallbiz #socialmediamarketing`
 
 **C — Agency/authority:** We audit Meta & TikTok ad accounts in seconds: explainable 0–100 health score, prioritized fixes, 12 AI specialists grounded in your real numbers — and white-label reports you brand as your own. Read-only, proposals only. From $97. `#agencylife #marketingagency #ppc #mediabuying #facebookadsexpert #whitelabel`

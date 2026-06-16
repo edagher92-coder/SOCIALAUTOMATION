@@ -67,5 +67,5 @@ export default async function ReportDetail({ params }: { params: { id: string } 
 }
 
 function Stat({ k, v }: { k: string; v: string }) {
-  return <div className="rounded-lg bg-[#f4f7fb] p-2.5"><b className="block text-lg">{v}</b><span className="text-xs text-muted">{k}</span></div>;
+  return <div className="rounded-lg bg-surface p-2.5"><b className="block text-lg">{v}</b><span className="text-xs text-muted">{k}</span></div>;
 }

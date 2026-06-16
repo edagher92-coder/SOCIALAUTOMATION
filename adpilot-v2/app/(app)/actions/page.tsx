@@ -24,7 +24,7 @@ export default async function ActionsPage() {
       {enabled ? (
         <ActionsConsole writeEnabled={writeEnabled} />
       ) : (
-        <div className="rounded-2xl border border-border-subtle bg-gradient-to-br from-[#eef4ff] to-white p-6 shadow-card">
+        <div className="rounded-2xl border border-border-subtle bg-gradient-to-br from-brand-50 to-surface-raised p-6 shadow-card">
           <div className="mb-1 text-2xl">🔒</div>
           <h3 className="font-bold">Guarded ad changes are an Expert feature</h3>
           <p className="mb-3 mt-1 text-sm text-muted">Your plan ({PLAN_LABEL[plan]}) is read-only by design. Expert unlocks staging live pause/resume/budget changes — each one typed-confirmed, reversible, and audited.</p>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cronAuthorized } from "@/lib/cron-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { syncOrgPlatform, type Platform } from "@/lib/sync/pull";
 import { scoreAndAlertOrg } from "@/lib/cron/score";
@@ -18,7 +19,7 @@ export async function GET(req: Request) {
   // Fail closed: never run an unauthenticated sweep.
   if (!secret) return NextResponse.json({ error: "Cron not configured (set CRON_SECRET)." }, { status: 503 });
   const url = new URL(req.url);
-  const ok = req.headers.get("authorization") === `Bearer ${secret}` || url.searchParams.get("key") === secret;
+  const ok = cronAuthorized(req, secret);
   if (!ok) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const admin = createAdminClient();
@@ -57,7 +58,23 @@ export async function GET(req: Request) {
     for (const p of PLATFORMS) {
       if (!connected.has(p)) continue;
       try { pulled += await syncOrgPlatform(admin, org.id, p); didSync = true; }
-      catch { /* token/account issue on this platform — skip, others still run */ }
+      catch (e: any) {
+        // Only an AUTH/token failure should mark the account disconnected (so the UI can
+        // prompt a reconnect). Be specific: a bare "token" substring would wrongly disconnect
+        // on transient errors (e.g. "rate limit on token endpoint"). Require auth-shaped signals.
+        const m = String(e?.message || "").toLowerCase();
+        const authFail =
+          /\b(401|403)\b/.test(m) ||                                                   // HTTP unauthorised/forbidden
+          /\bcode\W*190\b/.test(m) ||                                                   // Meta: expired/invalid access token
+          /invalid_grant|reauthenticate|re-?authori[sz]e/.test(m) ||
+          /(access[\s_-]?token|oauth|session|credential)\W{0,24}(expired|invalid|revoked|denied)/.test(m) ||
+          /(expired|invalid|revoked)\W{0,24}(access[\s_-]?token|oauth|session|credential)/.test(m);
+        if (authFail) {
+          await admin.from("connected_ad_accounts").update({ status: "disconnected" })
+            .eq("organisation_id", org.id).eq("platform", p);
+        }
+        /* transient/other errors: skip this platform, others still run */
+      }
     }
 
     if (didSync) {

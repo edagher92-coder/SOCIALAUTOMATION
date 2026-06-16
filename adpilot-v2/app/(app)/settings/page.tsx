@@ -54,16 +54,16 @@ export default function Settings() {
     <div className="max-w-xl">
       <h1 className="text-2xl font-extrabold tracking-tight">Settings</h1>
       <p className="mb-5 mt-1 text-muted">Economics for the current client{name ? ` — ${name}` : ""}. These drive break-even and the scheduled score.</p>
-      <div className="space-y-4 rounded-2xl border border-[#e3e8ef] bg-white p-5 shadow-card">
+      <div className="space-y-4 rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
         <div><label className="mb-1 block text-sm font-bold">Average sale value (AUD)</label>
-          <input type="number" value={avg} onChange={(e) => setAvg(+e.target.value)} className="w-full rounded-lg border border-[#e3e8ef] p-2.5" /></div>
+          <input type="number" value={avg} onChange={(e) => setAvg(+e.target.value)} className="w-full rounded-lg border border-border-subtle p-2.5" /></div>
         <div><label className="mb-1 block text-sm font-bold">Gross margin (0–1)</label>
-          <input type="number" step="0.01" value={margin} onChange={(e) => setMargin(+e.target.value)} className="w-full rounded-lg border border-[#e3e8ef] p-2.5" /></div>
-        <div className="rounded-lg bg-[#f4f7fb] p-3 text-sm text-muted">
+          <input type="number" step="0.01" value={margin} onChange={(e) => setMargin(+e.target.value)} className="w-full rounded-lg border border-border-subtle p-2.5" /></div>
+        <div className="rounded-lg bg-surface p-3 text-sm text-muted">
           Break-even CPA: <b>${beCpa.toFixed(2)}</b> · Break-even ROAS: <b>{beRoas.toFixed(2)}</b>
         </div>
 
-        <div className="border-t border-[#eef2f7] pt-4">
+        <div className="border-t border-border-subtle pt-4">
           <label className="mb-1 block text-sm font-bold">Auto-sync cadence</label>
           <p className="mb-2 text-xs text-muted">How often connected Meta/TikTok accounts pull fresh data on their own. No prompts once connected. <span className="font-semibold">Pro &amp; Expert plans.</span></p>
           <select
@@ -75,7 +75,7 @@ export default function Settings() {
                 if (!(+syncHours >= 1)) setSyncHours(48);
               } else { setCustomMode(false); setSyncHours(+e.target.value); }
             }}
-            className="w-full rounded-lg border border-[#e3e8ef] p-2.5">
+            className="w-full rounded-lg border border-border-subtle p-2.5">
             {CADENCE_PRESETS.map((p) => <option key={p.v} value={String(p.v)}>{p.label}</option>)}
             <option value="custom">Custom…</option>
           </select>
@@ -83,7 +83,7 @@ export default function Settings() {
             <div className="mt-2 flex items-center gap-2">
               <span className="text-sm text-muted">Every</span>
               <input type="number" min={1} max={8760} value={syncHours} onChange={(e) => setSyncHours(+e.target.value)}
-                className="w-24 rounded-lg border border-[#e3e8ef] p-2.5" />
+                className="w-24 rounded-lg border border-border-subtle p-2.5" />
               <span className="text-sm text-muted">hours (1–8760)</span>
             </div>
           )}

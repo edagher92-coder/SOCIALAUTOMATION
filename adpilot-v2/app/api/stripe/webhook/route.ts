@@ -31,7 +31,15 @@ export async function POST(req: Request) {
         // Normalise the plan from the checkout metadata so a missing/garbled value records a
         // known tier ("free") rather than silently granting an unintended paid plan. The
         // checkout route already validated the price→plan mapping before setting this.
-        const plan = normalisePlan(s.metadata?.plan);
+        // Validate the plan from checkout metadata against the known set. Fail LOUD (log + 200
+        // no-write) on an unknown value rather than silently recording "free" for a paid checkout.
+        // Return 200 so Stripe doesn't retry a permanently-bad event. normalisePlan stays untouched.
+        const planRaw = String(s.metadata?.plan || "").trim().toLowerCase();
+        if (!["starter", "pro", "expert", "agency", "enterprise"].includes(planRaw)) {
+          console.error(`Stripe webhook: unknown plan "${s.metadata?.plan}" on session ${s.id} — not writing a subscription.`);
+          return NextResponse.json({ received: true, warning: "unknown_plan" });
+        }
+        const plan = normalisePlan(planRaw);
         // Upsert keyed on the subscription id so duplicate webhook deliveries are idempotent.
         await admin.from("billing_subscriptions").upsert({
           organisation_id: orgId,
