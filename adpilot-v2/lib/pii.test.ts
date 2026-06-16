@@ -64,3 +64,21 @@ describe("hashPII dispatches by kind", () => {
     expect(hashPII("0400000000", "phone")).toBe(hashPhone("0400000000"));
   });
 });
+
+describe("PII_PEPPER fail-closed in production", () => {
+  it("throws when hashing in production with no pepper set (refuses reversible hashes)", () => {
+    const prev = process.env.NODE_ENV;
+    try {
+      // @ts-expect-error — NODE_ENV is normally readonly-typed; we override for the test.
+      process.env.NODE_ENV = "production";
+      expect(() => hashEmail("jane@example.com")).toThrow(/PII_PEPPER/);
+    } finally {
+      // @ts-expect-error — restore
+      process.env.NODE_ENV = prev;
+    }
+  });
+
+  it("does not throw in test/dev (deterministic fixtures)", () => {
+    expect(() => hashEmail("jane@example.com")).not.toThrow();
+  });
+});

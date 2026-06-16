@@ -13,6 +13,17 @@ import crypto from "crypto";
 // and tests stay deterministic, but an unset pepper in production is unsafe.
 const PEPPER = process.env.PII_PEPPER || "";
 
+// Fail CLOSED in production: an unset pepper would make stored hashes plain SHA-256 of the
+// email/phone — reversible via a precomputed rainbow table, breaking the "never store reversible
+// PII" guarantee. In production we refuse to hash rather than persist weak hashes. Dev/test keep
+// the deterministic empty default so fixtures stay stable.
+function pepper(): string {
+  if (!PEPPER && process.env.NODE_ENV === "production") {
+    throw new Error("PII_PEPPER must be set in production — refusing to hash PII with an empty pepper (would be reversible).");
+  }
+  return PEPPER;
+}
+
 export type PiiKind = "email" | "phone";
 
 // Normalise an email: trim surrounding whitespace and lowercase (addresses are
@@ -32,7 +43,7 @@ export function normalisePhone(phone: string): string {
 // SHA-256 of (normalised value + pepper), returned as lowercase hex. One-way:
 // there is no inverse. Same input → same hash; different input → different hash.
 function sha256Hex(input: string): string {
-  return crypto.createHash("sha256").update(input + PEPPER, "utf8").digest("hex");
+  return crypto.createHash("sha256").update(input + pepper(), "utf8").digest("hex");
 }
 
 // Hash a single PII value of a known kind. Returns null for empty/whitespace
