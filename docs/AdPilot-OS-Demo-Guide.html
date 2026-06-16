@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AdPilot OS — Demo Guide</title>
+<style>
+  :root{
+    --coral:#f9603f; --amber:#ffb224; --ink:#1c1726; --muted:#7a7280;
+    --bg:#f5efe8; --card:#fff; --line:#e7ddd0; --green:#2fbf71; --orange:#ff8a3d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:860px;margin:0 auto;padding:0 20px 64px}
+  a{color:var(--coral)}
+  code{background:#fff;border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
+  .hero{background:linear-gradient(135deg,var(--coral),var(--amber));color:#fff;border-radius:0 0 28px 28px;
+    padding:46px 20px 40px;text-align:center;box-shadow:0 18px 50px rgba(249,96,63,.25)}
+  .hero .wrap{padding-bottom:0}
+  .badge{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.85}
+  .hero h1{margin:.3em 0 .2em;font-size:34px;font-weight:900;letter-spacing:-.02em}
+  .hero p{margin:0 auto;max-width:560px;opacity:.95}
+  .v3{display:inline-block;background:rgba(255,255,255,.22);border-radius:8px;padding:2px 8px;font-size:13px;font-weight:800;vertical-align:middle}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:26px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(28,23,38,.06)}
+  .card .e{font-size:26px}
+  .card h3{margin:.3em 0 .15em;font-size:16px}
+  .card p{margin:0;color:var(--muted);font-size:14px}
+  h2{font-size:22px;font-weight:900;margin:34px 0 10px}
+  .persona{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:0 10px 30px rgba(28,23,38,.07);margin-bottom:18px}
+  .persona .top{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .persona .nm{font-size:19px;font-weight:900}
+  .tag{background:#fff2ee;color:var(--coral);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800}
+  .score{margin-left:auto;font-weight:900}
+  .pill{border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800}
+  .pill.green{background:rgba(47,191,113,.12);color:var(--green)}
+  .pill.orange{background:rgba(255,138,61,.14);color:var(--orange)}
+  .login{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--bg);border-radius:12px;padding:10px 12px;margin:12px 0;font-size:14px}
+  ol.tour{list-style:none;counter-reset:s;margin:6px 0 0;padding:0}
+  ol.tour li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--line)}
+  ol.tour li:first-child{border-top:0}
+  ol.tour li::before{content:counter(s);flex:0 0 30px;height:30px;border-radius:50%;
+    background:linear-gradient(135deg,var(--coral),var(--amber));color:#fff;font-weight:900;
+    display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(249,96,63,.3)}
+  ol.tour b{display:block}
+  ol.tour span{color:var(--muted);font-size:14px}
+  .note{background:#fff8ea;border:1px solid #ffe0a3;color:#7a5b16;border-radius:16px;padding:14px 16px;font-size:14px;margin-top:24px}
+  .cta{display:inline-block;background:#fff;color:var(--coral);font-weight:900;border-radius:999px;padding:12px 22px;
+    text-decoration:none;box-shadow:0 8px 22px rgba(0,0,0,.12);margin-top:16px}
+  .foot{text-align:center;color:var(--muted);font-size:13px;margin-top:30px}
+  @media(max-width:640px){.cards{grid-template-columns:1fr}.hero h1{font-size:27px}.score{margin-left:0}}
+</style>
+</head>
+<body>
+  <div class="hero">
+    <div class="badge">AdPilot OS <span class="v3">V3</span> · Demo Guide</div>
+    <h1>See AdPilot work in 5 minutes</h1>
+    <p>Two ready-made accounts loaded with ~6 months of real Meta &amp; TikTok data. AdPilot scores each one
+       0–100, finds what's leaking budget, and proposes safe fixes — <b>read-only, it never edits a live ad.</b></p>
+  </div>
+
+  <div class="wrap">
+    <div class="cards">
+      <div class="card"><div class="e">📊</div><h3>It scores</h3><p>An explainable 0–100 Campaign Health Score across all your ad accounts.</p></div>
+      <div class="card"><div class="e">🧭</div><h3>It proposes</h3><p>Prioritised, safe fixes: Fix · Kill · Reduce · Refresh · Scale.</p></div>
+      <div class="card"><div class="e">🔒</div><h3>It's safe</h3><p>Read-only. It proposes — you approve. It never touches your live ads.</p></div>
+    </div>
+
+    <h2>Two accounts, two stories</h2>
+
+    <div class="persona">
+      <div class="top">
+        <span class="nm">Coach Maya — Fitness Studio</span>
+        <span class="tag">Solo creator · $199 program</span>
+        <span class="score">Health 80 / 100 <span class="pill green">Healthy</span></span>
+      </div>
+      <p style="color:var(--muted);margin:10px 0 0">A creator who's crushing it: strong 2.2× ROAS across Meta + TikTok. AdPilot says she's healthy and clear-to-scale — the proposals are about pouring fuel on the winners.</p>
+      <div class="login"><b>Log in:</b> <code>creator.demo@adpilot.app</code> · password <code>AdPilotDemo!2026</code></div>
+      <ol class="tour">
+        <li><div><b>See the score land — Command Center</b><span>Health 80 / Green and a live verdict strip; two 🚀 Scale proposals waiting.</span></div></li>
+        <li><div><b>Approve a safe win — Proposals</b><span>Scale the TikTok “Day-1 Hook Reel” (2.5× ROAS) and the Free-Guide funnel.</span></div></li>
+        <li><div><b>Read the breakdown — Ads Health</b><span>The 13 factors behind the 80; six months of campaigns underneath.</span></div></li>
+        <li><div><b>Schedule content — Content Studio</b><span>Published reels, a scheduled leg-day post, a meal-prep draft.</span></div></li>
+        <li><div><b>Ask the AI team — AI Specialists</b><span>Travis (TikTok) &amp; Dana (Data) answer using her real numbers.</span></div></li>
+        <li><div><b>Send the proof — Reports</b><span>Six monthly reports show the growth trend; download the branded PDF.</span></div></li>
+      </ol>
+    </div>
+
+    <div class="persona">
+      <div class="top">
+        <span class="nm">Bean &amp; Bloom Café</span>
+        <span class="tag">Local café · brunch + orders</span>
+        <span class="score">Health 58 / 100 <span class="pill orange">At risk</span></span>
+      </div>
+      <p style="color:var(--muted);margin:10px 0 0">A small business turning it around. AdPilot finds the leaks: a budget bleeder to kill, broken tracking to fix, a tired creative to refresh — and the one winner to scale.</p>
+      <div class="login"><b>Log in:</b> <code>cafe.demo@adpilot.app</code> · password <code>AdPilotDemo!2026</code></div>
+      <ol class="tour">
+        <li><div><b>See what needs action — Command Center</b><span>Health 58 / Orange with five proposals ranked most-urgent-first.</span></div></li>
+        <li><div><b>Work the queue — Proposals</b><span>🛑 Kill the “Menu Launch” bleeder, 🛠️ fix Loyalty tracking, 🔻 reduce Catering, 🚀 scale Brunch.</span></div></li>
+        <li><div><b>Find the leak — Ads Health</b><span>The breakdown pinpoints weak tracking &amp; CPA — where the money's going.</span></div></li>
+        <li><div><b>Auto-reply to customers — Messenger</b><span>Greeting + menu / hours / booking replies already configured.</span></div></li>
+        <li><div><b>Plan the posts — Content Studio</b><span>Brunch specials, a hiring post, a cold-brew reel scheduled.</span></div></li>
+        <li><div><b>Show the owner — Reports</b><span>Monthly reports tell the turnaround story; branded PDF in a click.</span></div></li>
+      </ol>
+    </div>
+
+    <div style="text-align:center">
+      <a class="cta" href="#" data-login-url>Open AdPilot &amp; sign in →</a>
+    </div>
+
+    <div class="note">
+      <b>These are demo accounts.</b> Every number is generated and clearly labelled <code>[DEMO]</code> — nothing spends real
+      money or touches a live ad. To create them, run <code>npm run seed:demo</code> against a staging Supabase
+      (see <code>adpilot-v2/scripts/README-demo.md</code>).
+    </div>
+
+    <div class="foot">AdPilot OS V3 · Know exactly what your ads are doing to your money.</div>
+  </div>
+
+  <script>
+    // Point the CTA at wherever this guide is opened from, falling back to a relative login.
+    (function(){
+      var a = document.querySelector('[data-login-url]');
+      if (a) a.href = (location.origin && location.origin.indexOf('http') === 0) ? location.origin + '/login' : '/login';
+    })();
+  </script>
+</body>
+</html>

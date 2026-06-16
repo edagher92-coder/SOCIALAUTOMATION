@@ -30,7 +30,7 @@ export default async function CommandCenter() {
           <p className="mt-1 text-sm text-muted">
             Your Campaign Health Score and safe proposals live here once you’re signed in.
           </p>
-          <a href="/login" className="mt-4 inline-block rounded-xl bg-brand px-5 py-2 text-sm font-bold text-white">Sign in</a>
+          <a href="/login" className="mt-4 inline-block rounded-xl bg-brand-gradient px-5 py-2 text-sm font-bold text-white shadow-glow transition hover:opacity-95">Sign in</a>
         </div>
       </div>
     );
@@ -74,7 +74,8 @@ export default async function CommandCenter() {
       )}
       {/* Control-room hero */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-command via-navy to-command p-6 text-white shadow-card md:p-8">
-        <div className="absolute -right-10 -top-10 h-44 w-44 rounded-full bg-brand/30 blur-3xl" aria-hidden />
+        <div className="absolute -right-10 -top-10 h-44 w-44 rounded-full bg-brand/40 blur-3xl" aria-hidden />
+        <div className="absolute -bottom-12 -left-8 h-40 w-40 rounded-full bg-teal/25 blur-3xl" aria-hidden />
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="text-xs font-bold uppercase tracking-widest text-white/60">Command Center</div>

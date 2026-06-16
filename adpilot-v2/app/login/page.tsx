@@ -26,21 +26,21 @@ export default function Login() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-surface px-5 py-12">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-mesh px-5 py-12">
       {/* Logo */}
       <div className="mb-8 flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-ink">
-        <span className="inline-block h-8 w-8 rounded-xl bg-gradient-to-br from-brand to-teal shadow-sm" aria-hidden />
-        AdPilot OS
+        <span className="inline-block h-9 w-9 rounded-xl bg-brand-gradient shadow-glow" aria-hidden />
+        <span className="text-gradient">AdPilot OS</span>
         <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand">V3</span>
       </div>
 
       <div className="w-full max-w-sm">
-        <div className="rounded-2xl border border-border-subtle bg-white p-8 shadow-card">
+        <div className="rounded-3xl border border-border-subtle bg-white/90 p-8 shadow-card backdrop-blur-sm">
           <h1 className="text-2xl font-extrabold tracking-tight text-ink">
-            {mode === "signin" ? "Welcome back" : "Create account"}
+            {mode === "signin" ? "Welcome back 👋" : "Create your account"}
           </h1>
           <p className="mb-6 mt-1 text-sm text-muted">
-            {mode === "signin" ? "Sign in to your AdPilot OS workspace." : "Start your AdPilot OS free trial."}
+            {mode === "signin" ? "Sign in to your AdPilot OS workspace." : "Your ads & content, on autopilot — start free."}
           </p>
 
           <form onSubmit={submit} className="space-y-4">

@@ -5,28 +5,34 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Warm coral primary — creator energy, friendly for small businesses.
         brand: {
-          DEFAULT: "#0b5fff",
-          50:  "#eef3ff",
-          100: "#dce7ff",
-          200: "#bfd4ff",
-          500: "#0b5fff",
-          600: "#0952db",
-          700: "#073db5",
+          DEFAULT: "#f9603f",
+          50:  "#fff3ef",
+          100: "#ffe4db",
+          200: "#ffc6b6",
+          500: "#f9603f",
+          600: "#ea4a27",
+          700: "#c2391c",
         },
-        navy: "#0b1f3a",
-        command: "#0a1430",
+        // Amber/gold accent for the signature warm gradient lives on the `teal` token
+        // below (kept that name so existing gradient/accent classes warm up). Tailwind's
+        // built-in `amber` scale is left intact for incidental UI (e.g. the safety notice).
+        navy: "#211a2e",      // warm dark (was cool navy)
+        command: "#161221",   // warm near-black for the Command Center
+        // `teal` retained as a token name but recoloured to the warm amber accent,
+        // so existing `from-brand to-teal` gradients and accents warm up automatically.
         teal: {
-          DEFAULT: "#00c2a8",
-          50:  "#e6fbf6",
-          100: "#ccf7ed",
+          DEFAULT: "#ffb224",
+          50:  "#fff8ea",
+          100: "#ffedc7",
         },
-        ink: "#0d1626",
-        muted: "#5a6577",
-        surface: "#f7f9fc",
+        ink: "#1c1726",       // warm near-black text
+        muted: "#6b6478",     // warm grey
+        surface: "#faf7f4",   // warm off-white (was cool #f7f9fc)
         "surface-raised": "#ffffff",
-        "border-subtle": "#e3e8ef",
-        "border-focus": "#0b5fff",
+        "border-subtle": "#ece7e1",
+        "border-focus": "#f9603f",
         band: {
           green:  "#16a34a",
           yellow: "#ca8a04",
@@ -41,10 +47,11 @@ const config: Config = {
         "2xs": ["0.625rem", { lineHeight: "0.875rem" }],
       },
       boxShadow: {
-        card:  "0 1px 3px rgba(13,22,38,.06), 0 8px 24px rgba(13,22,38,.06)",
-        "card-hover": "0 1px 3px rgba(13,22,38,.08), 0 12px 32px rgba(13,22,38,.10)",
-        "ring-brand": "0 0 0 3px rgba(11,95,255,.18)",
-        "inner-sm": "inset 0 1px 2px rgba(13,22,38,.06)",
+        card:  "0 1px 3px rgba(28,23,38,.05), 0 8px 24px rgba(28,23,38,.06)",
+        "card-hover": "0 1px 3px rgba(28,23,38,.07), 0 14px 34px rgba(28,23,38,.12)",
+        "ring-brand": "0 0 0 3px rgba(249,96,63,.20)",
+        glow: "0 12px 40px -8px rgba(249,96,63,.38)",   // warm coral glow for hero CTAs
+        "inner-sm": "inset 0 1px 2px rgba(28,23,38,.06)",
       },
       transitionDuration: {
         "150": "150ms",
