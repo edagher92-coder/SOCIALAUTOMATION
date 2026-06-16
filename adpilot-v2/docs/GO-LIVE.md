@@ -1,6 +1,6 @@
-# AdPilot OS v3 — Go-Live Runbook
+# AdPilot OS v4 — Go-Live Runbook
 
-The fastest path from this repo to a live instance you can connect Snowflow to.
+The fastest path from this repo to a live instance you can connect your ad account to.
 ~30–45 min. You do the clicks (accounts + secrets are yours); everything else is built.
 
 _Last updated: 2026-06-15._
@@ -72,7 +72,7 @@ Copy the output → `TOKEN_ENCRYPTION_KEY`.
    ```
    (Use `'starter'` or `'pro'` to test a lower tier. With Stripe configured, the Billing page does this automatically on checkout.)
 
-## 5. Connect Snowflow (fastest = dev token)
+## 5. Connect your ad account (fastest = dev token)
 - **Connect & Sync → Advanced — connect with an access token.**
   - Meta: paste a token with `ads_read` (Graph API Explorer or a Business System User). Leave Account ID blank for all accounts, or paste `act_<id>`.
   - TikTok: paste a long-lived token **and** the `advertiser_id`.
