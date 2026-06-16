@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
 import { can, PLAN_LABEL } from "@/lib/entitlements";
 import { verdictMeta, bandMeta, cadenceText } from "@/lib/proposals";
+import ModeAware from "@/components/ModeAware";
 
 export const dynamic = "force-dynamic";
 
@@ -139,7 +140,8 @@ export default async function CommandCenter() {
           )}
         </section>
 
-        {/* Right rail */}
+        {/* Right rail — Advanced view only; Simple keeps just the score + top fixes (10-second answer). */}
+        <ModeAware only="advanced">
         <aside className="space-y-5">
           {/* Connections */}
           <div className="rounded-2xl border border-border-subtle bg-white p-4 shadow-card">
@@ -195,6 +197,7 @@ export default async function CommandCenter() {
             )}
           </div>
         </aside>
+        </ModeAware>
       </div>
     </div>
   );
