@@ -90,3 +90,12 @@ collected in V6-MASTER-PLAN.md → "Owner decision queue" and surfaced just befo
 - Implemented: AppShell renders locked nav items muted with a 🔒 + required-tier badge linking to
   /billing; new PlanMatrix (Free/Starter/Pro/Expert × features, driven by PLANS+entitlements) on
   /billing + landing; featuresFor() helper + coherence test. Prices stay owner-gated. 453 tests green.
+
+## 2026-06-16 — Council round: per-tier features + GUI + data-training consent
+- Owner: team + management debate features for each of the 3 paid tiers (Starter/Pro/Expert) —
+  new / upgrade / remove; only genuinely useful, app-true features that ease BOTH back-end (us) and
+  client work. GUI implementation is the priority ("nail the GUI/UX"). Loop to consensus. Use the
+  competitor scans + v6-research. ALSO: add a Terms clause permitting use of client data to improve
+  + train the model (more efficient/effective) — privacy-sensitive, compliance-led, placeholder+solicitor.
+- Launched 4 council streams (write to product/v6-tiers/*.md) → management converges to an agreed
+  per-tier plan + GUI roadmap; then implement (data-consent clause first, it's discrete).
