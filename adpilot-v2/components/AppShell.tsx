@@ -68,9 +68,9 @@ function Sidebar({ email, onNav }: { email?: string; onNav?: () => void }) {
   return (
     <div className="flex h-full flex-col gap-3 p-4">
       {/* Logo */}
-      <Link href="/command" className="flex items-center gap-2.5 px-1 py-1 text-base font-extrabold tracking-tight text-ink transition hover:text-brand">
-        <span className="inline-block h-7 w-7 flex-shrink-0 rounded-xl bg-gradient-to-br from-brand to-teal shadow-sm" />
-        <span>AdPilot OS</span>
+      <Link href="/command" className="flex items-center gap-2.5 px-1 py-1 text-base font-extrabold tracking-tight text-ink transition hover:opacity-90">
+        <span className="inline-block h-7 w-7 flex-shrink-0 rounded-xl bg-brand-gradient shadow-glow" />
+        <span className="text-gradient">AdPilot OS</span>
         <span className="ml-0.5 rounded-full bg-brand-50 px-2 py-0.5 text-2xs font-bold text-brand">V3</span>
       </Link>
 
@@ -97,7 +97,7 @@ function Sidebar({ email, onNav }: { email?: string; onNav?: () => void }) {
                   aria-current={active ? "page" : undefined}
                   className={`group rounded-xl px-3 py-2 transition-all duration-150 focus-visible:shadow-ring-brand ${
                     active
-                      ? "bg-brand text-white shadow-sm"
+                      ? "bg-brand-gradient text-white shadow-glow"
                       : "text-ink hover:bg-white hover:shadow-sm"
                   }`}>
                   <div className="flex items-center gap-2.5">
@@ -139,8 +139,8 @@ export default function AppShell({ children, email }: { children: React.ReactNod
         {/* Mobile top bar */}
         <div className="flex items-center justify-between border-b border-border-subtle bg-white px-4 py-3 md:hidden print:hidden">
           <span className="flex items-center gap-2 font-extrabold text-ink">
-            <span className="inline-block h-6 w-6 rounded-lg bg-gradient-to-br from-brand to-teal shadow-sm" aria-hidden />
-            AdPilot OS
+            <span className="inline-block h-6 w-6 rounded-lg bg-brand-gradient shadow-glow" aria-hidden />
+            <span className="text-gradient">AdPilot OS</span>
           </span>
           <button
             onClick={() => setOpen(!open)}
@@ -153,7 +153,7 @@ export default function AppShell({ children, email }: { children: React.ReactNod
 
         {/* Sidebar */}
         <aside
-          className={`${open ? "block" : "hidden"} border-r border-border-subtle bg-[#eef2f8] md:block print:hidden`}
+          className={`${open ? "block" : "hidden"} border-r border-border-subtle bg-[#f5efe8] md:block print:hidden`}
           aria-label="Sidebar">
           <div className="md:sticky md:top-0 md:h-screen">
             <Sidebar email={email} onNav={() => setOpen(false)} />

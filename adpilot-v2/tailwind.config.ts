@@ -15,12 +15,9 @@ const config: Config = {
           600: "#ea4a27",
           700: "#c2391c",
         },
-        // Amber/gold accent — pairs with coral for the signature warm gradient.
-        amber: {
-          DEFAULT: "#ffb224",
-          50:  "#fff8ea",
-          100: "#ffedc7",
-        },
+        // Amber/gold accent for the signature warm gradient lives on the `teal` token
+        // below (kept that name so existing gradient/accent classes warm up). Tailwind's
+        // built-in `amber` scale is left intact for incidental UI (e.g. the safety notice).
         navy: "#211a2e",      // warm dark (was cool navy)
         command: "#161221",   // warm near-black for the Command Center
         // `teal` retained as a token name but recoloured to the warm amber accent,
