@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cronAuthorized } from "@/lib/cron-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { publishPost } from "@/lib/publish/providers";
 import { can, normalisePlan } from "@/lib/entitlements";
@@ -12,7 +13,7 @@ export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
   if (!secret) return NextResponse.json({ error: "Cron not configured (set CRON_SECRET)." }, { status: 503 });
   const url = new URL(req.url);
-  const ok = req.headers.get("authorization") === `Bearer ${secret}` || url.searchParams.get("key") === secret;
+  const ok = cronAuthorized(req, secret);
   if (!ok) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const admin = createAdminClient();

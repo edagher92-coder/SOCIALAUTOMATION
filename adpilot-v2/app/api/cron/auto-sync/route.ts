@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cronAuthorized } from "@/lib/cron-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { syncOrgPlatform, type Platform } from "@/lib/sync/pull";
 import { scoreAndAlertOrg } from "@/lib/cron/score";
@@ -18,7 +19,7 @@ export async function GET(req: Request) {
   // Fail closed: never run an unauthenticated sweep.
   if (!secret) return NextResponse.json({ error: "Cron not configured (set CRON_SECRET)." }, { status: 503 });
   const url = new URL(req.url);
-  const ok = req.headers.get("authorization") === `Bearer ${secret}` || url.searchParams.get("key") === secret;
+  const ok = cronAuthorized(req, secret);
   if (!ok) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const admin = createAdminClient();
@@ -57,7 +58,16 @@ export async function GET(req: Request) {
     for (const p of PLATFORMS) {
       if (!connected.has(p)) continue;
       try { pulled += await syncOrgPlatform(admin, org.id, p); didSync = true; }
-      catch { /* token/account issue on this platform — skip, others still run */ }
+      catch (e: any) {
+        // On an auth/token failure, mark the account disconnected so the UI can prompt a
+        // reconnect instead of silently failing forever. Transient errors are just skipped.
+        const m = String(e?.message || "").toLowerCase();
+        if (/\b(401|190|token|expired|oauth|unauthor)/.test(m)) {
+          await admin.from("connected_ad_accounts").update({ status: "disconnected" })
+            .eq("organisation_id", org.id).eq("platform", p);
+        }
+        /* others still run */
+      }
     }
 
     if (didSync) {

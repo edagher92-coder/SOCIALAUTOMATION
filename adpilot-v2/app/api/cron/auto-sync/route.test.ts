@@ -33,7 +33,12 @@ function makeAdmin() {
         select() { return api; },
         eq(col: string, val: any) { filters[col] = val; return api; },
         update(values: any) {
-          return { eq: (_c: string, id: any) => { updates.push({ table, values, id }); return Promise.resolve({ error: null }); } };
+          // chainable .eq() (Supabase supports .eq().eq()…), awaitable; records once on resolve
+          const u: any = {
+            eq(c: string, v: any) { filters[c] = v; return u; },
+            then(resolve: any, reject: any) { updates.push({ table, values, id: filters.id }); return Promise.resolve({ error: null }).then(resolve, reject); },
+          };
+          return u;
         },
         then(resolve: any, reject: any) {
           // resolve a select chain with the configured rows for the table
