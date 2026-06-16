@@ -42,3 +42,13 @@ collected in V6-MASTER-PLAN.md → "Owner decision queue" and surfaced just befo
   files (score.ts, cron, engine) are done on-branch, not via worktree, to avoid clobbering.
 - NEXT in P1: trend data model (index health_scores for time-series; add account_daily_metrics) +
   the missing indexes the architecture stream flagged (migration 0021).
+- ✅ DONE — trend data foundation: migration `0021_trend_data` (health_scores time-series index +
+  `account_daily_metrics` rollup, RLS-read/service-write) + score.ts upserts the daily rollup
+  (additive, best-effort). 432 tests green.
+
+## 2026-06-16 — Phase 1 (Foundations) COMPLETE
+- Shipped: cron fan-out fix (no more silent truncation) + trend data model/indexes + daily rollup.
+- Telemetry partially delivered (cron now returns deferred/truncated/durationMs). Deferred to a
+  later pass (non-blocking): a hard vitest coverage-threshold gate (risks CI friction now) and the
+  full Sentry/queue (QStash/Inngest) — scheduled for when org volume grows.
+- All P1 work on-branch (PR #22), green, pushed. NEXT: **Phase 2 — Dual-mode UX** (owner's #1 ask).
