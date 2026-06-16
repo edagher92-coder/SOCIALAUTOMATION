@@ -21,7 +21,8 @@ function kindFromPeriod(period?: string): ReportKind {
 const f2 = (v: number | null) => (v == null ? "N/A" : (Math.round(v * 100) / 100).toLocaleString());
 const BANDC: Record<string, string> = { Green: "#16a34a", Yellow: "#ca8a04", Orange: "#ea580c", Red: "#dc2626" };
 
-export default async function ReportDetail({ params }: { params: { id: string } }) {
+export default async function ReportDetail(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const supabase = createClient();
   const { data: report } = await supabase.from("reports").select("title,period,payload,created_at,organisation_id").eq("id", params.id).maybeSingle();
   if (!report) notFound();

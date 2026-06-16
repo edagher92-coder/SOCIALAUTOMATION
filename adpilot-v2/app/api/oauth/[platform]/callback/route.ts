@@ -9,7 +9,8 @@ import { syncOrgPlatform } from "@/lib/sync/pull";
 
 export const runtime = "nodejs";
 
-export async function GET(req: Request, { params }: { params: { platform: string } }) {
+export async function GET(req: Request, props: { params: Promise<{ platform: string }> }) {
+  const params = await props.params;
   const url = new URL(req.url);
   const redirect = (q: string) => NextResponse.redirect(new URL(`/connect?${q}`, req.url));
 
@@ -22,7 +23,7 @@ export async function GET(req: Request, { params }: { params: { platform: string
 
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
-  const cookieState = cookies().get("oauth_state")?.value;
+  const cookieState = (await cookies()).get("oauth_state")?.value;
   if (!code) return redirect(`error=${platform}_no_code`);
   if (!state || state !== cookieState) return redirect(`error=${platform}_bad_state`);
   // Bind the flow to the signed-in user: the state encodes the user id; reject a mismatch so a

@@ -6,7 +6,8 @@ import TokenConnect from "@/components/TokenConnect";
 
 export const dynamic = "force-dynamic";
 
-export default async function Connect({ searchParams }: { searchParams: { connected?: string; error?: string } }) {
+export default async function Connect(props: { searchParams: Promise<{ connected?: string; error?: string }> }) {
+  const searchParams = await props.searchParams;
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const orgId = user ? await getActiveOrgId(user.id, user.email ?? undefined) : "";

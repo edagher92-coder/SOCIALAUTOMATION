@@ -50,7 +50,7 @@ function patch(body: any) {
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
   });
-  return PATCH(req, { params: { id: "post-1" } });
+  return PATCH(req, { params: Promise.resolve({ id: "post-1" }) });
 }
 
 beforeEach(() => {

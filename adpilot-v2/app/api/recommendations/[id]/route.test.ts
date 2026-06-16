@@ -56,28 +56,28 @@ describe("PATCH /api/recommendations/[id]", () => {
 
   it("rejects an unauthenticated request with 401", async () => {
     mockUser = null;
-    const res = await PATCH(req({ status: "approved" }), { params: { id: "rec-1" } });
+    const res = await PATCH(req({ status: "approved" }), { params: Promise.resolve({ id: "rec-1" }) });
     expect(res.status).toBe(401);
   });
 
   it("rejects a missing id with 400", async () => {
-    const res = await PATCH(req({ status: "approved" }), { params: { id: "  " } });
+    const res = await PATCH(req({ status: "approved" }), { params: Promise.resolve({ id: "  " }) });
     expect(res.status).toBe(400);
   });
 
   it("rejects an invalid status with 400", async () => {
-    const res = await PATCH(req({ status: "banana" }), { params: { id: "rec-1" } });
+    const res = await PATCH(req({ status: "banana" }), { params: Promise.resolve({ id: "rec-1" }) });
     expect(res.status).toBe(400);
     expect(adminHandle.calls.update).toBeNull(); // never reached the DB
   });
 
   it("rejects a non-JSON body with 400", async () => {
-    const res = await PATCH(req(undefined), { params: { id: "rec-1" } });
+    const res = await PATCH(req(undefined), { params: Promise.resolve({ id: "rec-1" }) });
     expect(res.status).toBe(400);
   });
 
   it("updates the status and scopes the query to id + active org", async () => {
-    const res = await PATCH(req({ status: "approved" }), { params: { id: "rec-1" } });
+    const res = await PATCH(req({ status: "approved" }), { params: Promise.resolve({ id: "rec-1" }) });
     const json = await res.json();
     expect(res.status).toBe(200);
     expect(json).toEqual({ ok: true, id: "rec-1", status: "approved" });
@@ -90,20 +90,20 @@ describe("PATCH /api/recommendations/[id]", () => {
 
   it("returns 404 when no row matches the id within the active org", async () => {
     adminHandle = makeAdmin({ data: null, error: null });
-    const res = await PATCH(req({ status: "dismissed" }), { params: { id: "rec-x" } });
+    const res = await PATCH(req({ status: "dismissed" }), { params: Promise.resolve({ id: "rec-x" }) });
     expect(res.status).toBe(404);
   });
 
   it("maps a DB error to 502", async () => {
     adminHandle = makeAdmin({ data: null, error: { message: "boom" } });
-    const res = await PATCH(req({ status: "done" }), { params: { id: "rec-1" } });
+    const res = await PATCH(req({ status: "done" }), { params: Promise.resolve({ id: "rec-1" }) });
     expect(res.status).toBe(502);
   });
 
   it("accepts every valid lifecycle status (open/approved/dismissed/done)", async () => {
     for (const status of ["open", "approved", "dismissed", "done"]) {
       adminHandle = makeAdmin({ data: { id: "rec-1", status }, error: null });
-      const res = await PATCH(req({ status }), { params: { id: "rec-1" } });
+      const res = await PATCH(req({ status }), { params: Promise.resolve({ id: "rec-1" }) });
       expect(res.status).toBe(200);
       expect((await res.json()).status).toBe(status);
     }
@@ -111,8 +111,8 @@ describe("PATCH /api/recommendations/[id]", () => {
 
   it("is idempotent: re-PATCHing the same status still resolves 200 with that status", async () => {
     adminHandle = makeAdmin({ data: { id: "rec-1", status: "approved" }, error: null });
-    const first = await PATCH(req({ status: "approved" }), { params: { id: "rec-1" } });
-    const second = await PATCH(req({ status: "approved" }), { params: { id: "rec-1" } });
+    const first = await PATCH(req({ status: "approved" }), { params: Promise.resolve({ id: "rec-1" }) });
+    const second = await PATCH(req({ status: "approved" }), { params: Promise.resolve({ id: "rec-1" }) });
     expect(first.status).toBe(200);
     expect(second.status).toBe(200);
     expect((await second.json()).status).toBe("approved");

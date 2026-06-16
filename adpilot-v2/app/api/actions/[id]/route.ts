@@ -30,8 +30,9 @@ async function writeToken(admin: any, orgId: string, platform: string): Promise<
   try { return decrypt({ ciphertext: data.ciphertext, iv: data.iv, authTag: data.auth_tag }); } catch { return null; }
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const g = await gate(); if (g.res) return g.res;
+export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+  const g = await gate();if (g.res) return g.res;
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
@@ -78,8 +79,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  const g = await gate(); if (g.res) return g.res;
+export async function DELETE(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+  const g = await gate();if (g.res) return g.res;
   const admin = createAdminClient();
   await admin.from("ad_actions").delete().eq("id", params.id).eq("organisation_id", g.orgId!).eq("status", "proposed");
   return NextResponse.json({ ok: true });

@@ -8,7 +8,8 @@ import { can } from "@/lib/entitlements";
 export const runtime = "nodejs";
 
 // Manual "Sync now" — same idempotent puller the auto-sync cron uses.
-export async function POST(req: Request, { params }: { params: { platform: string } }) {
+export async function POST(req: Request, props: { params: Promise<{ platform: string }> }) {
+  const params = await props.params;
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });

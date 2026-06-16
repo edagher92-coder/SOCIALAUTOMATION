@@ -40,7 +40,7 @@ export async function getActiveOrgId(userId: string, email?: string): Promise<st
   const { data: mems } = await admin.from("memberships").select("organisation_id").eq("user_id", userId);
   const ids = (mems || []).map((m: any) => m.organisation_id as string);
   if (ids.length === 0) return ensureOrg(userId, email);
-  const want = cookies().get("active_org")?.value;
+  const want = (await cookies()).get("active_org")?.value;
   return want && ids.includes(want) ? want : ids[0];
 }
 
@@ -50,7 +50,7 @@ export async function listOrgs(userId: string): Promise<{ orgs: { id: string; na
   const { data } = await admin
     .from("memberships").select("role, organisation_id, organisations(name)").eq("user_id", userId);
   const orgs = (data || []).map((m: any) => ({ id: m.organisation_id, name: m.organisations?.name || "Workspace", role: m.role }));
-  const want = cookies().get("active_org")?.value;
+  const want = (await cookies()).get("active_org")?.value;
   const activeId = orgs.find((o) => o.id === want)?.id || orgs[0]?.id || "";
   return { orgs, activeId };
 }
