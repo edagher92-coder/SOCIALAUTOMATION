@@ -1,11 +1,26 @@
 "use client";
 import { useState } from "react";
+import { PLANS, planPriceLabel } from "@/lib/plans";
+import { FEATURE_LABEL } from "@/lib/entitlements";
 
-const TIERS = [
-  { plan: "Starter", price: process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER, blurb: "DIY: dashboard, CSV import, audits, saved reports.", features: [] as string[] },
-  { plan: "Pro", price: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO, blurb: "Everything + live API connect, automated sync & alerts, AI team.", features: ["API / dev-link connect", "Automated sync (hourly–weekly)", "AI specialist team"] },
-  { plan: "Expert", price: process.env.NEXT_PUBLIC_STRIPE_PRICE_EXPERT, blurb: "All of Pro + white-label and the team-built expert plugins.", features: ["Everything in Pro", "White-label reports", "Expert plugins (team-built)"] },
-];
+// Stripe price ids must be referenced statically (Next inlines NEXT_PUBLIC_* at build time;
+// a dynamic process.env[key] would not be replaced in the client bundle).
+const PRICE: Record<string, string | undefined> = {
+  starter: process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER,
+  pro: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO,
+  expert: process.env.NEXT_PUBLIC_STRIPE_PRICE_EXPERT,
+};
+
+// Paid tiers, copy + features + price label all from the single PLANS source of truth.
+const TIERS = PLANS.filter((p) => p.id !== "free").map((p) => ({
+  plan: p.label,
+  id: p.id,
+  price: PRICE[p.id],
+  priceLabel: planPriceLabel(p),
+  blurb: p.blurb,
+  popular: !!p.mostPopular,
+  features: p.headlineFeatures.map((f) => FEATURE_LABEL[f]),
+}));
 
 export default function UpgradeButtons() {
   const [busy, setBusy] = useState("");
@@ -25,10 +40,11 @@ export default function UpgradeButtons() {
   return (
     <div>
       <div className="grid gap-4 sm:grid-cols-3">
-        {TIERS.map((t, i) => (
-          <div key={t.plan} className={`relative flex flex-col rounded-2xl border bg-white p-5 shadow-card ${i === 1 ? "border-brand ring-1 ring-brand/30" : "border-[#e3e8ef]"}`}>
-            {i === 1 && <span className="absolute -top-2 right-4 rounded-full bg-brand px-2 py-0.5 text-[11px] font-bold text-white">Most popular</span>}
+        {TIERS.map((t) => (
+          <div key={t.plan} className={`relative flex flex-col rounded-2xl border bg-white p-5 shadow-card ${t.popular ? "border-brand ring-1 ring-brand/30" : "border-[#e3e8ef]"}`}>
+            {t.popular && <span className="absolute -top-2 right-4 rounded-full bg-brand px-2 py-0.5 text-[11px] font-bold text-white">Most popular</span>}
             <h3 className="text-lg font-bold">{t.plan}</h3>
+            <p className="text-sm font-semibold text-brand">{t.priceLabel}</p>
             <p className="mb-3 mt-1 text-sm text-muted">{t.blurb}</p>
             {t.features.length > 0 && (
               <ul className="mb-4 space-y-1 text-sm text-ink">

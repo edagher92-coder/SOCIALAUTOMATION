@@ -13,7 +13,7 @@ import "server-only";
 // A pack may only ADD grounding (tightening the guardrails); it never loosens them.
 
 export type ContextPack = {
-  id: string; // e.g. "snowflow" | "profit-minute-au"
+  id: string; // a private business pack id, e.g. "client-a" | "acme-co"
   shared?: string; // grounding appended to EVERY specialist when active
   agents?: Record<string, string>; // per-agent extra grounding (agent id -> text)
 };

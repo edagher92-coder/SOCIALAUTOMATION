@@ -1,8 +1,8 @@
 {
-  "name": "adpilot-os-v2",
-  "version": "2.0.0",
+  "name": "adpilot-os",
+  "version": "4.0.0",
   "private": true,
-  "description": "AdPilot OS V2 — Meta & TikTok ads health SaaS (Next.js + Supabase + Stripe).",
+  "description": "AdPilot OS V4 — Meta & TikTok ads health SaaS (Next.js + Supabase + Stripe).",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
