@@ -74,12 +74,13 @@ function gauge(cx, cy, R, frac, dark) {
     const fs = s, fe = Math.min(e, frac); if (fe <= fs) continue;
     ctx.strokeStyle = col; ctx.beginPath(); ctx.arc(cx, cy, R, lerp(a0, a1, fs) + 0.015, lerp(a0, a1, fe) - 0.015); ctx.stroke();
   }
-  // needle
+  // tip marker on the arc (no center needle, so the score number stays clear)
   const ang = lerp(a0, a1, frac);
-  ctx.save(); ctx.translate(cx, cy); ctx.rotate(ang); ctx.fillStyle = dark ? C.white : C.ink;
-  ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(0, -9); ctx.lineTo(R - 36, 0); ctx.lineTo(0, 9); ctx.closePath(); ctx.fill(); ctx.restore();
-  ctx.fillStyle = dark ? C.white : C.ink; ctx.beginPath(); ctx.arc(cx, cy, 24, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = dark ? C.command : C.surface; ctx.beginPath(); ctx.arc(cx, cy, 9, 0, Math.PI * 2); ctx.fill();
+  const tx = cx + Math.cos(ang) * R, ty = cy + Math.sin(ang) * R;
+  ctx.save(); shadow(dark ? "rgba(0,0,0,0.45)" : "rgba(28,23,38,0.22)", 16, 0, 2);
+  ctx.fillStyle = dark ? C.white : C.ink; ctx.beginPath(); ctx.arc(tx, ty, 32, 0, Math.PI * 2); ctx.fill(); noShadow();
+  ctx.fillStyle = bandColor(Math.round(frac * 100)); ctx.beginPath(); ctx.arc(tx, ty, 17, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
 }
 function bandColor(score) { return score < 40 ? C.red : score < 60 ? C.orange : score < 80 ? C.yellow : C.green; }
 function bandLabel(score) { return score < 40 ? "CRITICAL" : score < 60 ? "AT RISK" : score < 80 ? "WATCH" : "HEALTHY"; }
