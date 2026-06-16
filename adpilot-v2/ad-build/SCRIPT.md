@@ -7,7 +7,8 @@ All claims are drawn from the real product (read-only audits, 0–100 Health Sco
 ## Build
 ```bash
 cd ad-build
-npm install                 # @napi-rs/canvas + ffmpeg-static + fonts
+npm install                 # @napi-rs/canvas + ffmpeg-static
+./fetch-fonts.sh            # OFL display fonts (Anton, Montserrat) -> fonts/
 node render.js preview      # one frame per scene -> preview/
 node render.js all          # all 1230 frames -> frames/
 node_modules/ffmpeg-static/ffmpeg -y -framerate 30 -i frames/f%05d.png \
