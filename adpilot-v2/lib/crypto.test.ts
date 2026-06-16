@@ -26,8 +26,10 @@ describe("parseKey — tolerant 32-byte key parsing", () => {
   });
 
   it("repairs a '+' that was turned into a space by URL-decoding", () => {
-    // Only meaningful when the key actually contains a '+'.
-    const withPlus = (() => { let b: Buffer; do { b = randomBytes(32); } while (!b.toString("base64").includes("+")); return b; })();
+    // Deterministic: first byte 0xFB makes the base64 START with '+', exercising the
+    // edge case where the '+'-turned-space sits at the very start (naive trimming dropped it).
+    const withPlus = Buffer.from(Array.from({ length: 32 }, (_, i) => (i === 0 ? 0xfb : (i * 37 + 11) & 0xff)));
+    expect(withPlus.toString("base64").startsWith("+")).toBe(true);
     const mangled = withPlus.toString("base64").replace(/\+/g, " ");
     expect(parseKey(mangled).equals(withPlus)).toBe(true);
   });
