@@ -9,10 +9,12 @@ import { getAgent } from "@/lib/agents/registry";
 import { knowledgeForAgent } from "@/lib/agents/knowledge";
 import { contextPackGrounding } from "@/lib/agents/context-pack";
 import { buildGrounding } from "@/lib/agents/grounding";
+import { buildRileyReportInstruction } from "@/lib/reports/format";
+import { isReportKind } from "@/lib/reports/templates";
 
 export const runtime = "nodejs";
 
-const Body = z.object({ agentId: z.string().min(1), question: z.string().max(2000).optional() });
+const Body = z.object({ agentId: z.string().min(1), question: z.string().max(2000).optional(), kind: z.string().optional() });
 
 export async function POST(req: Request) {
   const supabase = createClient();
@@ -46,7 +48,12 @@ export async function POST(req: Request) {
   // Private business context-pack grounding (env-gated; "" in the sellable default build).
   const pack = contextPackGrounding(agent.id);
   const q = parsed.data.question?.trim();
-  const userMsg = `${kb ? `REFERENCE KNOWLEDGE (current best practice — guidance, not guarantees; cite ranges, not false precision):\n${kb}\n\n` : ""}${pack ? `ACTIVE BUSINESS CONTEXT (private — honour these rules; they tighten the guardrails, never loosen them):\n${pack}\n\n` : ""}${grounding}\n\n${q ? `The user asks: ${q}` : "Give your top findings and safe, prioritised proposals for this account right now."}`;
+  // Riley report path: when a report kind is requested, append the prose-only contract.
+  const kind = parsed.data.kind;
+  const reportInstruction = agent.id === "riley" && isReportKind(kind)
+    ? `\n\n${buildRileyReportInstruction(payload, { kind, periodLabel: "the latest period" })}`
+    : "";
+  const userMsg = `${kb ? `REFERENCE KNOWLEDGE (current best practice — guidance, not guarantees; cite ranges, not false precision):\n${kb}\n\n` : ""}${pack ? `ACTIVE BUSINESS CONTEXT (private — honour these rules; they tighten the guardrails, never loosen them):\n${pack}\n\n` : ""}${grounding}\n\n${q ? `The user asks: ${q}` : "Give your top findings and safe, prioritised proposals for this account right now."}${reportInstruction}`;
 
   try {
     const text = await callClaude({ system: agent.system, user: userMsg, maxTokens: 1200 });

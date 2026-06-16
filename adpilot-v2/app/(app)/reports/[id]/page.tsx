@@ -3,8 +3,21 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import PrintButton from "@/components/PrintButton";
 import PageHeader from "@/components/PageHeader";
+import { buildReportMarkdown } from "@/lib/reports/format";
+import { isReportKind, type ReportKind } from "@/lib/reports/templates";
 
 export const dynamic = "force-dynamic";
+
+// Pick a report kind from the saved period label (defaults to weekly).
+function kindFromPeriod(period?: string): ReportKind {
+  const p = (period || "").toLowerCase();
+  if (isReportKind(p)) return p as ReportKind;
+  if (p.includes("month")) return "monthly";
+  if (p.includes("day") || p.includes("daily")) return "daily";
+  if (p.includes("tiktok")) return "audit-tiktok";
+  if (p.includes("audit")) return "audit-meta";
+  return "weekly";
+}
 const f2 = (v: number | null) => (v == null ? "N/A" : (Math.round(v * 100) / 100).toLocaleString());
 const BANDC: Record<string, string> = { Green: "#16a34a", Yellow: "#ca8a04", Orange: "#ea580c", Red: "#dc2626" };
 
@@ -60,6 +73,14 @@ export default async function ReportDetail({ params }: { params: { id: string } 
         <div className="mt-4 rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
           <h3 className="mb-2 font-bold">Proposals</h3>
           <ul className="space-y-1 text-sm">{p.decisions.map((d: any, i: number) => <li key={i}><b className="capitalize">{d.verdict}</b> — {d.name}: {d.proposal}</li>)}</ul>
+        </div>
+      )}
+
+      {p?.summary && (
+        <div className="mt-4 rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
+          <h3 className="mb-2 font-bold">Formatted report</h3>
+          <p className="mb-2 text-xs text-muted print:hidden">Template-faithful, client-ready. Numbers are read straight from the saved analysis — print to PDF above.</p>
+          <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg bg-surface p-3 text-xs leading-relaxed">{buildReportMarkdown(p, { kind: kindFromPeriod((report as any).period), periodLabel: (report as any).period || "Latest period", whiteLabel: wl ? { name: (wl as any).brand_name } : null })}</pre>
         </div>
       )}
     </div>
