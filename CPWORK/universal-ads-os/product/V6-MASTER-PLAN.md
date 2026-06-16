@@ -41,8 +41,26 @@ Expanded team (each specialist paired with an industry-expert lens), full autono
 8. Architecture, scale & QA (support V6 without regressions).
 Then **management (PMs)** converge the streams into the V6 phase roadmap below.
 
-## Phase roadmap (to be filled after Phase 0 converges)
-_TBD — populated from the council synthesis._
+## Phase roadmap (converged 2026-06-16 — full detail in `V6-PHASE-ROADMAP.md`)
+1. **P1 Foundations** — cron fan-out fix (parallelise + time-budget guard; stop the silent
+   truncation), trend tables (`health_score_snapshots` + `account_daily_metrics`, migration 0021),
+   telemetry, indexes, coverage gate. _Unblocks everything downstream._ ← **building first**
+2. **P2 Dual-mode UX** — mode+plan-aware nav (5 Simple / ~12 Advanced), 10-second Simple Home,
+   shared primitives + `<ModeAware>`, live "wasted-spend found". _(owner's #1 ask)_
+3. **P3 Diagnostics** — `timeseries.ts` + `stats.ts`, significance-gated kill/scale, predictive
+   creative fatigue (2–3 day lead), hook/hold decomposition, platform-vs-CRM gap; split
+   `break_even_cpa`→`break_even_cpl` + CTR÷100 guard.
+4. **P4 AI** — eval harness FIRST, then Command-Centre orchestration (Paige-gated), engine tool-use,
+   structured grounding, model routing + prompt caching.
+5. **P5 Automation** — configurable rules engine (rolling-baseline fixes false-CRITICAL),
+   multi-channel delivery, two-way integrations, canonical LQS.
+6. **P6 Creative/CRO** — activate offer/landing factors, Creative Scorecard, angle-aware
+   generation, "what-to-test" recommender, benchmark percentiles.
+7. **P7 Monetisation** — reverse-trial + annual, usage metering, deep white-label, add-ons,
+   marketplace/partner program.
+
+Cross-cutting (resolved): migrations number from **0021** (0012–0015 intentional gap); LQS canonical
+= outcome table; eval harness ships before the AI it protects; trend data model in P1.
 
 ## Owner decision queue (collected; surfaced just before upload)
 - Pricing/costings (AUD numbers per tier; any new paid features' prices).
