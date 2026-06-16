@@ -27,7 +27,8 @@ export default async function Connect({ searchParams }: { searchParams: { connec
       {msg && <div className="mb-4 rounded-xl border border-border-subtle bg-white p-3 text-sm shadow-card">{msg}</div>}
       {accounts?.some((a: any) => a.status === "disconnected" || a.status === "error") && (
         <div className="mb-4 rounded-xl border border-band-red/30 bg-band-red/5 p-3 text-sm font-semibold text-band-red">
-          ⚠ One or more accounts need reconnecting — AdPilot can&apos;t pull fresh data until you do, so your scores may be stale.
+          ⚠ One or more accounts need reconnecting — AdPilot can&apos;t pull fresh data until you do, so your scores may be stale.{" "}
+          <a href="#token-help" className="underline">How to get a token that won&apos;t expire →</a>
         </div>
       )}
 
@@ -90,7 +91,41 @@ export default async function Connect({ searchParams }: { searchParams: { connec
           })}
         </div>
       )}
-      <p className="mt-3 text-xs text-muted">Tokens are encrypted at rest (AES-256-GCM) and never sent to the browser. OAuth requires the platform app credentials to be set on the server.</p>
+      <details id="token-help" className="mt-6 scroll-mt-24 rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+        <summary className="cursor-pointer list-none font-bold">
+          🔑 Token expired? Get a Meta token that <span className="text-brand">won&apos;t expire</span>
+          <span className="ml-2 text-xs font-normal text-muted">(tap to open)</span>
+        </summary>
+        <div className="mt-3 space-y-3 text-sm text-muted">
+          <p>
+            Tokens you copy from the Graph API <b>Explorer</b> are short-lived — they expire after
+            ~1–2 hours, which is why sync starts failing. For a connection that keeps running, use a
+            Meta <b>System User</b> token: it can be set to <b>never</b> expire.
+          </p>
+          <ol className="list-decimal space-y-1.5 pl-5">
+            <li>
+              Open{" "}
+              <a className="font-semibold text-brand underline" href="https://business.facebook.com/settings/system-users" target="_blank" rel="noopener noreferrer">
+                Business Settings → Users → System Users
+              </a>{" "}
+              and click <b>Add</b> to create one (any name; <b>Admin</b> role is simplest).
+            </li>
+            <li>Select the system user → <b>Assign assets</b> → add your <b>Ad Accounts</b> with full control.</li>
+            <li>
+              Click <b>Generate new token</b>, pick your Meta app, set <b>Token expiration</b> to{" "}
+              <b>Never</b>, and tick the scopes <code className="rounded bg-surface px-1">ads_read</code> and{" "}
+              <code className="rounded bg-surface px-1">read_insights</code> (read-only — no write access).
+            </li>
+            <li>Copy the generated token, paste it into <b>Paste an access token</b> above, and click <b>Connect &amp; sync</b>.</li>
+            <li>Leave <b>Account ID</b> blank — AdPilot detects your ad accounts automatically.</li>
+          </ol>
+          <p className="text-xs">
+            Tip: if you have a duplicate account still showing <span className="font-semibold text-band-red">Reconnect needed</span> after this, remove it — the
+            non-expiring connection replaces it. Tokens are encrypted at rest (AES-256-GCM) and never sent back to the browser.
+          </p>
+        </div>
+      </details>
+      <p className="mt-3 text-xs text-muted">OAuth requires the platform app credentials to be set on the server.</p>
     </div>
   );
 }
