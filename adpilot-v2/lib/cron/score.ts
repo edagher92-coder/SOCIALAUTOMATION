@@ -50,6 +50,18 @@ export async function scoreAndAlertOrg(
   await admin.from("health_scores").insert({ organisation_id: org.id, scope: "account", total: result.health.total, band: result.health.band, breakdown: result.health.breakdown });
   await admin.from("reports").insert({ organisation_id: org.id, title: `Scheduled — health ${Math.round(result.health.total)}`, period: new Date().toISOString().slice(0, 10), payload: result });
 
+  // V6 P1: upsert the per-day account rollup (one row per org per day) for fast trend reads.
+  // Additive + best-effort — a missing table (pre-0021) or error never blocks scoring.
+  try {
+    const s = result.summary;
+    await admin.from("account_daily_metrics").upsert({
+      organisation_id: org.id, date: new Date().toISOString().slice(0, 10),
+      spend: s.spend ?? 0, impressions: s.impressions ?? 0, clicks: s.clicks ?? 0,
+      leads: s.leads ?? 0, purchases: s.purchases ?? 0, revenue: s.revenue ?? 0,
+      health_total: result.health.total, health_band: result.health.band,
+    }, { onConflict: "organisation_id,date" });
+  } catch { /* trend rollup is best-effort */ }
+
   // Refresh the open Proposals queue from this analysis (actionable verdicts only, deduped).
   // Approved/dismissed/done history is preserved — we only replace the 'open' set.
   // Platform-aware dedupe + insert-then-clear safety live in the shared helper so the
