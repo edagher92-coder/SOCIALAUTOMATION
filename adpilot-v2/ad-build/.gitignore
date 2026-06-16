@@ -1,6 +1,9 @@
 node_modules/
 frames/
+frames-v3/
 preview/
+preview-v3/
 fonts/
 frame.png
+frame-v3.png
 package-lock.json
