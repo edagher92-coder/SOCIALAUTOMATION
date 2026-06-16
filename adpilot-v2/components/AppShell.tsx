@@ -4,8 +4,12 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ModeProvider, useMode } from "./mode";
 import OrgSwitcher from "./OrgSwitcher";
+import { can, type Feature, type Plan } from "@/lib/entitlements";
 
-const NAV_GROUPS: { title: string | null; items: { href: string; label: string; icon: string; desc: string }[] }[] = [
+// V6 P2 dual-mode nav. `advanced` items show only in Advanced mode; `feature` items show only
+// when the plan unlocks them — so Simple stays a calm ~6-item view and locked clutter disappears.
+type NavItem = { href: string; label: string; icon: string; desc: string; advanced?: boolean; feature?: Feature };
+const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
   { title: null, items: [
     { href: "/command", label: "Command Center", icon: "🛰️", desc: "Your live ads control room" },
   ] },
@@ -13,30 +17,30 @@ const NAV_GROUPS: { title: string | null; items: { href: string; label: string; 
     { href: "/proposals", label: "Proposals", icon: "✅", desc: "Approve safe, prioritised fixes" },
     { href: "/dashboard", label: "Ads Health", icon: "📊", desc: "Score a CSV export" },
     { href: "/connect", label: "Connect & Sync", icon: "🔗", desc: "Meta & TikTok + auto-sync" },
-    { href: "/utm-builder", label: "UTM Builder", icon: "🏷️", desc: "Consistent names & tagged URLs" },
-    { href: "/content", label: "Content Studio", icon: "🎬", desc: "Create, schedule & publish posts" },
-    { href: "/messenger", label: "Messenger Setup", icon: "💬", desc: "Greeting, ice breakers & menu" },
-    { href: "/actions", label: "Ad Actions", icon: "🛠️", desc: "Guarded live changes (Expert)" },
-    { href: "/reports", label: "Reports", icon: "🗃️", desc: "Your analysis history" },
+    { href: "/reports", label: "Reports", icon: "🗃️", desc: "Your analysis history", feature: "reports" },
+    { href: "/utm-builder", label: "UTM Builder", icon: "🏷️", desc: "Consistent names & tagged URLs", advanced: true },
+    { href: "/content", label: "Content Studio", icon: "🎬", desc: "Create, schedule & publish posts", advanced: true, feature: "content_publish" },
+    { href: "/messenger", label: "Messenger Setup", icon: "💬", desc: "Greeting, ice breakers & menu", advanced: true, feature: "messenger_automation" },
+    { href: "/actions", label: "Ad Actions", icon: "🛠️", desc: "Guarded live changes (Expert)", advanced: true, feature: "ad_write" },
   ] },
   { title: "AI Team", items: [
-    { href: "/ai-specialists", label: "AI Specialists", icon: "🧭", desc: "Agents grounded in your numbers" },
-    { href: "/policy-check", label: "Policy Check", icon: "🛡️", desc: "Paige checks copy for policy risk" },
-    { href: "/canva-creator", label: "Canva Creator", icon: "🎨", desc: "Ad creative briefs & prompts" },
-    { href: "/creative", label: "Creative Library", icon: "🖼️", desc: "Link or upload audio/video/photo" },
-    { href: "/bobby-business-assistant", label: "Bobby — Business", icon: "🤝", desc: "Plain-English business help" },
-    { href: "/aria-course-creator", label: "Aria — Courses", icon: "🎓", desc: "Turn expertise into a course" },
-    { href: "/crm-maintenance", label: "CRM Maintenance", icon: "🧹", desc: "Keep your pipeline clean" },
-    { href: "/build-dashboard", label: "Build a Dashboard", icon: "🧱", desc: "Sheets / Looker / Notion specs" },
+    { href: "/ai-specialists", label: "AI Specialists", icon: "🧭", desc: "Agents grounded in your numbers", feature: "ai_team" },
+    { href: "/policy-check", label: "Policy Check", icon: "🛡️", desc: "Paige checks copy for policy risk", advanced: true, feature: "ai_team" },
+    { href: "/canva-creator", label: "Canva Creator", icon: "🎨", desc: "Ad creative briefs & prompts", advanced: true, feature: "creative_studio" },
+    { href: "/creative", label: "Creative Library", icon: "🖼️", desc: "Link or upload audio/video/photo", advanced: true, feature: "creative_studio" },
+    { href: "/bobby-business-assistant", label: "Bobby — Business", icon: "🤝", desc: "Plain-English business help", advanced: true, feature: "ai_team" },
+    { href: "/aria-course-creator", label: "Aria — Courses", icon: "🎓", desc: "Turn expertise into a course", advanced: true, feature: "ai_team" },
+    { href: "/crm-maintenance", label: "CRM Maintenance", icon: "🧹", desc: "Keep your pipeline clean", advanced: true },
+    { href: "/build-dashboard", label: "Build a Dashboard", icon: "🧱", desc: "Sheets / Looker / Notion specs", advanced: true },
   ] },
   { title: "Account", items: [
     { href: "/billing", label: "Billing", icon: "💳", desc: "Plan & subscription" },
-    { href: "/notifications", label: "Notifications", icon: "🔔", desc: "Weekly digest & alerts" },
-    { href: "/portfolio", label: "Portfolio", icon: "🗂️", desc: "All clients, health & spend at a glance" },
-    { href: "/agency", label: "White-label", icon: "🏷️", desc: "Brand reports as your agency" },
     { href: "/settings", label: "Settings", icon: "⚙️", desc: "Economics & auto-sync" },
-    { href: "/claude-api", label: "Claude API", icon: "🔌", desc: "Connect AI generation" },
-    { href: "/manual", label: "User Manual", icon: "📖", desc: "How-to + download PDF" },
+    { href: "/portfolio", label: "Portfolio", icon: "🗂️", desc: "All clients at a glance", advanced: true, feature: "multi_client" },
+    { href: "/agency", label: "White-label", icon: "🏷️", desc: "Brand reports as your agency", advanced: true, feature: "white_label" },
+    { href: "/notifications", label: "Notifications", icon: "🔔", desc: "Weekly digest & alerts", advanced: true },
+    { href: "/claude-api", label: "Claude API", icon: "🔌", desc: "Connect AI generation", advanced: true },
+    { href: "/manual", label: "User Manual", icon: "📖", desc: "How-to + download PDF", advanced: true },
   ] },
 ];
 
@@ -66,8 +70,15 @@ function ModeToggle() {
   );
 }
 
-function Sidebar({ email, onNav }: { email?: string; onNav?: () => void }) {
+function Sidebar({ email, plan, onNav }: { email?: string; plan: Plan; onNav?: () => void }) {
   const path = usePathname();
+  const { mode } = useMode();
+  const advanced = mode === "advanced";
+  // Mode + plan filter: hide Advanced-only items in Simple, and hide anything the plan can't use.
+  const visible = (n: NavItem) => (advanced || !n.advanced) && (!n.feature || can(plan, n.feature));
+  const groups = NAV_GROUPS
+    .map((g) => ({ ...g, items: g.items.filter(visible) }))
+    .filter((g) => g.items.length > 0);
   return (
     <div className="flex h-full flex-col gap-3 p-4">
       {/* Logo */}
@@ -85,7 +96,7 @@ function Sidebar({ email, onNav }: { email?: string; onNav?: () => void }) {
 
       {/* Nav */}
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto py-1" aria-label="Main navigation">
-        {NAV_GROUPS.map((group, gi) => (
+        {groups.map((group, gi) => (
           <div key={gi} className="flex flex-col gap-0.5">
             {group.title && (
               <div className="px-3 pb-0.5 pt-2 text-2xs font-bold uppercase tracking-widest text-muted/70">{group.title}</div>
@@ -107,9 +118,11 @@ function Sidebar({ email, onNav }: { email?: string; onNav?: () => void }) {
                     <span className="text-base leading-none" aria-hidden>{n.icon}</span>
                     <span className="text-sm font-semibold">{n.label}</span>
                   </div>
-                  <div className={`pl-[1.625rem] text-2xs leading-snug ${active ? "text-white/75" : "text-muted"}`}>
-                    {n.desc}
-                  </div>
+                  {advanced && (
+                    <div className={`pl-[1.625rem] text-2xs leading-snug ${active ? "text-white/75" : "text-muted"}`}>
+                      {n.desc}
+                    </div>
+                  )}
                 </Link>
               );
             })}
@@ -134,7 +147,7 @@ function Sidebar({ email, onNav }: { email?: string; onNav?: () => void }) {
   );
 }
 
-export default function AppShell({ children, email }: { children: React.ReactNode; email?: string }) {
+export default function AppShell({ children, email, plan = "free" }: { children: React.ReactNode; email?: string; plan?: Plan }) {
   const [open, setOpen] = useState(false);
   return (
     <ModeProvider>
@@ -159,7 +172,7 @@ export default function AppShell({ children, email }: { children: React.ReactNod
           className={`${open ? "block" : "hidden"} border-r border-border-subtle bg-[#eef2f8] md:block print:hidden`}
           aria-label="Sidebar">
           <div className="md:sticky md:top-0 md:h-screen">
-            <Sidebar email={email} onNav={() => setOpen(false)} />
+            <Sidebar email={email} plan={plan} onNav={() => setOpen(false)} />
           </div>
         </aside>
 
