@@ -366,11 +366,12 @@ function s0(lt) {
   if (scrimA > 0.01) { ctx.save(); ctx.globalAlpha = scrimA; ctx.fillStyle = C.surface; ctx.fillRect(0, 0, W, H); ctx.restore(); vignette(540, 780, 720, C.coral, 0.07 * scrimA); }
   const ti = clamp(seg(lt, 0.1, 0.25)) * (1 - clamp(seg(lt, 1.55, 0.55)));
   if (ti > 0.01) {
-    ctx.save(); ctx.globalAlpha = ti; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
-    ctx.fillStyle = gradH(540 - 46, 590, 92, 92); rr(540 - 46, 590, 92, 92, 24); ctx.fill();
-    ctx.fillStyle = C.ink; ctx.font = `62px ${DISP}`; ctx.fillText("MEET", 540, 800);
-    richLine([{ t: "ADPILOT ", c: C.ink }, { t: "OS", c: C.coral }], 540, 905, `116px ${DISP}`);
-    ctx.fillStyle = C.mutedL; ctx.font = `600 36px ${UI}`; ctx.fillText("Your read-only ads co-pilot", 540, 975);
+    ctx.save(); ctx.globalAlpha = ti; ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = gradH(540 - 40, 450, 80, 80); rr(540 - 40, 450, 80, 80, 20); ctx.fill();
+    eyebrow("MEET ADPILOT OS · V3", 598, C.mutedL);
+    ctx.textAlign = "center"; ctx.fillStyle = C.ink; ctx.font = `92px ${DISP}`; ctx.fillText("IT RUNS YOUR ADS.", 540, 738);
+    richLine([{ t: "YOU RUN ", c: C.ink }, { t: "EVERYTHING.", c: C.coral }], 540, 838, `92px ${DISP}`);
+    ctx.textAlign = "center"; ctx.fillStyle = C.mutedL; ctx.font = `600 34px ${UI}`; ctx.fillText("Audits every dollar — you approve every fix.", 540, 912);
     ctx.restore();
   }
   // explainer captions once the dashboard is scrolling
