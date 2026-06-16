@@ -107,3 +107,25 @@ collected in V6-MASTER-PLAN.md → "Owner decision queue" and surfaced just befo
 - Note: repo Dependabot flagged 15 vulns (1 critical/5 high/7 moderate/2 low) at session start — this
   pass quantifies + remediates. Launched 4-expert audit fleet (cyber, privacy/breach, AI-token-cost,
   back-end-resource); read-only analysis → findings files; management converges → I execute safe wins.
+
+## 2026-06-16 — Connect/automation council DONE + hardening-pass true state (honest checkpoint)
+- Connect council (both streams in, committed): front = 4-step guided wizard, read-only-forward,
+  first-score payoff card, ModeAware Simple/Advanced; back = token-lifecycle (refresh short->long,
+  use the existing-but-unused platform_tokens.expires_at), retry/backoff fetch wrapper, incremental
+  pull window (upsert vs delete+reinsert), and HMAC-signed OAuth state (top safety hardening; state
+  is currently plaintext base64 compared with !==). Front-end clarity fix already SHIPPED (connect page).
+- CORRECTION to the privacy audit: its "PII_PEPPER P0" is a FALSE POSITIVE — lib/pii.ts already
+  fails closed in production (pepper() throws when empty; sha256Hex calls pepper(), not the raw
+  default). Verified in code. NO change made. (Verify findings before acting.)
+- Also: earlier in-chat I misstated that a "hardening batch" was live — it was NOT; only audit
+  FINDINGS were committed. No hardening code has been executed yet. Correcting the record here.
+- Security/efficiency audits: AI-cost + privacy IN; cyber-security (the 15 Dependabot vulns + attack
+  surface) + back-end-efficiency STILL RUNNING.
+
+### Planned execution sprint (verified-safe first; each its own tested commit)
+SAFE-AUTOMATIC: sync retry/backoff wrapper (lib/sync/fetch.ts) · incremental pull window ·
+maxTokens right-size · non-breaking dependency bumps (pending cyber audit list) · connect
+read-only/auto-sync UI chips + first-score card.
+NEEDS-CARE (own commits, tested): prompt caching (claude.ts) ~25-30% token cut · HMAC-signed OAuth
+state · right-to-erasure deletion job (the REAL privacy P0) · tier feature keys + data-consent clause.
+OWNER-GATED: prices · auto-execute green-light · Meta System User token · solicitor legal text.
