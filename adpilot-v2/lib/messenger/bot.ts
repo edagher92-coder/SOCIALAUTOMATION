@@ -1,6 +1,6 @@
 import "server-only";
 import crypto from "crypto";
-import { callClaude, NoKeyError } from "@/lib/ai/claude";
+import { callClaude, NoKeyError, MODELS } from "@/lib/ai/claude";
 
 // Multi-channel Messenger/Instagram/WhatsApp bot core: signature verification, hours-aware
 // reply decisioning, and the Send APIs. Ported from the meta-messaging-bot skill's reply
@@ -106,7 +106,7 @@ export async function subscribePage(pageToken: string): Promise<any> {
 // Port of the uploaded Sam bot's "smart mode": only fires when no payload-rule and no
 // keyword matched. Answers STRICTLY from the channel's VERIFIED FACTS — no invention of
 // prices/specs/policies, never collects finance/credit details in chat. PURE + unit-testable.
-export const AI_MODEL = "claude-haiku-4-5";
+export const AI_MODEL = MODELS.light;
 
 // Build the strict, no-hallucination system prompt. `facts` is the ONLY source of truth the
 // model may answer from; `voice` is an optional brand-voice note. Returns a self-contained

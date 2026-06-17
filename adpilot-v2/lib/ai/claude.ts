@@ -8,6 +8,23 @@ export class NoKeyError extends Error {
   constructor() { super("NO_KEY"); this.name = "NoKeyError"; }
 }
 
+// Model tiers — route each task to the lightest model that does the job, to cut token
+// cost and latency on the back end without hurting quality:
+//   light    → short, templated creative / classification (Haiku: cheapest, fastest)
+//   standard → grounded reasoning over the user's live numbers (Sonnet: the default)
+//   deep     → web-research synthesis / knowledge refresh (Opus)
+export const MODELS = {
+  light: "claude-haiku-4-5",
+  standard: "claude-sonnet-4-6",
+  deep: "claude-opus-4-8",
+} as const;
+
+// Pick the model for a tier. A global ANTHROPIC_MODEL pin (operator override) always wins,
+// otherwise the per-tier default applies. Keeps light tasks cheap unless explicitly overridden.
+export function modelFor(tier: keyof typeof MODELS): string {
+  return process.env.ANTHROPIC_MODEL || MODELS[tier];
+}
+
 export async function callClaude(opts: { system?: string; user: string; model?: string; maxTokens?: number; cacheSystem?: boolean }): Promise<string> {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) throw new NoKeyError();

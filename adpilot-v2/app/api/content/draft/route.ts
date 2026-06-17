@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
 import { can } from "@/lib/entitlements";
-import { callClaude, NoKeyError } from "@/lib/ai/claude";
+import { callClaude, NoKeyError, modelFor } from "@/lib/ai/claude";
 import { getAgent } from "@/lib/agents/registry";
 
 export const runtime = "nodejs";
@@ -48,7 +48,8 @@ Topic/product: ${i.topic || "(use the business context)"}. Offer: ${i.offer || "
 Return, clearly labelled: 3 scroll-stopping hooks; a ready-to-post caption (platform-appropriate length); 8–12 relevant hashtags; and a 3–5 shot shotlist/scene plan. Compliant — no guarantees or absolute claims.`;
 
   try {
-    const text = await callClaude({ system: stella?.system, user: userMsg, maxTokens: 1100 });
+    // Organic content drafting is light, templated creative → Haiku tier.
+    const text = await callClaude({ system: stella?.system, user: userMsg, maxTokens: 1100, model: modelFor("light") });
     return NextResponse.json({ text });
   } catch (e: any) {
     if (e instanceof NoKeyError)
