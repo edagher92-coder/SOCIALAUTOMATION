@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { PLANS, planPriceLabel, planById } from "./plans";
+import { PLANS, planPriceLabel, planAnnualLabel, planById } from "./plans";
 import { can, PLAN_RANK, type Plan } from "./entitlements";
 
 // DRIFT ALARM: marketing copy (PLANS) must never advertise a feature a tier can't actually use.
@@ -17,9 +17,17 @@ describe("PLANS ↔ entitlements coherence", () => {
     }
   });
 
-  it("labels free as Free and unconfirmed paid tiers as 'See pricing' (no mismatched figure)", () => {
+  it("labels free as Free and shows the owner-confirmed AUD figures", () => {
     expect(planPriceLabel(planById("free")!)).toBe("Free");
-    expect(planPriceLabel(planById("pro")!)).toBe("See pricing");
+    expect(planPriceLabel(planById("starter")!)).toBe("$49/mo AUD");
+    expect(planPriceLabel(planById("pro")!)).toBe("$149/mo AUD");
+    expect(planPriceLabel(planById("expert")!)).toBe("$399/mo AUD");
+  });
+
+  it("annual label shows ~2-months-free savings for paid tiers, empty for Free", () => {
+    expect(planAnnualLabel(planById("free")!)).toBe("");
+    // $1,490/yr vs $149×12=$1,788 → ~17% saving.
+    expect(planAnnualLabel(planById("pro")!)).toBe("or $1,490/yr — save ~17%");
   });
 
   it("only the top tier carries the highest-ranked features", () => {

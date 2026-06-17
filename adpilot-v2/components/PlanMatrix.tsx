@@ -1,4 +1,4 @@
-import { PLANS, planPriceLabel } from "@/lib/plans";
+import { PLANS, planPriceLabel, planAnnualLabel } from "@/lib/plans";
 import { FEATURE_MIN_PLAN, FEATURE_LABEL, FEATURE_DESC, PLAN_LABEL, can, requiredPlan, type Feature } from "@/lib/entitlements";
 
 // Tier comparison matrix — the differentiation surface. Driven entirely by PLANS + entitlements,
@@ -17,6 +17,7 @@ export default function PlanMatrix() {
               <th key={p.id} className={`p-3 text-center ${p.mostPopular ? "bg-brand-50" : ""}`}>
                 <div className="font-extrabold">{p.label}</div>
                 <div className="text-xs font-semibold text-brand">{planPriceLabel(p)}</div>
+                {planAnnualLabel(p) && <div className="text-2xs text-muted">{planAnnualLabel(p)}</div>}
                 {p.mostPopular && <div className="text-2xs font-bold uppercase tracking-wide text-brand">Most popular</div>}
               </th>
             ))}
