@@ -44,7 +44,7 @@ export default function PrivacyPage() {
         </div>
         <div>
           <h2 className="text-lg font-bold text-ink">7. Use of data to improve &amp; train the system</h2>
-          <p className="text-muted">[Placeholder — solicitor to supply. Intended position: we use account and ad-performance data to operate and continually improve AdPilot, including training and evaluating our models. This uses <b>de-identified and/or aggregated</b> data only; it is never shared with or exposed to another customer (strict tenant isolation), and identifiable lead PII (which we store only as a one-way hash) is excluded from any training set. You may opt out of model-improvement use at any time without losing core functionality. See your consent record (captured at sign-up) and the erasure process above.]</p>
+          <p className="text-muted">[Placeholder — solicitor to supply. Intended position (conservative): we use account and ad-performance data to operate and continually improve AdPilot, including training and evaluating our models. Any such training or evaluation uses <b>de-identified and/or aggregated</b> data only; we do <b>not</b> use identifiable personal information — including lead data — to train our models. We treat lead identifiers (including the one-way hash we store) as <b>personal information</b> under this policy and the Australian Privacy Principles, not as de-identification, unless a documented re-identification-risk assessment establishes otherwise. Your data is never shared with or exposed to another customer (strict tenant isolation). You may opt out of de-identified model-improvement use at any time without losing core functionality. See the erasure process above.]</p>
         </div>
       </section>
     </article>

@@ -44,7 +44,7 @@ export default function TermsPage() {
         </div>
         <div>
           <h2 className="text-lg font-bold text-ink">7. Data use &amp; model improvement</h2>
-          <p className="text-muted">[Placeholder — solicitor to supply. Intended position: AdPilot may use account and ad-performance data to operate, improve, and train its models so the system becomes more accurate and efficient over time. Any training or evaluation uses <b>de-identified and/or aggregated</b> data only; your data is never exposed to another customer (strict tenant isolation), and identifiable lead PII is excluded. You may opt out of model-improvement use without losing core functionality, and erasure requests are honoured (see the Privacy Policy).]</p>
+          <p className="text-muted">[Placeholder — solicitor to supply. Intended position (conservative): AdPilot may use account and ad-performance data to operate, improve and train its models. Any model training or evaluation uses <b>de-identified and/or aggregated</b> data only — we do <b>not</b> use identifiable personal information, including lead data, to train our models. We treat lead identifiers (including any hashed values we store) as <b>personal information</b> handled under the Privacy Policy, not as de-identified data. Your data is never exposed to another customer (strict tenant isolation). You may opt out of de-identified model-improvement use without losing core functionality, and erasure requests are honoured (see the Privacy Policy).]</p>
         </div>
       </section>
     </article>
