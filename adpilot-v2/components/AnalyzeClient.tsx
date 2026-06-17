@@ -178,6 +178,12 @@ export default function AnalyzeClient() {
                     <span className="font-semibold text-ink">{Math.round(res.health.breakdown.data_confidence.score)}/100</span>
                   </p>
                 )}
+                {res.health.breakdown?.lead_quality?.score != null && (
+                  <p className="mt-0.5 text-xs text-muted">
+                    Lead quality:{" "}
+                    <span className="font-semibold text-ink">{Math.round(res.health.breakdown.lead_quality.score)}/100</span>
+                  </p>
+                )}
               </div>
             </div>
 

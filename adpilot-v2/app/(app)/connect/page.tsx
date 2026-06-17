@@ -7,6 +7,7 @@ import TokenConnect from "@/components/TokenConnect";
 import ReadOnlyBadge from "@/components/ReadOnlyBadge";
 import AutoSyncStatus from "@/components/AutoSyncStatus";
 import RunFirstAudit from "@/components/RunFirstAudit";
+import LeadAdsSync from "@/components/LeadAdsSync";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,9 @@ export default async function Connect(props: { searchParams: Promise<{ connected
   const org = orgRes.data as any;
   const cadence = cadenceText(org?.sync_interval_hours);
   const hasScore = (scoreRes.data as any)?.total != null;
+  // Lead-ads sync surfaces only for Pro+ orgs with a live Meta connection.
+  const leadLoop = can(plan, "lead_quality_loop");
+  const hasMeta = (accounts || []).some((a: any) => a.platform === "meta" && a.status !== "disconnected" && a.status !== "error");
 
   // First-score onboarding: a connected, healthy account that hasn't produced a score yet.
   const accts = (accounts || []) as any[];
@@ -146,6 +150,13 @@ export default async function Connect(props: { searchParams: Promise<{ connected
           })}
         </div>
       )}
+      {leadLoop && hasMeta && (
+        <div className="mt-7">
+          <h2 className="mb-2 text-lg font-bold">Lead Ads → lead-quality loop</h2>
+          <LeadAdsSync />
+        </div>
+      )}
+
       <details id="token-help" className="mt-6 scroll-mt-24 rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
         <summary className="cursor-pointer list-none font-bold">
           🔑 Token expired? Get a Meta token that <span className="text-brand">won&apos;t expire</span>
