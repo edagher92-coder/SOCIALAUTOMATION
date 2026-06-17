@@ -34,9 +34,18 @@ vi.mock("@/lib/sync/pull", () => ({
   syncOrgPlatform: (...a: any[]) => syncOrgPlatform(...a),
 }));
 
-import { POST } from "./route";
+import { POST, metaTokenError } from "./route";
 
 const fetchMock = vi.fn();
+
+// Meta connect now makes TWO calls: /me/permissions (scope check) then /me/adaccounts.
+// This helper wires a URL-aware fetch so tests can set each response independently.
+const PERMS_OK = { ok: true, status: 200, json: async () => ({ data: [{ permission: "ads_read", status: "granted" }, { permission: "read_insights", status: "granted" }] }) };
+function metaFetch(opts: { perms?: any; accounts?: any } = {}) {
+  const perms = opts.perms ?? PERMS_OK;
+  const accounts = opts.accounts ?? { ok: true, status: 200, json: async () => ({ data: [{ account_id: "123", name: "My Acct" }] }) };
+  return (url: string) => Promise.resolve(String(url).includes("/me/permissions") ? perms : accounts);
+}
 
 function post(body: any) {
   return new Request("https://x/api/connect/token", {
@@ -78,7 +87,7 @@ describe("entitlement gate", () => {
   });
 
   it("allows pro and expert plans through the gate", async () => {
-    fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => ({ data: [{ account_id: "123", name: "Acct" }] }) });
+    fetchMock.mockImplementation(metaFetch());
     for (const plan of ["pro", "expert"]) {
       CURRENT_PLAN = plan;
       insertedRows.length = 0;
@@ -110,7 +119,7 @@ describe("input validation", () => {
 
 describe("meta connect flow", () => {
   it("validates the token, stores it, and triggers an immediate pull", async () => {
-    fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => ({ data: [{ account_id: "123", name: "My Acct" }] }) });
+    fetchMock.mockImplementation(metaFetch());
     const r = await POST(post({ platform: "meta", token: "tok-1234567890" }));
     expect(r.status).toBe(200);
     const j = await r.json();
@@ -126,23 +135,53 @@ describe("meta connect flow", () => {
     expect(syncOrgPlatform).toHaveBeenCalledWith(expect.anything(), "org-1", "meta");
   });
 
-  it("502 with the platform's message when Meta rejects the token", async () => {
-    fetchMock.mockResolvedValue({ ok: false, status: 400, json: async () => ({ error: { message: "Invalid OAuth access token" } }) });
+  it("502 with a precise expired message when Meta rejects the token (code 190)", async () => {
+    // Rejection happens at the /me/permissions probe (the first Meta call).
+    fetchMock.mockImplementation(metaFetch({ perms: { ok: false, status: 400, json: async () => ({ error: { code: 190, error_subcode: 463, message: "Session expired" } }) } }));
     const r = await POST(post({ platform: "meta", token: "tok-1234567890" }));
     expect(r.status).toBe(502);
-    expect((await r.json()).error).toMatch(/Invalid OAuth access token/i);
+    const j = await r.json();
+    expect(j.error).toMatch(/expired/i);
+    expect(j.tokenHelp).toBe(true); // UI can deep-link the token guide
     expect(insertedRows).toHaveLength(0); // nothing stored when validation fails
   });
 
+  it("502 with a missing-scope message when read scopes aren't granted", async () => {
+    fetchMock.mockImplementation(metaFetch({ perms: { ok: true, status: 200, json: async () => ({ data: [{ permission: "email", status: "granted" }] }) } }));
+    const r = await POST(post({ platform: "meta", token: "tok-1234567890" }));
+    expect(r.status).toBe(502);
+    const j = await r.json();
+    expect(j.error).toMatch(/ads_read/i);
+    expect(j.error).toMatch(/read_insights/i);
+    expect(insertedRows).toHaveLength(0);
+    // never reached the adaccounts call once the scope check failed
+  });
+
   it("reports syncError but still 200 when the immediate pull fails", async () => {
-    fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => ({ data: [{ account_id: "123", name: "A" }] }) });
+    fetchMock.mockImplementation(metaFetch());
     syncOrgPlatform.mockRejectedValue(new Error("rate limited"));
     const r = await POST(post({ platform: "meta", token: "tok-1234567890" }));
     expect(r.status).toBe(200);
     const j = await r.json();
     expect(j.syncError).toMatch(/rate limited/i);
+    expect(j.canAudit).toBe(true); // still offer the one-click audit
     // account is still connected even though the first pull failed
     expect(insertedRows.find((x) => x.table === "connected_ad_accounts")).toBeTruthy();
+  });
+});
+
+describe("metaTokenError mapping", () => {
+  it("maps subcode 463 to an expired-token message", () => {
+    expect(metaTokenError({ error: { code: 190, error_subcode: 463 } }, 400)).toMatch(/expired/i);
+  });
+  it("maps subcode 467 to a revoked/invalidated message", () => {
+    expect(metaTokenError({ error: { code: 190, error_subcode: 467 } }, 400)).toMatch(/revoked|invalidated/i);
+  });
+  it("maps a permissions error (code 200 / HTTP 403) to a scope message", () => {
+    expect(metaTokenError({ error: { code: 200 } }, 403)).toMatch(/ads_read/i);
+  });
+  it("falls back to the platform message for unknown codes", () => {
+    expect(metaTokenError({ error: { message: "weird thing" } }, 500)).toMatch(/weird thing/i);
   });
 });
 

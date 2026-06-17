@@ -6,6 +6,7 @@ import SyncButton from "@/components/SyncButton";
 import TokenConnect from "@/components/TokenConnect";
 import ReadOnlyBadge from "@/components/ReadOnlyBadge";
 import AutoSyncStatus from "@/components/AutoSyncStatus";
+import RunFirstAudit from "@/components/RunFirstAudit";
 
 export const dynamic = "force-dynamic";
 
@@ -75,10 +76,10 @@ export default async function Connect(props: { searchParams: Promise<{ connected
           ) : (
             <>
               <div>
-                <div className="font-bold text-ink">✅ Connected — your first score is on the way</div>
-                <p className="text-sm text-muted">It appears after the next auto-sync ({cadence}). Want it now? Run one.</p>
+                <div className="font-bold text-ink">✅ Connected — run your first audit now</div>
+                <p className="text-sm text-muted">One click pulls your numbers and produces your first Campaign Health Score. (It also runs automatically every {cadence}.)</p>
               </div>
-              <SyncButton platform={firstPlatform} />
+              <RunFirstAudit />
             </>
           )}
         </div>

@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
+import RunFirstAudit from "@/components/RunFirstAudit";
 
 // Dev-link connect: paste a read-only access token to connect Meta/TikTok without OAuth
-// app review. On success the server pulls data immediately (automation-first).
+// app review. On success the server pulls data immediately (automation-first) and we offer
+// a one-click "Run my first audit" so the user reaches their Campaign Health Score right away.
 export default function TokenConnect() {
   const [platform, setPlatform] = useState<"meta" | "tiktok">("meta");
   const [token, setToken] = useState("");
@@ -11,6 +13,8 @@ export default function TokenConnect() {
   const [msg, setMsg] = useState("");
   const [ok, setOk] = useState(false);
   const [upgrade, setUpgrade] = useState(false);
+  const [tokenIssue, setTokenIssue] = useState(false);
+  const [canAudit, setCanAudit] = useState(false);
 
   const tikTokNeedsAccount = platform === "tiktok" && accountId.trim().length === 0;
   // Catch the easy mistake of typing a login email into the ad-account-id box.
@@ -19,7 +23,7 @@ export default function TokenConnect() {
 
   async function go() {
     if (!canSubmit) return;
-    setBusy(true); setMsg(""); setOk(false); setUpgrade(false);
+    setBusy(true); setMsg(""); setOk(false); setUpgrade(false); setTokenIssue(false); setCanAudit(false);
     try {
       const r = await fetch("/api/connect/token", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -28,12 +32,14 @@ export default function TokenConnect() {
       const j = await r.json().catch(() => ({}));
       if (!r.ok) {
         setUpgrade(Boolean(j.upgrade)); // 402 → show the Billing link
+        setTokenIssue(Boolean(j.tokenHelp)); // token-shaped error → deep-link the in-page guide
         setMsg(j.error || `Connect failed (HTTP ${r.status})`);
       } else {
         setOk(true);
+        setCanAudit(Boolean(j.canAudit));
         const n = j.inserted ?? 0;
         setMsg(`Connected ${j.connected} · ${j.accounts} account(s) · pulled ${n} row${n === 1 ? "" : "s"}`
-          + (j.syncError ? ` (first sync note: ${j.syncError})` : "") + ". Refresh to see it below.");
+          + (j.syncError ? ` (first sync note: ${j.syncError})` : "") + ".");
         setToken("");
       }
     } catch (e: any) { setMsg(e?.message || "Network error — check your connection and try again."); }
@@ -85,12 +91,19 @@ export default function TokenConnect() {
           <span className="text-xs text-muted">Enter the advertiser_id to enable TikTok connect.</span>
         )}
         {msg && (
-          <span className={`text-xs ${ok ? "text-green-600" : "text-red-600"}`} role="status">
+          <span className={`text-xs ${ok ? "text-green-600" : "text-red-600"}`} role="status" aria-live="polite">
             {msg}
             {upgrade && <a href="/billing" className="ml-1 font-semibold underline">Upgrade</a>}
+            {tokenIssue && !ok && <a href="#token-help" className="ml-1 font-semibold underline">How to get a non-expiring token</a>}
           </span>
         )}
       </div>
+      {ok && canAudit && (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-teal/30 bg-teal/5 p-3">
+          <span className="text-sm font-semibold text-ink">Connected — get your first Campaign Health Score now.</span>
+          <RunFirstAudit />
+        </div>
+      )}
       <p className="mt-3 text-xs text-muted">Token is encrypted (AES-256-GCM) before storage and never sent back to the browser. Read-only — we never edit, pause, or create ads.</p>
     </div>
   );
