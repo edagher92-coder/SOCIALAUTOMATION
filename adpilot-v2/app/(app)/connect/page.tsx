@@ -1,8 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
 import { can, PLAN_LABEL } from "@/lib/entitlements";
+import { cadenceText } from "@/lib/proposals";
 import SyncButton from "@/components/SyncButton";
 import TokenConnect from "@/components/TokenConnect";
+import ReadOnlyBadge from "@/components/ReadOnlyBadge";
+import AutoSyncStatus from "@/components/AutoSyncStatus";
 
 export const dynamic = "force-dynamic";
 
@@ -13,9 +16,22 @@ export default async function Connect(props: { searchParams: Promise<{ connected
   const orgId = user ? await getActiveOrgId(user.id, user.email ?? undefined) : "";
   const plan = orgId ? await planForOrg(orgId) : "free";
   const apiEnabled = can(plan, "api_connect");
-  const { data: accounts } = await supabase
-    .from("connected_ad_accounts").select("platform,display_name,external_account_id,status,created_at")
-    .eq("organisation_id", orgId).order("created_at", { ascending: false });
+
+  const [accountsRes, orgRes, scoreRes] = await Promise.all([
+    supabase.from("connected_ad_accounts").select("platform,display_name,external_account_id,status,created_at")
+      .eq("organisation_id", orgId).order("created_at", { ascending: false }),
+    supabase.from("organisations").select("last_synced_at,sync_interval_hours").eq("id", orgId).maybeSingle(),
+    supabase.from("health_scores").select("total").eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  const accounts = accountsRes.data;
+  const org = orgRes.data as any;
+  const cadence = cadenceText(org?.sync_interval_hours);
+  const hasScore = (scoreRes.data as any)?.total != null;
+
+  // First-score onboarding: a connected, healthy account that hasn't produced a score yet.
+  const accts = (accounts || []) as any[];
+  const firstHealthy = accts.find((a) => a.status !== "disconnected" && a.status !== "error");
+  const firstPlatform = firstHealthy ? (firstHealthy.platform === "tiktok" ? "tiktok" : "meta") : "meta";
 
   const msg = searchParams.connected ? `✅ Connected ${searchParams.connected}.`
     : searchParams.error ? `⚠ Couldn't connect: ${searchParams.error.replace(/_/g, " ")}` : "";
@@ -31,13 +47,40 @@ export default async function Connect(props: { searchParams: Promise<{ connected
         <div><span className="font-bold text-brand">2 · Auto-sync</span><div className="text-muted">We pull your numbers on your schedule.</div></div>
         <div><span className="font-bold text-brand">3 · Score &amp; propose</span><div className="text-muted">Health score + safe fixes. Never edits an ad.</div></div>
       </div>
-      <p className="mb-5 -mt-2 text-xs text-muted">🔒 Read-only access only · tokens encrypted at rest (AES-256-GCM) · never sent to your browser.</p>
+      <div className="mb-3 -mt-2 flex flex-wrap items-center gap-2">
+        <ReadOnlyBadge />
+        {apiEnabled && <AutoSyncStatus cadence={cadence} lastSyncedAt={org?.last_synced_at} />}
+      </div>
+      <p className="mb-5 text-xs text-muted">🔒 Tokens are encrypted at rest (AES-256-GCM) and never sent back to your browser.</p>
 
       {msg && <div className="mb-4 rounded-xl border border-border-subtle bg-white p-3 text-sm shadow-card">{msg}</div>}
       {accounts?.some((a: any) => a.status === "disconnected" || a.status === "error") && (
         <div className="mb-4 rounded-xl border border-band-red/30 bg-band-red/5 p-3 text-sm font-semibold text-band-red">
           ⚠ One or more accounts need reconnecting — AdPilot can&apos;t pull fresh data until you do, so your scores may be stale.{" "}
           <a href="#token-help" className="underline">How to get a token that won&apos;t expire →</a>
+        </div>
+      )}
+
+      {/* First-score onboarding — guides a freshly connected account to their score. */}
+      {apiEnabled && firstHealthy && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-teal/30 bg-teal/5 p-4 shadow-card">
+          {hasScore ? (
+            <>
+              <div>
+                <div className="font-bold text-ink">✅ Connected &amp; scored</div>
+                <p className="text-sm text-muted">Your Campaign Health Score is live in the Command Center.</p>
+              </div>
+              <a href="/command" className="rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white">View your score →</a>
+            </>
+          ) : (
+            <>
+              <div>
+                <div className="font-bold text-ink">✅ Connected — your first score is on the way</div>
+                <p className="text-sm text-muted">It appears after the next auto-sync ({cadence}). Want it now? Run one.</p>
+              </div>
+              <SyncButton platform={firstPlatform} />
+            </>
+          )}
         </div>
       )}
 
