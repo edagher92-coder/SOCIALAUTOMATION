@@ -174,3 +174,19 @@ OWNER-GATED: prices · auto-execute green-light · Meta System User token · sol
   done. REMAINING V6 build (specced/agreed, queued): tier feature keys + their features/GUI; diagnostics
   UI wiring (significance into decisions, trend/fatigue cards, break_even_cpl split); connect wizard
   builds; Simple-Home money strip; Haiku routing; dev-dep audit cleanup (vitest v3).
+
+## 2026-06-17 — EXECUTED: build-tail batch (Simple-Home money, connect chips, AI cost routing)
+- Simple-Home money-at-stake: command/page hero now shows the latest audit's spend + CPA vs
+  break-even straight from the saved report payload summary (honest figures only — no fabricated
+  "wasted spend"); coloured chip flags CPA above / at-or-below break-even; hidden until a report exists.
+- Connect-wizard trust + onboarding: reusable ReadOnlyBadge ("never edits your ads") + AutoSyncStatus
+  (cadence + last-pull age) chips on Connect; first-score onboarding card (run-a-sync CTA or
+  view-your-score link once a healthy account is connected). Connect data fetch parallelised.
+- AI back-end cost routing: MODELS (light/standard/deep) + modelFor() with ANTHROPIC_MODEL pin
+  override; ai/generate + content/draft (light templated creative) routed to Haiku; messenger bot
+  AI_MODEL now references the shared constant. Grounded specialists + policy checker stay on Sonnet.
+  +3 routing tests. Est. light-route token cost down ~60-75% vs Sonnet at similar quality for these tasks.
+- Verified each: tsc clean, 461 tests green, next build clean. Pushed (PR #22).
+- REMAINING tail: tier feature keys + their features/GUI; diagnostics surfacing (significance/fatigue
+  into decisions, break_even_cpl split); dev-dep audit cleanup (vitest v3). Owner-gated: AUD prices,
+  auto-execute green-light, solicitor legal text, non-expiring Meta token.
