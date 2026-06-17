@@ -46,6 +46,10 @@ version standardisation). Verify with `tsc --noEmit` + `vitest` + `next build`. 
 ## What's next / owner-gated
 - **Wave B** (fast-follow): ad-level sync rewrite (fixes false-CRITICAL "zero conversions" on
   API-synced accounts), lead/CRM webhook + alert engine, budget-pacing, agency portfolio.
-- **Owner-only:** confirm recurring AUD prices; solicitor Terms/Privacy text (placeholders only
-  shipped); paste a non-expiring Meta System User token to run the real-account audit.
+- **Owner-only:** AUD prices CONFIRMED + wired for display (Starter $49 / Pro $149 / Expert $399,
+  annual ≈2 months free) — still need the matching Stripe price IDs; admitted-solicitor sign-off of
+  the DRAFT Terms/Privacy frameworks (now drafted + two-partner reviewed under `CPWORK/.../legal/` —
+  key open issue: lead-hash likely personal info); paste a non-expiring Meta System User token to run
+  the real-account audit (one-click "Run my first audit" flow now built). Live-write: team recommends
+  `ADS_WRITE_ENABLED` stays OFF for launch (memo in `product/v6-governance/`).
 - Full detail: `CPWORK/universal-ads-os/product/V4-INTEGRATION-PLAN.md` and `adpilot-v2/CHANGELOG.md`.

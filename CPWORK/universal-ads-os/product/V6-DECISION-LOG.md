@@ -208,3 +208,21 @@ OWNER-GATED: prices · auto-execute green-light · Meta System User token · sol
   locally — align to ^4 to clear the esbuild/vite dev-chain advisories). Owner-gated: AUD prices,
   auto-execute green-light, solicitor legal text, non-expiring Meta token, and a UX home for the
   lead-close-rate input discoverability (currently in Settings).
+
+## 2026-06-17 — EXECUTED: pricing answer, legal framework + reviews, governance memo, token flow
+- PRICING (research loop, 2 parallel agents — competitor scan + AU willingness-to-pay): CONVERGED on
+  Starter $49 / Pro $149 / Expert $399 AUD/mo (annual ≈2 months free, ~17%), matching the in-code anchor.
+  Owner CONFIRMED → wired into lib/plans.ts display (+ planAnnualLabel, PlanMatrix annual note). Stripe
+  annual price objects remain owner-gated.
+- LEGAL FRAMEWORK (drafting team + 2 senior-partner review loop): DRAFT Terms (17 clauses) + Privacy
+  (15 APP sections) written; Partner A approved Terms subject to conditions; Partner B held Privacy
+  (5 blocking, led by lead-hash-likely-personal-info). Consolidated in legal/LEGAL-FRAMEWORK-STATUS.md.
+  Owner chose to soften the live /terms /privacy §7 wording now → removed the "hash = de-identified"
+  overclaim (training uses de-identified/aggregated only; identifiable + hashed lead data treated as
+  personal info; not used to train). DRAFT banners intact; admitted solicitor still finalises.
+- LIVE-WRITE GOVERNANCE: memo (product/v6-governance/) recommends ADS_WRITE_ENABLED stays OFF for launch;
+  only ever ship as phased opt-in Expert beta behind hard guardrails. No code change (already OFF).
+- TOKEN / REAL-ACCOUNT AUDIT: one-click "Run my first audit" (read-only /api/audit/run reusing the cron
+  sync+score path) + hardened Meta token validation (scope probe before store, precise errors). Read-only
+  invariant intact.
+- Verified each: tsc clean, 484 tests green, next build clean. All pushed (PR #22). Copilot review requested.
