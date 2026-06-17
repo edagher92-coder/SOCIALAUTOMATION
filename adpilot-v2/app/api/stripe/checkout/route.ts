@@ -42,6 +42,7 @@ export async function POST(req: Request) {
       success_url: `${base}/billing?status=success`,
       cancel_url: `${base}/billing?status=cancelled`,
       customer_email: user.email ?? undefined,
+      consent_collection: { terms_of_service: "required" },
       metadata: { user_id: user.id, plan },
     });
     return NextResponse.json({ url: session.url });

@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { PLANS, planPriceLabel } from "@/lib/plans";
+import { FEATURE_LABEL } from "@/lib/entitlements";
+import PlanMatrix from "@/components/PlanMatrix";
 
 export default function Landing() {
   return (
@@ -10,7 +13,7 @@ export default function Landing() {
             <span className="inline-block h-7 w-7 rounded-xl bg-gradient-to-br from-brand to-teal shadow-sm" />
             AdPilot OS
           </Link>
-          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand">V3</span>
+          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand">V4</span>
           <div className="ml-auto flex items-center gap-3 text-sm font-semibold">
             <Link href="#pricing" className="hidden text-muted transition hover:text-ink sm:inline">Pricing</Link>
             <Link href="/login"
@@ -79,49 +82,35 @@ export default function Landing() {
           <h2 className="text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Simple, honest pricing</h2>
           <p className="mt-3 text-base text-muted">AUD. No results guarantees — just a system that does the work.</p>
         </div>
-        <div className="mt-10 grid gap-5 sm:grid-cols-3">
-          {[
-            {
-              n: "Starter", p: "$97–297", tag: null,
-              d: "DIY: dashboard, CSV import, full audit suite.",
-              items: ["Campaign Health Score", "CSV import", "Findings & proposals"],
-            },
-            {
-              n: "Pro", p: "$497–1,497", tag: "Most popular",
-              d: "Automation, alerts, health scoring, UTM builder.",
-              items: ["Everything in Starter", "Auto-sync Meta & TikTok", "Weekly digest emails", "UTM builder"],
-            },
-            {
-              n: "Expert", p: "$1,997+", tag: null,
-              d: "All of Pro + white-label and team-built expert plugins.",
-              items: ["Everything in Pro", "White-label reports", "Expert plugins (team-built)", "Multi-client workspaces"],
-            },
-          ].map((t) => (
-            <div key={t.n}
-              className={`relative flex flex-col rounded-2xl border bg-white p-7 shadow-card transition hover:shadow-card-hover ${t.tag ? "border-brand ring-1 ring-brand/20" : "border-border-subtle"}`}>
-              {t.tag && (
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {PLANS.map((t) => (
+            <div key={t.id}
+              className={`relative flex flex-col rounded-2xl border bg-white p-6 shadow-card transition hover:shadow-card-hover ${t.mostPopular ? "border-brand ring-1 ring-brand/20" : "border-border-subtle"}`}>
+              {t.mostPopular && (
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand px-3 py-1 text-xs font-bold text-white shadow-sm">
-                  {t.tag}
+                  Most popular
                 </span>
               )}
-              <div className="mb-1 text-sm font-bold uppercase tracking-widest text-muted">{t.n}</div>
-              <div className="text-3xl font-extrabold tracking-tight text-ink">{t.p}</div>
-              <p className="mt-2 text-sm text-muted">{t.d}</p>
+              <div className="mb-1 text-sm font-bold uppercase tracking-widest text-muted">{t.label}</div>
+              <div className="text-2xl font-extrabold tracking-tight text-ink">{planPriceLabel(t)}</div>
+              <p className="mt-2 text-sm text-muted">{t.blurb}</p>
               <ul className="mt-5 flex-1 space-y-2.5">
-                {t.items.map((item) => (
-                  <li key={item} className="flex items-start gap-2 text-sm text-ink">
+                {t.headlineFeatures.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-ink">
                     <span className="mt-0.5 text-teal" aria-hidden>✓</span>
-                    {item}
+                    {FEATURE_LABEL[f]}
                   </li>
                 ))}
               </ul>
-              <Link href="/command"
-                className={`mt-6 block rounded-xl px-4 py-2.5 text-center text-sm font-bold transition ${t.tag ? "bg-brand text-white hover:bg-brand-600" : "border border-border-subtle text-ink hover:border-brand hover:text-brand"}`}>
-                Get started
+              <Link href={t.id === "free" ? "/login" : "/billing"}
+                className={`mt-6 block rounded-xl px-4 py-2.5 text-center text-sm font-bold transition ${t.mostPopular ? "bg-brand text-white hover:bg-brand-600" : "border border-border-subtle text-ink hover:border-brand hover:text-brand"}`}>
+                {t.id === "free" ? "Start free" : "See plan"}
               </Link>
             </div>
           ))}
         </div>
+        <div className="mt-8"><PlanMatrix /></div>
+        <p className="mt-4 text-center text-xs text-muted">All plans billed monthly in AUD via Stripe. Current pricing is shown at checkout. No earnings or results guarantees.</p>
       </section>
 
       {/* ── Footer ───────────────────────────────────────────── */}
@@ -129,9 +118,14 @@ export default function Landing() {
         <div className="mx-auto max-w-6xl flex flex-col items-center gap-2 text-center text-sm text-muted sm:flex-row sm:justify-between">
           <span className="flex items-center gap-2 font-semibold text-ink">
             <span className="inline-block h-5 w-5 rounded-lg bg-gradient-to-br from-brand to-teal" />
-            AdPilot OS V3
+            AdPilot OS V4
           </span>
           <span>Numbers-first · safe by design. No earnings or results guarantees.</span>
+          <nav className="flex items-center gap-4">
+            <Link href="/terms" className="transition hover:text-ink">Terms</Link>
+            <Link href="/privacy" className="transition hover:text-ink">Privacy</Link>
+            <Link href="/limitations" className="transition hover:text-ink">Limitations</Link>
+          </nav>
         </div>
       </footer>
     </main>

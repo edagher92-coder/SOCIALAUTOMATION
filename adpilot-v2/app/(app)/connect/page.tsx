@@ -1,20 +1,38 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
 import { can, PLAN_LABEL } from "@/lib/entitlements";
+import { cadenceText } from "@/lib/proposals";
 import SyncButton from "@/components/SyncButton";
 import TokenConnect from "@/components/TokenConnect";
+import ReadOnlyBadge from "@/components/ReadOnlyBadge";
+import AutoSyncStatus from "@/components/AutoSyncStatus";
+import RunFirstAudit from "@/components/RunFirstAudit";
 
 export const dynamic = "force-dynamic";
 
-export default async function Connect({ searchParams }: { searchParams: { connected?: string; error?: string } }) {
+export default async function Connect(props: { searchParams: Promise<{ connected?: string; error?: string }> }) {
+  const searchParams = await props.searchParams;
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const orgId = user ? await getActiveOrgId(user.id, user.email ?? undefined) : "";
   const plan = orgId ? await planForOrg(orgId) : "free";
   const apiEnabled = can(plan, "api_connect");
-  const { data: accounts } = await supabase
-    .from("connected_ad_accounts").select("platform,display_name,external_account_id,status,created_at")
-    .eq("organisation_id", orgId).order("created_at", { ascending: false });
+
+  const [accountsRes, orgRes, scoreRes] = await Promise.all([
+    supabase.from("connected_ad_accounts").select("platform,display_name,external_account_id,status,created_at")
+      .eq("organisation_id", orgId).order("created_at", { ascending: false }),
+    supabase.from("organisations").select("last_synced_at,sync_interval_hours").eq("id", orgId).maybeSingle(),
+    supabase.from("health_scores").select("total").eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  const accounts = accountsRes.data;
+  const org = orgRes.data as any;
+  const cadence = cadenceText(org?.sync_interval_hours);
+  const hasScore = (scoreRes.data as any)?.total != null;
+
+  // First-score onboarding: a connected, healthy account that hasn't produced a score yet.
+  const accts = (accounts || []) as any[];
+  const firstHealthy = accts.find((a) => a.status !== "disconnected" && a.status !== "error");
+  const firstPlatform = firstHealthy ? (firstHealthy.platform === "tiktok" ? "tiktok" : "meta") : "meta";
 
   const msg = searchParams.connected ? `✅ Connected ${searchParams.connected}.`
     : searchParams.error ? `⚠ Couldn't connect: ${searchParams.error.replace(/_/g, " ")}` : "";
@@ -22,12 +40,48 @@ export default async function Connect({ searchParams }: { searchParams: { connec
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-extrabold tracking-tight">Connect ad accounts</h1>
-      <p className="mb-5 mt-1 text-muted">Connect read-only so AdPilot can pull your numbers automatically. We never edit, pause, or create ads.</p>
+      <p className="mb-4 mt-1 text-muted">Connect read-only so AdPilot can pull your numbers automatically. We never edit, pause, or create ads.</p>
+
+      {/* How it works — 3 steps, makes the flow obvious and the safety explicit. */}
+      <div className="mb-5 grid gap-2 rounded-2xl border border-border-subtle bg-surface-raised p-4 text-sm shadow-card sm:grid-cols-3">
+        <div><span className="font-bold text-brand">1 · Connect</span><div className="text-muted">One click (read-only) — or paste a token.</div></div>
+        <div><span className="font-bold text-brand">2 · Auto-sync</span><div className="text-muted">We pull your numbers on your schedule.</div></div>
+        <div><span className="font-bold text-brand">3 · Score &amp; propose</span><div className="text-muted">Health score + safe fixes. Never edits an ad.</div></div>
+      </div>
+      <div className="mb-3 -mt-2 flex flex-wrap items-center gap-2">
+        <ReadOnlyBadge />
+        {apiEnabled && <AutoSyncStatus cadence={cadence} lastSyncedAt={org?.last_synced_at} />}
+      </div>
+      <p className="mb-5 text-xs text-muted">🔒 Tokens are encrypted at rest (AES-256-GCM) and never sent back to your browser.</p>
 
       {msg && <div className="mb-4 rounded-xl border border-border-subtle bg-white p-3 text-sm shadow-card">{msg}</div>}
       {accounts?.some((a: any) => a.status === "disconnected" || a.status === "error") && (
         <div className="mb-4 rounded-xl border border-band-red/30 bg-band-red/5 p-3 text-sm font-semibold text-band-red">
-          ⚠ One or more accounts need reconnecting — AdPilot can&apos;t pull fresh data until you do, so your scores may be stale.
+          ⚠ One or more accounts need reconnecting — AdPilot can&apos;t pull fresh data until you do, so your scores may be stale.{" "}
+          <a href="#token-help" className="underline">How to get a token that won&apos;t expire →</a>
+        </div>
+      )}
+
+      {/* First-score onboarding — guides a freshly connected account to their score. */}
+      {apiEnabled && firstHealthy && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-teal/30 bg-teal/5 p-4 shadow-card">
+          {hasScore ? (
+            <>
+              <div>
+                <div className="font-bold text-ink">✅ Connected &amp; scored</div>
+                <p className="text-sm text-muted">Your Campaign Health Score is live in the Command Center.</p>
+              </div>
+              <a href="/command" className="rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white">View your score →</a>
+            </>
+          ) : (
+            <>
+              <div>
+                <div className="font-bold text-ink">✅ Connected — run your first audit now</div>
+                <p className="text-sm text-muted">One click pulls your numbers and produces your first Campaign Health Score. (It also runs automatically every {cadence}.)</p>
+              </div>
+              <RunFirstAudit />
+            </>
+          )}
         </div>
       )}
 
@@ -41,6 +95,7 @@ export default async function Connect({ searchParams }: { searchParams: { connec
         </div>
       ) : (
         <>
+          <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-muted">Easiest — one click, read-only</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
               <div className="mb-2 text-2xl">🔵</div>
@@ -56,6 +111,7 @@ export default async function Connect({ searchParams }: { searchParams: { connec
             </div>
           </div>
 
+          <h2 className="mb-2 mt-6 text-sm font-bold uppercase tracking-wide text-muted">Or paste an access token — works without app review</h2>
           <TokenConnect />
 
           <p className="mt-4 rounded-xl bg-surface p-3 text-sm text-muted">
@@ -90,7 +146,41 @@ export default async function Connect({ searchParams }: { searchParams: { connec
           })}
         </div>
       )}
-      <p className="mt-3 text-xs text-muted">Tokens are encrypted at rest (AES-256-GCM) and never sent to the browser. OAuth requires the platform app credentials to be set on the server.</p>
+      <details id="token-help" className="mt-6 scroll-mt-24 rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+        <summary className="cursor-pointer list-none font-bold">
+          🔑 Token expired? Get a Meta token that <span className="text-brand">won&apos;t expire</span>
+          <span className="ml-2 text-xs font-normal text-muted">(tap to open)</span>
+        </summary>
+        <div className="mt-3 space-y-3 text-sm text-muted">
+          <p>
+            Tokens you copy from the Graph API <b>Explorer</b> are short-lived — they expire after
+            ~1–2 hours, which is why sync starts failing. For a connection that keeps running, use a
+            Meta <b>System User</b> token: it can be set to <b>never</b> expire.
+          </p>
+          <ol className="list-decimal space-y-1.5 pl-5">
+            <li>
+              Open{" "}
+              <a className="font-semibold text-brand underline" href="https://business.facebook.com/settings/system-users" target="_blank" rel="noopener noreferrer">
+                Business Settings → Users → System Users
+              </a>{" "}
+              and click <b>Add</b> to create one (any name; <b>Admin</b> role is simplest).
+            </li>
+            <li>Select the system user → <b>Assign assets</b> → add your <b>Ad Accounts</b> with full control.</li>
+            <li>
+              Click <b>Generate new token</b>, pick your Meta app, set <b>Token expiration</b> to{" "}
+              <b>Never</b>, and tick the scopes <code className="rounded bg-surface px-1">ads_read</code> and{" "}
+              <code className="rounded bg-surface px-1">read_insights</code> (read-only — no write access).
+            </li>
+            <li>Copy the generated token, paste it into <b>Paste an access token</b> above, and click <b>Connect &amp; sync</b>.</li>
+            <li>Leave <b>Account ID</b> blank — AdPilot detects your ad accounts automatically.</li>
+          </ol>
+          <p className="text-xs">
+            Tip: if you have a duplicate account still showing <span className="font-semibold text-band-red">Reconnect needed</span> after this, remove it — the
+            non-expiring connection replaces it. Tokens are encrypted at rest (AES-256-GCM) and never sent back to the browser.
+          </p>
+        </div>
+      </details>
+      <p className="mt-3 text-xs text-muted">OAuth requires the platform app credentials to be set on the server.</p>
     </div>
   );
 }

@@ -1,8 +1,8 @@
 {
-  "name": "adpilot-os-v2",
-  "version": "2.0.0",
+  "name": "adpilot-os",
+  "version": "4.0.0",
   "private": true,
-  "description": "AdPilot OS V2 — Meta & TikTok ads health SaaS (Next.js + Supabase + Stripe).",
+  "description": "AdPilot OS V4 — Meta & TikTok ads health SaaS (Next.js + Supabase + Stripe).",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -18,26 +18,26 @@
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.4",
-    "next": "^14.2.35",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "next": "^16.2.9",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "stripe": "^16.12.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.16.10",
-    "@types/react": "^18.3.11",
-    "@types/react-dom": "^18.3.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.20",
-    "eslint": "^8.57.1",
-    "eslint-config-next": "^14.2.35",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.9",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.13",
     "tsx": "^4.19.2",
     "typescript": "^5.6.2",
-    "vitest": "^2.1.2"
+    "vitest": "^4.1.9"
   },
   "engines": {
-    "node": ">=18.18"
+    "node": ">=20.9.0"
   }
 }

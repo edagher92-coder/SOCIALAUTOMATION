@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 
-// Premium Messenger setup editor. Prefilled with a Snow Flow "Sam" template; edit per client.
+// Premium Messenger setup editor. Prefilled with a neutral starter template; edit per client.
 // Applies greeting / ice breakers / persistent menu via the Graph API — no browser, no prompts.
 const slug = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 40) || "OPTION";
 
@@ -10,13 +10,13 @@ type Menu = { title: string; url: string };
 export default function MessengerSetup({ tokenConfigured }: { tokenConfigured: boolean }) {
   const [pageToken, setPageToken] = useState("");
   const [greeting, setGreeting] = useState(
-    "Hi, Sam here 👋 — ask me anything about our products, pricing, and current specials!",
+    "Hi 👋 — ask me anything about our products, pricing, and current specials!",
   );
   const [ice, setIce] = useState<string[]>([
     "How much are your products?",
     "Do you offer repairs or servicing?",
     "Tell me about your current special",
-    "Do you do finance / rent-to-own?",
+    "What are your payment options?",
   ]);
   const [menu, setMenu] = useState<Menu[]>([
     { title: "See our range", url: "https://example.com" },

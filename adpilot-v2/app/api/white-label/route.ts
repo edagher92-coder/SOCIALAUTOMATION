@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getActiveOrgId } from "@/lib/org";
+import { getActiveOrgId, planForOrg } from "@/lib/org";
+import { can } from "@/lib/entitlements";
 
 export const runtime = "nodejs";
 
@@ -30,6 +31,11 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
   const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  // White-label branding is an Expert-tier feature. The POST writes via the admin client
+  // (which bypasses RLS), so the plan gate MUST be enforced here — not just hidden in the UI.
+  if (!can(await planForOrg(orgId), "white_label")) {
+    return NextResponse.json({ error: "White-label branding is an Expert-tier feature. Upgrade on Billing to enable it.", upgrade: true }, { status: 402 });
+  }
   const admin = createAdminClient();
   await admin.from("white_label_profiles").upsert(
     { organisation_id: orgId, ...parsed.data },

@@ -25,8 +25,13 @@ export function analyse(rows: Row[], cfg: Cfg) {
     config: cfg,
     summary: {
       spend: res.agg.spend, leads: res.agg.leads, purchases: res.agg.purchases, revenue: res.agg.revenue,
+      // Delivery metrics — additive; cpc/cpm/cpl/frequency are not on agg, computed here via M.*.
+      impressions: res.agg.impressions, reach: res.agg.reach, clicks: res.agg.clicks,
+      ctr: res.agg.ctr, cpc: M.cpc(res.agg.spend, res.agg.clicks), cpm: M.cpm(res.agg.spend, res.agg.impressions),
+      frequency: M.frequency(res.agg.impressions, res.agg.reach), conv_rate: res.agg.conv_rate,
+      cpl: M.cpl(res.agg.spend, res.agg.leads),
       cpa: res.agg.cpa, roas: res.agg.roas, mer: M.mer(res.agg.revenue, res.agg.spend),
-      break_even_cpa: res.break_even_cpa, break_even_roas: M.breakEvenRoas(cfg.gross_margin),
+      break_even_cpa: res.break_even_cpa, break_even_cpl: res.break_even_cpl ?? null, break_even_roas: M.breakEvenRoas(cfg.gross_margin),
     },
     health: { total: res.total, band: res.band, guidance: res.guidance, findings: res.findings, weakest: res.weakest, breakdown: res.breakdown },
     campaigns,

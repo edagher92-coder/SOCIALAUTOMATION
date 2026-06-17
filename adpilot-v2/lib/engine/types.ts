@@ -7,6 +7,13 @@ export interface Cfg {
   currency?: string;
   average_sale_value: number;
   gross_margin: number;
+  // Optional lead→sale close rate (0–1) for lead-gen accounts. Enables a break-even cost-per-lead
+  // read; left unset, lead-only accounts keep the conservative lead-quality routing (no CPL verdict).
+  lead_close_rate?: number | null;
+  // Optional month context for the budget_pacing factor (caller-supplied; account-level).
+  pacing?: { monthlyBudget: number | null; spendToDate: number; daysElapsed: number; daysInMonth: number };
+  // Optional account-level lead-quality average (0–100), e.g. derived from CRM lead_events.
+  lead_quality_avg?: number | null;
 }
 
 export interface FactorBreakdown {
@@ -49,6 +56,7 @@ export interface Aggregate {
 export interface AccountScore extends HealthResult {
   agg: Aggregate;
   break_even_cpa: number;
+  break_even_cpl?: number | null; // modelled break-even cost-per-lead (null unless a close rate is set)
   findings: Finding[];
 }
 

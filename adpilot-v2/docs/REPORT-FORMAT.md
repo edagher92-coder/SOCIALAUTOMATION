@@ -26,7 +26,7 @@ the numbers>. **No budgets touched.**   ← state exactly what was/wasn't change
 | <Engine A> | active | $… | … | … | … | … | $… ⭐ |
 | …          | paused | …   | … | … | … | … | —      |
 
-## 7-day scoreboard (targets: <$8/convo · ~$67.50/qualified lead)
+## 7-day scoreboard (targets: per the account's context pack — cost/convo + qualified-lead cost)
 | Engine | Spend | Convos | Reply | Deep-3 | Leads | Cost/convo |
 |---|---|---|---|---|---|---|
 | <Engine A> | $… | … | … | … | … | $… ⭐ |
@@ -47,7 +47,8 @@ to the owner first; no deletions. State geo/segment rules and the contact channe
 ## Field notes (CTWA / messaging accounts)
 - **Optimise on conversations started**, not link CTR. Show cost/convo, reply rate, and depth-3+
   replies — they capture intent that pixel leads miss.
-- Targets: **<$8/convo** healthy, **>$8** a watch-flag; **~$67.50** qualified-lead reference.
+- Targets (cost/convo healthy band, watch-flag, qualified-lead reference) come from the account's
+  business context pack — not a hard-coded universal number, since they vary by vertical and geo.
 - **Don't judge a starved ad set on volume** — fund it, then test ≥3 days; persistent ~0 convos ⇒
   creative/offer problem, not budget.
 - Mark the standout engine with ⭐ and name the "engine carrying the month."

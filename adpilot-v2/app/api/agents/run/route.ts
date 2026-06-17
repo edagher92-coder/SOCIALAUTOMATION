@@ -7,11 +7,14 @@ import { can } from "@/lib/entitlements";
 import { callClaude, NoKeyError } from "@/lib/ai/claude";
 import { getAgent } from "@/lib/agents/registry";
 import { knowledgeForAgent } from "@/lib/agents/knowledge";
+import { contextPackGrounding } from "@/lib/agents/context-pack";
 import { buildGrounding } from "@/lib/agents/grounding";
+import { buildRileyReportInstruction } from "@/lib/reports/format";
+import { isReportKind } from "@/lib/reports/templates";
 
 export const runtime = "nodejs";
 
-const Body = z.object({ agentId: z.string().min(1), question: z.string().max(2000).optional() });
+const Body = z.object({ agentId: z.string().min(1), question: z.string().max(2000).optional(), kind: z.string().optional() });
 
 export async function POST(req: Request) {
   const supabase = createClient();
@@ -42,11 +45,22 @@ export async function POST(req: Request) {
   // knowledgeForAgent already falls back to baseline internally; guard the call
   // itself so an unexpected throw can't break grounding.
   const kb = await knowledgeForAgent(admin, agent.id).catch(() => "");
+  // Private business context-pack grounding (env-gated; "" in the sellable default build).
+  const pack = contextPackGrounding(agent.id);
   const q = parsed.data.question?.trim();
-  const userMsg = `${kb ? `REFERENCE KNOWLEDGE (current best practice — guidance, not guarantees; cite ranges, not false precision):\n${kb}\n\n` : ""}${grounding}\n\n${q ? `The user asks: ${q}` : "Give your top findings and safe, prioritised proposals for this account right now."}`;
+  // Riley report path: when a report kind is requested, append the prose-only contract.
+  const kind = parsed.data.kind;
+  const reportInstruction = agent.id === "riley" && isReportKind(kind)
+    ? `\n\n${buildRileyReportInstruction(payload, { kind, periodLabel: "the latest period" })}`
+    : "";
+  // Cacheable static prefix (persona + reference knowledge + private pack) — stable across calls.
+  // The volatile, account-specific grounding + question go in the user message, so repeat calls to
+  // the same specialist reuse the prefix at ~10% input cost (prompt caching).
+  const systemPrompt = `${agent.system}${kb ? `\n\nREFERENCE KNOWLEDGE (current best practice — guidance, not guarantees; cite ranges, not false precision):\n${kb}` : ""}${pack ? `\n\nACTIVE BUSINESS CONTEXT (private — honour these rules; they tighten the guardrails, never loosen them):\n${pack}` : ""}`;
+  const userMsg = `${grounding}\n\n${q ? `The user asks: ${q}` : "Give your top findings and safe, prioritised proposals for this account right now."}${reportInstruction}`;
 
   try {
-    const text = await callClaude({ system: agent.system, user: userMsg, maxTokens: 1200 });
+    const text = await callClaude({ system: systemPrompt, user: userMsg, maxTokens: 1200, cacheSystem: true });
     if (!text || !text.trim())
       return NextResponse.json({ error: "The specialist returned an empty answer. Please try again.", code: "EMPTY" }, { status: 502 });
     return NextResponse.json({ text, agent: { id: agent.id, name: agent.name } });

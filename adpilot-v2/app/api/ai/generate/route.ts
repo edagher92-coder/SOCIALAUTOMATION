@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { callClaude, NoKeyError } from "@/lib/ai/claude";
+import { callClaude, NoKeyError, modelFor } from "@/lib/ai/claude";
 
 export const runtime = "nodejs";
 
@@ -41,7 +41,8 @@ export async function POST(req: Request) {
   const { task, inputs } = parsed.data;
 
   try {
-    const text = await callClaude({ system: SYSTEM[task], user: userPrompt(task, inputs), maxTokens: 1100 });
+    // Light, templated creative → Haiku tier to keep token cost down.
+    const text = await callClaude({ system: SYSTEM[task], user: userPrompt(task, inputs), maxTokens: 1100, model: modelFor("light") });
     return NextResponse.json({ text });
   } catch (e: any) {
     if (e instanceof NoKeyError)

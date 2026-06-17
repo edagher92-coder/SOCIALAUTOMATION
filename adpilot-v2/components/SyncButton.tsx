@@ -30,13 +30,19 @@ export default function SyncButton({ platform }: { platform: "meta" | "tiktok" }
     }
   }
 
+  // Surface a "get a non-expiring token" link whenever the failure looks like an expired/auth token.
+  const tokenIssue = !ok && !!msg && /(access token|session has expired|expired|oauth|reconnect|\b190\b|\b401\b|\b403\b)/i.test(msg);
+
   return (
-    <span className="inline-flex items-center gap-2">
+    <span className="inline-flex flex-col items-end gap-1 text-right">
       <button onClick={go} disabled={busy} aria-busy={busy}
         className="rounded-lg border border-brand px-3 py-1.5 text-sm font-semibold text-brand disabled:opacity-50">
         {busy ? "Syncing…" : "Sync now"}
       </button>
       {msg && <span className={`text-xs ${ok ? "text-green-600" : "text-red-600"}`} role="status">{msg}</span>}
+      {tokenIssue && (
+        <a href="#token-help" className="text-xs font-semibold text-brand underline">🔑 Token expired — how to get a non-expiring token</a>
+      )}
     </span>
   );
 }

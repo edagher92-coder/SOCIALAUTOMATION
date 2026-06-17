@@ -2,6 +2,7 @@
 import type { Row, Cfg, Aggregate, Finding, AccountScore, CampaignScore } from "./types";
 import * as M from "./metrics";
 import { computeHealth } from "./health";
+import { pace, pacingScore } from "./pacing";
 
 const NEUTRAL = 70;
 
@@ -99,9 +100,16 @@ export function scoreAccount(rows: Row[], cfg: Cfg): AccountScore {
   factors.naming_quality = namingScore(rows);
   factors.data_confidence = dataConfScore(agg);
   if (agg.spend > 0 && agg.purchases === 0 && agg.leads === 0) factors.data_confidence = Math.min(factors.data_confidence, 20);
-  factors.budget_pacing = 85;
+  // Budget pacing: use the real pacing score when the caller supplies month context + a budget,
+  // else fall back to the neutral default (keeps scores stable when no budget is set).
+  const pScore = cfg.pacing ? pacingScore(pace(cfg.pacing)) : null;
+  factors.budget_pacing = pScore != null ? pScore : 85;
+  // Lead quality: prefer a caller-supplied account average (e.g. from CRM lead_events),
+  // else average any per-row lead_quality_score, else mark N/A (weight redistributes).
   const lq = rows.map((r) => r.lead_quality_score).filter((v) => v) as number[];
-  if (!lq.length) na.push("lead_quality"); else factors.lead_quality = lq.reduce((a, b) => a + b, 0) / lq.length;
+  const lqFromRows = lq.length ? lq.reduce((a, b) => a + b, 0) / lq.length : null;
+  const lqAvg = cfg.lead_quality_avg != null ? cfg.lead_quality_avg : lqFromRows;
+  if (lqAvg == null) na.push("lead_quality"); else factors.lead_quality = lqAvg;
   const effBase = cs == null ? 50 : cs;
   factors.spend_efficiency = 0.6 * effBase + 0.4 * factors.data_confidence;
   factors.cpc = 0.5 * factors.ctr + 0.5 * NEUTRAL;
@@ -111,6 +119,7 @@ export function scoreAccount(rows: Row[], cfg: Cfg): AccountScore {
   const res = computeHealth(factors, na) as AccountScore;
   res.agg = agg;
   res.break_even_cpa = be;
+  res.break_even_cpl = M.breakEvenCpl(cfg.average_sale_value, cfg.gross_margin, cfg.lead_close_rate ?? null);
   res.findings = findings(factors, agg, be, freq, na);
   return res;
 }

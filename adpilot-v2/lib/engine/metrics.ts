@@ -22,6 +22,11 @@ export const hookRate = (s3: number, imp: number): Num => safeDiv(s3, imp);
 export const holdRate = (tp: number, s3: number): Num => safeDiv(tp, s3);
 export const convRate = (p: number, clicks: number): Num => safeDiv(p, clicks);
 export const breakEvenCpa = (avg: number, gm: number): number => avg * gm;
+// Break-even cost-per-lead: the most you can pay per lead and still break even, given how many
+// leads turn into sales. beCpl = beCpa × close-rate. Null unless a positive close rate is known
+// (no close rate → we can't model lead-gen break-even, so callers fall back to the safe routing).
+export const breakEvenCpl = (avg: number, gm: number, closeRate: Num): Num =>
+  closeRate != null && closeRate > 0 ? avg * gm * closeRate : null;
 export const breakEvenRoas = (gm: number): Num => safeDiv(1, gm);
 export const variancePct = (a: number, t: number): Num => safeDiv((a - t) * 100, t);
 export const isRoasAnomaly = (r: Num): boolean => r != null && r >= ROAS_ANOMALY_THRESHOLD;

@@ -16,7 +16,7 @@ const KEY_B64 = Buffer.alloc(32, 7).toString("base64");
 process.env.TOKEN_ENCRYPTION_KEY = KEY_B64;
 
 import { encrypt } from "@/lib/crypto";
-import { syncOrgPlatform } from "@/lib/sync/pull";
+import { syncOrgPlatform, extractMetaConversions } from "@/lib/sync/pull";
 
 // ---- Inline mock Supabase -------------------------------------------------
 // Each table is a small builder that records the filters applied and resolves
@@ -86,8 +86,15 @@ function encToken(plain: string) {
 
 function metaRow(over: Record<string, any> = {}) {
   return {
-    campaign_name: "Camp A", date_start: "2026-06-01", spend: "10.5", impressions: "1000",
-    reach: "800", frequency: "1.25", clicks: "50", ctr: "5", cpc: "0.21", cpm: "10.5", ...over,
+    campaign_id: "c1", campaign_name: "Camp A", adset_id: "as1", adset_name: "AdSet A",
+    ad_id: "ad1", ad_name: "Ad A", date_start: "2026-06-01", spend: "10.5", impressions: "1000",
+    reach: "800", frequency: "1.25", clicks: "50", ctr: "5", cpc: "0.21", cpm: "10.5",
+    landing_page_views: "30",
+    actions: [{ action_type: "lead", value: "4" }, { action_type: "purchase", value: "3" }],
+    action_values: [{ action_type: "purchase", value: "600" }],
+    video_play_actions: [{ action_type: "video_view", value: "400" }],
+    video_thruplay_watched_actions: [{ action_type: "video_view", value: "120" }],
+    ...over,
   };
 }
 
@@ -129,12 +136,21 @@ describe("syncOrgPlatform — Meta", () => {
     const ins = (admin as any).__calls.inserts;
     expect(ins).toHaveLength(1);
     expect(ins[0].rows).toHaveLength(2);
-    // ctr is normalised from percent → fraction; spend coerced to number
-    expect(ins[0].rows[0]).toMatchObject({ organisation_id: "org-1", platform: "meta", spend: 10.5, ctr: 0.05, source: "meta_api" });
+    // ctr is normalised from percent → fraction; spend coerced to number; ad-grain
+    // identity + extracted conversions (leads/purchases/revenue) are written.
+    expect(ins[0].rows[0]).toMatchObject({
+      organisation_id: "org-1", platform: "meta", spend: 10.5, ctr: 0.05, source: "meta_api",
+      campaign_id: "c1", adset_id: "as1", ad_id: "ad1", ad_name: "Ad A",
+      leads: 4, purchases: 3, revenue: 600, landing_page_views: 30,
+      three_second_views: 400, thruplays: 120,
+    });
 
-    // the act_ prefix is added to the account id in the request URL
+    // the act_ prefix is added to the account id; pull is at AD level.
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(String(fetchMock.mock.calls[0][0])).toContain("act_123/insights");
+    const metaUrl = String(fetchMock.mock.calls[0][0]);
+    expect(metaUrl).toContain("act_123/insights");
+    expect(metaUrl).toContain("level=ad");
+    expect(metaUrl).toContain("action_values");
   });
 
   it("accumulates rows across multiple connected accounts", async () => {
@@ -207,16 +223,22 @@ describe("syncOrgPlatform — TikTok", () => {
     });
     fetchMock.mockReturnValueOnce(okJson({
       code: 0,
-      data: { list: [{ metrics: { campaign_name: "TT Camp", spend: "5", impressions: "200", clicks: "10", ctr: "2", cpc: "0.5", cpm: "25", reach: "150", frequency: "1.3" }, dimensions: { campaign_id: "c1", stat_time_day: "2026-06-02 00:00:00" } }] },
+      data: { list: [{ metrics: { campaign_id: "c1", campaign_name: "TT Camp", adgroup_id: "ag1", ad_id: "ad9", ad_name: "TT Ad", spend: "5", impressions: "200", clicks: "10", ctr: "2", cpc: "0.5", cpm: "25", reach: "150", frequency: "1.3", conversion: "7", total_complete_payment: "350", video_play_actions: "180", video_watched_2s: "120", video_watched_6s: "60", video_views_p100: "40" }, dimensions: { ad_id: "ad9", stat_time_day: "2026-06-02 00:00:00" } }] },
     }));
 
     const n = await syncOrgPlatform(admin as any, "org-1", "tiktok");
     expect(n).toBe(1);
     const ins = (admin as any).__calls.inserts[0].rows;
-    expect(ins[0]).toMatchObject({ organisation_id: "org-1", platform: "tiktok", campaign_name: "TT Camp", spend: 5, ctr: 0.02, source: "tiktok_api" });
+    expect(ins[0]).toMatchObject({
+      organisation_id: "org-1", platform: "tiktok", campaign_name: "TT Camp", spend: 5, ctr: 0.02, source: "tiktok_api",
+      campaign_id: "c1", adset_id: "ag1", ad_id: "ad9", ad_name: "TT Ad",
+      purchases: 7, revenue: 350, video_views: 180, three_second_views: 120, six_second_views: 60, thruplays: 40,
+    });
     expect(ins[0].date).toBe("2026-06-02"); // stat_time_day truncated to date
     // delete window filter targets the tiktok_api source
     expect((admin as any).__calls.deletes[0].filters.source).toBe("tiktok_api");
+    // pull is at AD level (AUCTION_AD), not campaign.
+    expect(String(fetchMock.mock.calls[0][0])).toContain("AUCTION_AD");
   });
 
   it("surfaces a TikTok API error (non-zero code in a 200 body)", async () => {
@@ -228,5 +250,55 @@ describe("syncOrgPlatform — TikTok", () => {
     fetchMock.mockReturnValueOnce(okJson({ code: 40105, message: "Access token is invalid" }));
     await expect(syncOrgPlatform(admin as any, "org-1", "tiktok")).rejects.toThrow(/Access token is invalid/i);
     expect((admin as any).__calls.inserts).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// extractMetaConversions — PURE helper unit tests (no network, no Supabase).
+// This is the crux of the fix: pulling at ad level with conversions so accounts
+// stop reporting "spend with zero results" and tripping a FALSE CRITICAL finding.
+// ---------------------------------------------------------------------------
+describe("extractMetaConversions", () => {
+  it("extracts leads, purchases and revenue from a sample Meta actions/action_values payload", () => {
+    const actions = [
+      { action_type: "lead", value: "3" },
+      { action_type: "onsite_conversion.lead_grouped", value: "2" },
+      { action_type: "leadgen.other", value: "1" },
+      { action_type: "purchase", value: "4" },
+      { action_type: "omni_purchase", value: "1" },
+      { action_type: "link_click", value: "999" }, // ignored
+    ];
+    const actionValues = [
+      { action_type: "purchase", value: "480.50" },
+      { action_type: "omni_purchase", value: "19.50" },
+      { action_type: "lead", value: "12345" }, // ignored: leads carry no revenue here
+    ];
+    expect(extractMetaConversions(actions, actionValues)).toEqual({
+      leads: 6,        // 3 + 2 + 1 across the three lead action types
+      purchases: 5,    // 4 + 1 (purchase + omni_purchase)
+      revenue: 500,    // 480.50 + 19.50 from action_values purchase types only
+    });
+  });
+
+  it("returns zeroes for null / empty / unmatched payloads", () => {
+    expect(extractMetaConversions(null, null)).toEqual({ leads: 0, purchases: 0, revenue: 0 });
+    expect(extractMetaConversions([], [])).toEqual({ leads: 0, purchases: 0, revenue: 0 });
+    expect(extractMetaConversions([{ action_type: "video_view", value: "10" }], []))
+      .toEqual({ leads: 0, purchases: 0, revenue: 0 });
+    // non-numeric values coerce to 0 rather than NaN
+    expect(extractMetaConversions([{ action_type: "lead", value: "n/a" }], []))
+      .toEqual({ leads: 0, purchases: 0, revenue: 0 });
+  });
+});
+
+describe("metaPull — CTR normalisation", () => {
+  it("divides the percent CTR returned by Meta by 100 into a fraction", async () => {
+    const fetchLocal = vi.fn().mockReturnValue(
+      okJson({ data: [metaRow({ ctr: "2.5" })] }),
+    );
+    vi.stubGlobal("fetch", fetchLocal);
+    const { metaPull } = await import("@/lib/sync/pull");
+    const rows = await metaPull("TOK", "555", "org-1");
+    expect(rows[0].ctr).toBeCloseTo(0.025, 6); // 2.5% → 0.025
   });
 });

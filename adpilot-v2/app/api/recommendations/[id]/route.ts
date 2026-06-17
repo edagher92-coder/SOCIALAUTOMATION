@@ -10,7 +10,8 @@ export const runtime = "nodejs";
 // "approve" records intent; it never edits a live ad.
 const Body = z.object({ status: z.enum(["open", "approved", "dismissed", "done"]) });
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });

@@ -2,6 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
 import { can, PLAN_LABEL } from "@/lib/entitlements";
 import { verdictMeta, bandMeta, cadenceText } from "@/lib/proposals";
+import { summariseSeries } from "@/lib/engine/timeseries";
+import { fmt } from "@/lib/engine/metrics";
+import ModeAware from "@/components/ModeAware";
+import ReadOnlyBadge from "@/components/ReadOnlyBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -40,12 +44,14 @@ export default async function CommandCenter() {
   const aiEnabled = can(plan, "ai_team");
   const apiEnabled = can(plan, "api_connect");
 
-  const [orgRes, scoreRes, openRecsRes, accountsRes, reportsRes] = await Promise.all([
+  const [orgRes, scoreRes, openRecsRes, accountsRes, reportsRes, trendRes, latestReportRes] = await Promise.all([
     supabase.from("organisations").select("name,last_synced_at,sync_interval_hours").eq("id", orgId).maybeSingle(),
     supabase.from("health_scores").select("total,band,created_at").eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("recommendations").select("id,verdict,entity_name,platform,proposal").eq("organisation_id", orgId).eq("status", "open").order("created_at", { ascending: false }).limit(100),
     supabase.from("connected_ad_accounts").select("platform,display_name,status").eq("organisation_id", orgId),
     supabase.from("reports").select("id,title,created_at").eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(5),
+    supabase.from("health_scores").select("total,created_at").eq("organisation_id", orgId).order("created_at", { ascending: true }).limit(60),
+    supabase.from("reports").select("payload").eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
 
   // Surface a clear banner if the data layer is unreachable, but still render the shell.
@@ -61,6 +67,19 @@ export default async function CommandCenter() {
   const recs = (openRecs || []) as any[];
   const byVerdict = recs.reduce((m: Record<string, number>, r) => ((m[r.verdict] = (m[r.verdict] || 0) + 1), m), {});
   const attention = recs.slice().sort((a, b) => verdictMeta(a.verdict).rank - verdictMeta(b.verdict).rank).slice(0, 4);
+  // Health-score trend over the saved history (P3 diagnostics surfaced).
+  const trendHist = ((trendRes.data || []) as any[]).map((r) => Number(r.total)).filter((v) => Number.isFinite(v));
+  const trend = summariseSeries(trendHist);
+  const trendArrow = trend.trend === "rising" ? "↑" : trend.trend === "falling" ? "↓" : "→";
+  const trendWow = trend.wowPct == null ? null : Math.round(trend.wowPct * 100);
+  // Money at stake — straight from the latest saved report's summary (numbers are never invented).
+  const summ = (latestReportRes.data as any)?.payload?.summary as Record<string, number | null | undefined> | undefined;
+  const ccy = (latestReportRes.data as any)?.payload?.config?.currency || "AUD";
+  const mny = (v: number | null | undefined) => (v == null ? null : `${ccy === "AUD" ? "$" : ccy + " "}${fmt(v)}`);
+  const moneySpend = summ?.spend ?? null;
+  const moneyCpa = summ?.cpa ?? null;
+  const moneyBe = summ?.break_even_cpa ?? null;
+  const cpaOverBe = moneyCpa != null && moneyBe != null && moneyBe > 0 ? moneyCpa > moneyBe : null;
   const accts = (accounts || []) as any[];
   const cadence = cadenceText((org as any)?.sync_interval_hours);
   const name = (org as any)?.name || "your workspace";
@@ -85,6 +104,7 @@ export default async function CommandCenter() {
                 ? <>Auto-syncing <b className="text-white">{cadence}</b> · last pull {fmtAgo((org as any)?.last_synced_at)} · then scored & queued for you.</>
                 : <>CSV mode on {PLAN_LABEL[plan]}. Upgrade to auto-sync Meta & TikTok live.</>}
             </p>
+            <div className="mt-2"><ReadOnlyBadge /></div>
           </div>
 
           {/* Health gauge */}
@@ -92,9 +112,33 @@ export default async function CommandCenter() {
             <div className="text-right">
               <div className="text-4xl font-extrabold leading-none">{total ?? "—"}<span className="text-lg text-white/50">/100</span></div>
               <div className="mt-1 text-xs font-bold uppercase tracking-wide text-white/70">{(score as any)?.band || "no score"} · {band.label}</div>
+              {trend.n >= 3 && (
+                <div className="mt-1 text-xs text-white/70" title="Trend over your saved health-score history">
+                  {trendArrow} {trend.trend}{trendWow != null ? ` · ${trendWow >= 0 ? "+" : ""}${trendWow}% WoW` : ""}
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Money at stake — honest figures from the last audit (no fabricated "wasted spend"). */}
+        {moneySpend != null && (
+          <div className="relative mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
+            <span className="text-white/60">Last audit:</span>
+            <span className="font-bold">{mny(moneySpend)}<span className="ml-1 font-normal text-white/60">spend</span></span>
+            {moneyCpa != null && (
+              <span className="font-bold">
+                CPA {mny(moneyCpa)}
+                {moneyBe != null && <span className="ml-1 font-normal text-white/60">vs break-even {mny(moneyBe)}</span>}
+              </span>
+            )}
+            {cpaOverBe != null && (
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${cpaOverBe ? "bg-band-red/25 text-white" : "bg-teal/25 text-white"}`}>
+                {cpaOverBe ? "CPA above break-even" : "CPA at / below break-even"}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Verdict pills */}
         <div className="relative mt-5 flex flex-wrap gap-2">
@@ -139,7 +183,8 @@ export default async function CommandCenter() {
           )}
         </section>
 
-        {/* Right rail */}
+        {/* Right rail — Advanced view only; Simple keeps just the score + top fixes (10-second answer). */}
+        <ModeAware only="advanced">
         <aside className="space-y-5">
           {/* Connections */}
           <div className="rounded-2xl border border-border-subtle bg-white p-4 shadow-card">
@@ -195,6 +240,7 @@ export default async function CommandCenter() {
             )}
           </div>
         </aside>
+        </ModeAware>
       </div>
     </div>
   );

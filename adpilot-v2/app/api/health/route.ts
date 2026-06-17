@@ -35,8 +35,8 @@ export async function GET() {
   const ready = missingRequired.length === 0 && tokenKeyOk;
   return NextResponse.json({
     status: ready ? "ok" : "degraded",
-    version: "2.0",
-    service: "adpilot-os-v2",
+    version: "4.0.0",
+    service: "adpilot-os",
     required: Object.fromEntries(required.map((k) => [k, has(k)])),
     missingRequired,
     tokenKeyValid: tokenKeyOk,

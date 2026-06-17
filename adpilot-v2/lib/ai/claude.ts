@@ -8,16 +8,40 @@ export class NoKeyError extends Error {
   constructor() { super("NO_KEY"); this.name = "NoKeyError"; }
 }
 
-export async function callClaude(opts: { system?: string; user: string; model?: string; maxTokens?: number }): Promise<string> {
+// Model tiers — route each task to the lightest model that does the job, to cut token
+// cost and latency on the back end without hurting quality:
+//   light    → short, templated creative / classification (Haiku: cheapest, fastest)
+//   standard → grounded reasoning over the user's live numbers (Sonnet: the default)
+//   deep     → web-research synthesis / knowledge refresh (Opus)
+export const MODELS = {
+  light: "claude-haiku-4-5",
+  standard: "claude-sonnet-4-6",
+  deep: "claude-opus-4-8",
+} as const;
+
+// Pick the model for a tier. A global ANTHROPIC_MODEL pin (operator override) always wins,
+// otherwise the per-tier default applies. Keeps light tasks cheap unless explicitly overridden.
+export function modelFor(tier: keyof typeof MODELS): string {
+  return process.env.ANTHROPIC_MODEL || MODELS[tier];
+}
+
+export async function callClaude(opts: { system?: string; user: string; model?: string; maxTokens?: number; cacheSystem?: boolean }): Promise<string> {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) throw new NoKeyError();
+  // Prompt caching: when the system prefix is large + static (persona + reference knowledge), mark
+  // it cacheable so repeat calls reuse it at ~10% input cost (GA; needs a ≥1024–2048-tok prefix).
+  const system = opts.system
+    ? (opts.cacheSystem
+        ? [{ type: "text", text: opts.system, cache_control: { type: "ephemeral" } }]
+        : opts.system)
+    : undefined;
   const res = await fetch(API, {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
     body: JSON.stringify({
       model: opts.model || process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6",
       max_tokens: opts.maxTokens ?? 1000,
-      ...(opts.system ? { system: opts.system } : {}),
+      ...(system ? { system } : {}),
       messages: [{ role: "user", content: opts.user }],
     }),
   });

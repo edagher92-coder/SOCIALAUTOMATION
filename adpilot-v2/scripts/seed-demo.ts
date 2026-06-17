@@ -138,7 +138,7 @@ const CREATOR: Persona = {
 const CAFE: Persona = {
   key: "cafe",
   email: process.env.DEMO_CAFE_EMAIL || "cafe.demo@adpilot.app",
-  fullName: "Sam Rivera",
+  fullName: "Mia Bennett",
   orgName: "Bean & Bloom Café [DEMO]",
   currency: "AUD", asv: 34, gm: 0.62,
   accounts: [

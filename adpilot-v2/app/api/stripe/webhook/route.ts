@@ -40,6 +40,14 @@ export async function POST(req: Request) {
           return NextResponse.json({ received: true, warning: "unknown_plan" });
         }
         const plan = normalisePlan(planRaw);
+        // The upsert's arbiter is a PARTIAL unique index (WHERE stripe_subscription_id <> ''),
+        // so an empty subscription id (e.g. a one-time payment, or a checkout completed before
+        // the subscription attaches) has no arbiter and ON CONFLICT throws — silently swallowed,
+        // dropping a paid subscription. Guard it: skip the write and log if there's no subscription.
+        if (!s.subscription) {
+          console.error(`Stripe webhook: checkout ${s.id} completed with no subscription id — not writing (subscription-mode checkouts populate this).`);
+          return NextResponse.json({ received: true, warning: "no_subscription" });
+        }
         // Upsert keyed on the subscription id so duplicate webhook deliveries are idempotent.
         await admin.from("billing_subscriptions").upsert({
           organisation_id: orgId,

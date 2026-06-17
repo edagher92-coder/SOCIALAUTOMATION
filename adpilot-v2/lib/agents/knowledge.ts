@@ -5,7 +5,7 @@ import "server-only";
 // GUIDANCE, not guarantees — they vary by vertical, geo, and season.
 // Last researched: 2026-06-15.
 
-export type KnowledgeDomain = "meta" | "tiktok" | "policy" | "seo";
+export type KnowledgeDomain = "meta" | "tiktok" | "policy" | "seo" | "finance_content";
 export type KnowledgeDoc = { title: string; updated: string; body: string; sources: string[] };
 
 export const KNOWLEDGE: Record<KnowledgeDomain, KnowledgeDoc> = {
@@ -17,7 +17,7 @@ export const KNOWLEDGE: Record<KnowledgeDomain, KnowledgeDoc> = {
       "Creative fatigue: refresh when frequency reaches ~2.5–3.0 OR CTR falls ≥20% from its baseline. CTR can drop ~40% after 4+ exposures — try to keep frequency below ~3.4 on cold audiences.",
       "Creative volume by daily spend: ~10–15 creatives at $100–300/day; 20–30 at $300–1k; 30–50 at $1k–5k; 50–100+ above $5k. Add 3–5 fresh variations weekly.",
       "Advantage+/automated: tends to cut CPA materially vs manual setups and lift CTR via real-time optimization; feed it plenty of creative diversity.",
-      "Click-to-Message (CTWA / Messenger objective): optimise on CONVERSATIONS STARTED, not link CTR. Healthy cost-per-conversation is roughly AUD $3–8; treat >$8/convo as a watch-flag, and ~$67.50 as the qualified-lead reference. Quality signals: reply rate (~70%+ is strong) and depth-3+ replies (real intent, not noise). Exiting Meta's learning phase needs ~50 optimisation events/ad-set/week (≈$40–45/day/ad-set at these costs) — under-funded ad sets stall in learning. Don't judge a starved ad set (<~$3/day) on volume: fund it first, then test ≥3 days before acting; if it still produces ~0 conversations, the issue is creative/offer, not budget.",
+      "Click-to-Message (CTWA / Messenger objective): optimise on CONVERSATIONS STARTED, not link CTR, and track cost-per-conversation rather than link CPC. Quality signals: reply rate (a high reply rate signals genuine intent) and reply depth (multi-turn replies beat one-and-done). Exiting Meta's learning phase needs ~50 optimisation events/ad-set/week, so under-funded ad sets stall in learning — fund an ad set to a fair test budget before judging it on conversation volume. If a funded ad set still produces ~0 conversations after a fair test (≥3 days), the issue is creative/offer, not budget. (Account-specific cost-per-conversation and qualified-lead targets load from the active business context pack, not this baseline.)",
       "Failure→action: spend with zero recorded results or flagged tracking ⇒ audit pixel/CAPI/events BEFORE any budget call (never scale/cut blind). High frequency + falling CTR ⇒ fatigue ⇒ launch fresh angles as PAUSED duplicates. Implausibly high ROAS ⇒ treat as a tracking anomaly, verify values.",
     ].join("\n"),
     sources: [
@@ -54,6 +54,7 @@ export const KNOWLEDGE: Record<KnowledgeDomain, KnowledgeDoc> = {
       "Meta data/claims: don't request financial info (income, debt, card/account numbers) or health info without permission. No misleading/unsupported claims — guaranteed income, instant weight loss, fake scarcity/reviews, unrealistic 'before/after' transformations.",
       "TikTok prohibited (absolute): illegal/controlled drugs & paraphernalia, weapons/explosives, counterfeit goods. No exaggerated/guaranteed results. AI-generated realistic depictions of people/scenes must be clearly labelled; misleading AI content is banned. Don't use tracking to collect health data.",
       "Rewrite risky→compliant: turn 'Struggling with [condition]?' into a product-focused, non-personal claim; remove guarantees/absolutes ('cure', 'guaranteed', '#1'); replace with substantiated, qualified language. Paige has final say on any copy.",
+      "ACCC / Australian Consumer Law: no misleading or deceptive representations about savings, prices, results or outcomes — every claim (e.g. '$X saved', 'X% off', 'results in Y days') must be substantiated and able to be backed up, or omit it.",
     ].join("\n"),
     sources: [
       "https://transparency.meta.com/policies/ad-standards/",
@@ -76,6 +77,25 @@ export const KNOWLEDGE: Record<KnowledgeDomain, KnowledgeDoc> = {
       "https://thebrandhopper.com/learning-resources/local-seo-google-business-profile-best-practices-for-2026/",
       "https://www.amst.com/resources/2026-seo-checklist-for-small-businesses-from-google-business-profile-to-technical-seo-60384",
       "https://knapsackcreative.com/blog/seo/local-seo-aeo-trends",
+    ],
+  },
+  finance_content: {
+    title: "Finance / business-education content advertising (compliant, numbers-first)",
+    updated: "2026-06-15",
+    body: [
+      "Category framing: this is financial/business EDUCATION content, never personal financial advice. Use 'this is how it works' framing, not 'you should do this'. Never guarantee, imply, or strongly suggest a specific financial outcome for an individual.",
+      "Numbers-first hook: open every creative with a specific number, dollar figure, or percentage — not a vague tease or a 'most people don't know' claim. The first line of Meta copy (or first ~2 seconds on TikTok) must carry the number.",
+      "Show the maths: state the assumption, run the calculation, show the result. One concept, one calculation, one takeaway per ad unit; if the figure can't be shown in the unit, the landing page or link must show it.",
+      "Australian context: AUD (never USD unless explicitly comparing); reference GST (not VAT), ATO (not IRS), ACCC / Australian Consumer Law (not FTC), superannuation (not 401k), PAYG. Regulatory references must be accurate; when unsure, describe the concept and point to a registered professional.",
+      "Banned hook words for this category: secret/secrets, guru, get rich (quick), guaranteed returns/results, 'passive income' unless immediately qualified with real numbers and caveats, 'financial freedom' as a standalone promise, and 'wealth/wealthy' as a hook without a specific number.",
+      "Meta restricted category: financial products & services is restricted — no specific earnings claims, no implied guaranteed results; follow Meta's current financial-services ad policy. ACCC: do not make misleading representations about savings/outcomes; if a claim can't be substantiated, don't make it.",
+      "Disclaimer discipline: any unit that could reasonably read as financial advice must carry a plain-language disclaimer — minimum: 'General information only, not personal financial advice. Speak to a registered adviser for advice specific to your situation.'",
+      "Compliant CTAs point to content/tools/opt-ins (e.g. 'Get the free margin calculator', 'Watch the full breakdown', 'Download the P&L explainer'), never to a financial product, investment offer, or an 'earn more / make more money today' promise.",
+    ].join("\n"),
+    sources: [
+      "https://transparency.meta.com/policies/ad-standards/",
+      "https://www.accc.gov.au/business/advertising-and-promoting-your-business/false-or-misleading-claims",
+      "https://moneysmart.gov.au/",
     ],
   },
 };

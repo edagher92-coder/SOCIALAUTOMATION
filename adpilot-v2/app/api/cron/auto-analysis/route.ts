@@ -17,7 +17,7 @@ export async function GET(req: Request) {
   if (!ok) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const admin = createAdminClient();
-  const { data: orgs, error: orgsErr } = await admin.from("organisations").select("id,name,average_sale_value,gross_margin");
+  const { data: orgs, error: orgsErr } = await admin.from("organisations").select("id,name,average_sale_value,gross_margin,monthly_budget,lead_close_rate");
   if (orgsErr) return NextResponse.json({ error: "Could not load organisations." }, { status: 502 });
   let scored = 0, alerted = 0, failed = 0;
 
