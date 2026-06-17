@@ -102,7 +102,7 @@ export const KNOWLEDGE: Record<KnowledgeDomain, KnowledgeDoc> = {
 
 // Which knowledge domains each specialist is grounded with.
 export const AGENT_KNOWLEDGE: Record<string, KnowledgeDomain[]> = {
-  command: ["meta", "tiktok"],
+  command: [], // router: decides which specialist owns the request — no benchmark tables needed (token saving)
   mira: ["meta", "policy"],
   travis: ["tiktok", "policy"],
   dana: ["meta", "tiktok"],
@@ -110,7 +110,7 @@ export const AGENT_KNOWLEDGE: Record<string, KnowledgeDomain[]> = {
   titan: ["meta", "seo"],
   atlas: ["meta", "tiktok"],
   riley: ["meta", "tiktok"],
-  paige: ["policy"],
+  paige: ["policy", "finance_content"], // finance verticals carry the strictest claims rules
 };
 
 // Compact reference block for a specialist from the committed baseline (sync).

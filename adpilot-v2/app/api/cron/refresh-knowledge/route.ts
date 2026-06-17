@@ -16,6 +16,7 @@ const DOMAINS: { domain: KnowledgeDomain; topic: string }[] = [
   { domain: "tiktok", topic: "TikTok ads optimization — hook rate, hold rate, CTR/CPM benchmarks, Spark Ads, creative cadence/fatigue, and common failure→action rules" },
   { domain: "policy", topic: "Meta and TikTok advertising POLICY essentials — prohibited/restricted categories, personal-attribute & claims rules, AI-content labeling, and risky→compliant rewrites" },
   { domain: "seo", topic: "SEO and Answer-Engine-Optimization (AEO) best practices for small businesses — Google Business Profile, local SEO, reviews-as-signals, and AI search visibility" },
+  { domain: "finance_content", topic: "Advertising finance & money-vertical CONTENT compliance — claims substantiation, prohibited/absolute earnings or returns language, risk disclaimers, and Australian frameworks (ASIC/ACCC) for finance-adjacent ad copy" },
 ];
 
 export async function GET(req: Request) {
