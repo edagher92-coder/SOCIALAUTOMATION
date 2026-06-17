@@ -1,5 +1,5 @@
 import { PLANS, planPriceLabel } from "@/lib/plans";
-import { FEATURE_MIN_PLAN, FEATURE_LABEL, PLAN_LABEL, can, requiredPlan, type Feature } from "@/lib/entitlements";
+import { FEATURE_MIN_PLAN, FEATURE_LABEL, FEATURE_DESC, PLAN_LABEL, can, requiredPlan, type Feature } from "@/lib/entitlements";
 
 // Tier comparison matrix — the differentiation surface. Driven entirely by PLANS + entitlements,
 // so it can never drift from what the app actually gates. Presentational/server-renderable.
@@ -27,7 +27,10 @@ export default function PlanMatrix() {
             const need = requiredPlan(f);
             return (
               <tr key={f} className="border-b border-border-subtle/60">
-                <td className="p-3 font-semibold text-ink">{FEATURE_LABEL[f]}</td>
+                <td className="p-3">
+                  <div className="font-semibold text-ink">{FEATURE_LABEL[f]}</div>
+                  <div className="text-2xs text-muted">{FEATURE_DESC[f]}</div>
+                </td>
                 {PLANS.map((p) => {
                   const has = can(p.id, f);
                   const isUnlockTier = p.id === need; // cheapest tier that adds this feature

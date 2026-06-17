@@ -71,6 +71,27 @@ export const FEATURE_LABEL: Record<Feature, string> = {
   expert_plugins: "Expert plugins (team-built)",
 };
 
+// One honest, anti-hype benefit line per feature — drives the "what you gain by upgrading"
+// subtext in the tier matrix so locked rows entice rather than just list a name. AU English.
+// `satisfies` guarantees every Feature has a description (compile error if one is missed).
+export const FEATURE_DESC = {
+  csv_import: "Paste or upload a CSV to get scored — no connection needed.",
+  health_score: "0–100 Campaign Health Score across 13 weighted factors.",
+  reports: "Save weekly and monthly reports to revisit and share.",
+  api_connect: "Connect Meta & TikTok read-only — no CSV juggling.",
+  auto_sync: "Fresh numbers pulled automatically on your schedule.",
+  ai_team: "Ask 12 grounded specialists about your live numbers.",
+  content_publish: "Upload and schedule your own organic posts.",
+  creative_studio: "Draft on-brand creative with AI plus Canva/Adobe.",
+  messenger_automation: "Set up Messenger auto-replies without the dev prompts.",
+  ad_write: "Apply guarded pause/budget changes — typed-YES, reversible.",
+  lead_quality_loop: "Feed CRM/lead events in to score lead quality.",
+  threshold_alerts: "Custom alert rules for frequency, zero-conv and CTR drops.",
+  multi_client: "Manage multiple client workspaces side by side.",
+  white_label: "Put your own brand on exported reports.",
+  expert_plugins: "Team-built extras reserved for the top tier.",
+} satisfies Record<Feature, string>;
+
 export function can(plan: Plan, feature: Feature): boolean {
   return PLAN_RANK[plan] >= PLAN_RANK[FEATURE_MIN_PLAN[feature]];
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { featuresFor, can, requiredPlan, FEATURE_MIN_PLAN, PLAN_RANK, type Plan, type Feature } from "./entitlements";
+import { featuresFor, can, requiredPlan, FEATURE_MIN_PLAN, FEATURE_DESC, PLAN_RANK, type Plan, type Feature } from "./entitlements";
 
 // The tier-comparison matrix + nav lock badges are driven off these helpers. Lock the invariants
 // (monotone, genuinely-differentiated tiers; correct required-plan) without a DOM render harness.
@@ -22,6 +22,12 @@ describe("featuresFor (tier matrix driver)", () => {
     for (let i = 1; i < ladder.length; i++) {
       const gained = featuresFor(ladder[i]).filter((f) => !can(ladder[i - 1], f));
       expect(gained.length, `${ladder[i]} adds nothing over ${ladder[i - 1]}`).toBeGreaterThan(0);
+    }
+  });
+
+  it("every feature has a non-empty benefit line for the matrix subtext", () => {
+    for (const f of Object.keys(FEATURE_MIN_PLAN) as Feature[]) {
+      expect(FEATURE_DESC[f]?.trim().length, `${f} has no description`).toBeGreaterThan(0);
     }
   });
 
