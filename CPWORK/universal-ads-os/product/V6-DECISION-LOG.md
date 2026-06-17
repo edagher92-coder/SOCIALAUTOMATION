@@ -190,3 +190,21 @@ OWNER-GATED: prices · auto-execute green-light · Meta System User token · sol
 - REMAINING tail: tier feature keys + their features/GUI; diagnostics surfacing (significance/fatigue
   into decisions, break_even_cpl split); dev-dep audit cleanup (vitest v3). Owner-gated: AUD prices,
   auto-execute green-light, solicitor legal text, non-expiring Meta token.
+
+## 2026-06-17 — EXECUTED: owner-authorised engine changes (significance gate + break-even-CPL split)
+- (a) Wilson significance gate (decisions.ts): scale/kill now also require statistical confidence in
+  the purchase rate vs the break-even rate (cpc/be). Scale needs a confident WIN, else softens to
+  keep; kill (>1.5x be) needs a confident LOSS, else softens to reduce. Strictly conservative — only
+  ever makes a proposal safer; point-estimate verdicts + decide().safe unchanged. Existing safety
+  fixtures (winner->scale, blown->kill) verified intact by hand and in tests. +4 tests.
+- (b) Break-even-CPL split (metrics/types/audit/index/decisions + migration 0023): optional org
+  lead->sale close rate unlocks beCpl = avg x margin x closeRate. Lead-only accounts get a
+  CPL-vs-break-even read (reduce when CPL >1.5x beCpl; keep/verify when <=beCpl; keep/lead-quality
+  when modestly above). NEVER kills on CPL. No close rate => existing lead-quality routing unchanged
+  (inert-safe). Threaded through score/ingest/auto-sync/auto-analysis cfg, settings UI (live beCpl
+  readout) + report KPI table. +6 tests.
+- Verified each: tsc clean, 472 tests green, next build clean (66 routes). Pushed (PR #22).
+- REMAINING tail: dev-dep audit reconciliation (vitest pinned ^2 in package.json but 4.1.9 resolved
+  locally — align to ^4 to clear the esbuild/vite dev-chain advisories). Owner-gated: AUD prices,
+  auto-execute green-light, solicitor legal text, non-expiring Meta token, and a UX home for the
+  lead-close-rate input discoverability (currently in Settings).
