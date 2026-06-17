@@ -42,6 +42,7 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
   const [ai, setAi] = useState("");
   const [imgPrompt, setImgPrompt] = useState("");
   const [imgAspect, setImgAspect] = useState("1:1");
+  const [imgN, setImgN] = useState(1);
   const [images, setImages] = useState<{ url: string; seed?: number }[]>([]);
   const [busy, setBusy] = useState("");
   const [msg, setMsg] = useState("");
@@ -79,7 +80,7 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
   async function genImage() {
     setBusy("img"); setMsg(""); setErr(""); setImages([]);
     try {
-      const r = await fetch("/api/creative/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: imgPrompt.trim(), aspect: imgAspect }) });
+      const r = await fetch("/api/creative/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: imgPrompt.trim(), aspect: imgAspect, numVariations: imgN }) });
       const j = await r.json();
       if (!r.ok) { setErr(j.error || "Couldn't generate the image"); return; }
       setImages(j.images || []);
@@ -169,7 +170,7 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
               {/* Firefly image generation */}
               <div className="mt-3 border-t border-brand-200/60 pt-3">
                 <span className="text-sm font-bold">🖼️ Generate an ad image</span>
-                <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto]">
+                <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
                   <input value={imgPrompt} onChange={(e) => setImgPrompt(e.target.value)} placeholder="Describe the image — e.g. warm flat-lay of a coffee subscription box on a kitchen bench" className="rounded-lg border border-border-subtle p-2 text-sm" />
                   <select value={imgAspect} onChange={(e) => setImgAspect(e.target.value)} className="rounded-lg border border-border-subtle p-2 text-sm">
                     <option value="1:1">1:1 feed</option>
@@ -177,6 +178,11 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
                     <option value="16:9">16:9 landscape</option>
                     <option value="4:3">4:3</option>
                     <option value="3:4">3:4</option>
+                  </select>
+                  <select value={imgN} onChange={(e) => setImgN(Number(e.target.value))} className="rounded-lg border border-border-subtle p-2 text-sm" title="How many variations to generate">
+                    <option value={1}>1 image</option>
+                    <option value={2}>2 variations</option>
+                    <option value={4}>4 variations</option>
                   </select>
                 </div>
                 <button onClick={genImage} disabled={busy === "img" || imgPrompt.trim().length < 3} className="mt-2 rounded-lg border border-brand px-3 py-1.5 text-sm font-bold text-brand disabled:opacity-50">
