@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
 import { can, PLAN_LABEL } from "@/lib/entitlements";
 import { verdictMeta, bandMeta, cadenceText } from "@/lib/proposals";
+import { summariseSeries } from "@/lib/engine/timeseries";
 import ModeAware from "@/components/ModeAware";
 
 export const dynamic = "force-dynamic";
@@ -41,12 +42,13 @@ export default async function CommandCenter() {
   const aiEnabled = can(plan, "ai_team");
   const apiEnabled = can(plan, "api_connect");
 
-  const [orgRes, scoreRes, openRecsRes, accountsRes, reportsRes] = await Promise.all([
+  const [orgRes, scoreRes, openRecsRes, accountsRes, reportsRes, trendRes] = await Promise.all([
     supabase.from("organisations").select("name,last_synced_at,sync_interval_hours").eq("id", orgId).maybeSingle(),
     supabase.from("health_scores").select("total,band,created_at").eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("recommendations").select("id,verdict,entity_name,platform,proposal").eq("organisation_id", orgId).eq("status", "open").order("created_at", { ascending: false }).limit(100),
     supabase.from("connected_ad_accounts").select("platform,display_name,status").eq("organisation_id", orgId),
     supabase.from("reports").select("id,title,created_at").eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(5),
+    supabase.from("health_scores").select("total,created_at").eq("organisation_id", orgId).order("created_at", { ascending: true }).limit(60),
   ]);
 
   // Surface a clear banner if the data layer is unreachable, but still render the shell.
@@ -62,6 +64,11 @@ export default async function CommandCenter() {
   const recs = (openRecs || []) as any[];
   const byVerdict = recs.reduce((m: Record<string, number>, r) => ((m[r.verdict] = (m[r.verdict] || 0) + 1), m), {});
   const attention = recs.slice().sort((a, b) => verdictMeta(a.verdict).rank - verdictMeta(b.verdict).rank).slice(0, 4);
+  // Health-score trend over the saved history (P3 diagnostics surfaced).
+  const trendHist = ((trendRes.data || []) as any[]).map((r) => Number(r.total)).filter((v) => Number.isFinite(v));
+  const trend = summariseSeries(trendHist);
+  const trendArrow = trend.trend === "rising" ? "↑" : trend.trend === "falling" ? "↓" : "→";
+  const trendWow = trend.wowPct == null ? null : Math.round(trend.wowPct * 100);
   const accts = (accounts || []) as any[];
   const cadence = cadenceText((org as any)?.sync_interval_hours);
   const name = (org as any)?.name || "your workspace";
@@ -93,6 +100,11 @@ export default async function CommandCenter() {
             <div className="text-right">
               <div className="text-4xl font-extrabold leading-none">{total ?? "—"}<span className="text-lg text-white/50">/100</span></div>
               <div className="mt-1 text-xs font-bold uppercase tracking-wide text-white/70">{(score as any)?.band || "no score"} · {band.label}</div>
+              {trend.n >= 3 && (
+                <div className="mt-1 text-xs text-white/70" title="Trend over your saved health-score history">
+                  {trendArrow} {trend.trend}{trendWow != null ? ` · ${trendWow >= 0 ? "+" : ""}${trendWow}% WoW` : ""}
+                </div>
+              )}
             </div>
           </div>
         </div>
