@@ -87,6 +87,16 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
     } catch (e: any) { setErr(e?.message || "Couldn't generate the image"); } finally { setBusy(""); }
   }
 
+  async function varyImage(ref: string) {
+    setBusy("img"); setMsg(""); setErr("");
+    try {
+      const r = await fetch("/api/creative/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: imgPrompt.trim() || "Create a fresh on-brand advertising variation of this image. Keep the product and style faithful. No text, no people.", aspect: imgAspect, referenceImage: ref }) });
+      const j = await r.json();
+      if (!r.ok) { setErr(j.error || "Couldn't vary the image"); return; }
+      setImages(j.images || []);
+    } catch (e: any) { setErr(e?.message || "Couldn't vary the image"); } finally { setBusy(""); }
+  }
+
   async function save() {
     setMsg(""); setErr("");
     if (nothingToSave) { setErr("Add a caption or a media URL first."); return; }
@@ -194,7 +204,10 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
                       <div key={i} className="rounded-lg border border-border-subtle p-1.5">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={im.url} alt="Generated ad creative" className="w-full rounded" />
-                        <button onClick={() => { setMediaUrl(im.url); setMediaType("image"); setMsg("Image set as media — save your draft."); }} className="mt-1.5 w-full rounded-md bg-brand px-2 py-1 text-xs font-bold text-white">Use this image</button>
+                        <div className="mt-1.5 flex gap-1.5">
+                          <button onClick={() => { setMediaUrl(im.url); setMediaType("image"); setMsg("Image set as media — save your draft."); }} className="flex-1 rounded-md bg-brand px-2 py-1 text-xs font-bold text-white">Use</button>
+                          <button onClick={() => varyImage(im.url)} disabled={busy === "img"} title="Make an on-brand variation / edit of this image" className="flex-1 rounded-md border border-brand px-2 py-1 text-xs font-bold text-brand disabled:opacity-50">✨ Vary</button>
+                        </div>
                       </div>
                     ))}
                   </div>

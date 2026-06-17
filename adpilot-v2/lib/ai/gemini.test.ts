@@ -58,4 +58,27 @@ describe("gemini image client", () => {
     vi.stubGlobal("fetch", vi.fn(async () => res({ predictions: [] })));
     await expect(m.generateImage({ prompt: "x" })).rejects.toThrow(/no image/i);
   });
+
+  it("parseDataUrl extracts mime + base64, rejects non-data URLs", async () => {
+    const { parseDataUrl } = await import("./gemini");
+    expect(parseDataUrl("data:image/png;base64,QUJD")).toEqual({ mimeType: "image/png", base64: "QUJD" });
+    expect(parseDataUrl("https://example.com/x.png")).toBeNull();
+    expect(parseDataUrl("data:text/plain;base64,QUJD")).toBeNull();
+  });
+
+  it("editImage posts an inline image part to gemini-2.5-flash-image and returns a data URL", async () => {
+    process.env.GEMINI_API_KEY = "k-9";
+    const calls: any[] = [];
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init: any) => {
+      calls.push({ url, init });
+      return res({ candidates: [{ content: { parts: [{ inlineData: { mimeType: "image/png", data: "WllZ" } }] } }] });
+    }));
+    const { editImage } = await import("./gemini");
+    const out = await editImage({ prompt: "put it on marble", image: { base64: "QUJD", mimeType: "image/png" } });
+    expect(out).toEqual([{ url: "data:image/png;base64,WllZ", mimeType: "image/png" }]);
+    expect(calls[0].url).toContain("gemini-2.5-flash-image:generateContent");
+    const body = JSON.parse(calls[0].init.body);
+    expect(body.generationConfig.responseModalities).toEqual(["IMAGE"]);
+    expect(body.contents[0].parts[1].inlineData.data).toBe("QUJD");
+  });
 });

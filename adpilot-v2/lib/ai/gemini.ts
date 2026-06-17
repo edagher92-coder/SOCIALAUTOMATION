@@ -47,6 +47,41 @@ export async function generateImage(opts: {
   return images;
 }
 
+// Image-to-image: edit / vary a reference image with a text prompt (e.g. "put this product on a
+// marble shelf", or "create a fresh on-brand variation"). Uses the gemini-2.5-flash-image model
+// (:generateContent with an inline image part) — verified live. Returns data: URLs.
+export async function editImage(opts: { prompt: string; image: { base64: string; mimeType: string } }): Promise<GeneratedImage[]> {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) throw new GeminiNotConfigured();
+  const model = process.env.GEMINI_EDIT_MODEL || "gemini-2.5-flash-image";
+  const body = {
+    contents: [{ parts: [{ text: opts.prompt }, { inlineData: { mimeType: opts.image.mimeType || "image/png", data: opts.image.base64 } }] }],
+    generationConfig: { responseModalities: ["IMAGE"] },
+  };
+  const res = await fetch(`${BASE}/models/${model}:generateContent`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-goog-api-key": key },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Gemini edit failed (${res.status}): ${(await res.text()).slice(0, 300)}`);
+  const j: any = await res.json();
+  const parts: any[] = j?.candidates?.[0]?.content?.parts || [];
+  const images: GeneratedImage[] = [];
+  for (const p of parts) {
+    const data = p?.inlineData?.data || p?.inline_data?.data;
+    if (data) images.push({ url: `data:${p?.inlineData?.mimeType || "image/png"};base64,${data}`, mimeType: p?.inlineData?.mimeType });
+  }
+  if (!images.length) throw new Error("Gemini edit: response contained no image");
+  return images;
+}
+
+// Parse a data:image/...;base64,... URL into its parts (used to vary a generated image safely,
+// without server-side fetching of arbitrary URLs).
+export function parseDataUrl(s: string): { base64: string; mimeType: string } | null {
+  const m = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/s.exec(s);
+  return m ? { mimeType: m[1], base64: m[2] } : null;
+}
+
 export function geminiConfigured(): boolean {
   return !!process.env.GEMINI_API_KEY;
 }
