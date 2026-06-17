@@ -5,6 +5,7 @@ import { verdictMeta, bandMeta, cadenceText } from "@/lib/proposals";
 import { summariseSeries } from "@/lib/engine/timeseries";
 import { fmt } from "@/lib/engine/metrics";
 import ModeAware from "@/components/ModeAware";
+import ReadOnlyBadge from "@/components/ReadOnlyBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +104,7 @@ export default async function CommandCenter() {
                 ? <>Auto-syncing <b className="text-white">{cadence}</b> · last pull {fmtAgo((org as any)?.last_synced_at)} · then scored & queued for you.</>
                 : <>CSV mode on {PLAN_LABEL[plan]}. Upgrade to auto-sync Meta & TikTok live.</>}
             </p>
+            <div className="mt-2"><ReadOnlyBadge /></div>
           </div>
 
           {/* Health gauge */}
