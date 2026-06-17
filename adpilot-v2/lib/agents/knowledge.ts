@@ -5,7 +5,7 @@ import "server-only";
 // GUIDANCE, not guarantees — they vary by vertical, geo, and season.
 // Last researched: 2026-06-15.
 
-export type KnowledgeDomain = "meta" | "tiktok" | "policy" | "seo" | "finance_content";
+export type KnowledgeDomain = "meta" | "tiktok" | "policy" | "seo" | "finance_content" | "cro" | "lead_gen";
 export type KnowledgeDoc = { title: string; updated: string; body: string; sources: string[] };
 
 export const KNOWLEDGE: Record<KnowledgeDomain, KnowledgeDoc> = {
@@ -98,6 +98,42 @@ export const KNOWLEDGE: Record<KnowledgeDomain, KnowledgeDoc> = {
       "https://moneysmart.gov.au/",
     ],
   },
+  cro: {
+    title: "Conversion-rate optimisation & offer-funnel",
+    updated: "2026-06-17",
+    body: [
+      "Benchmarks (ranges; SOURCE matters more than vertical): median landing-page CVR ~6–7%; 'good' ≥10%. By source: paid search ~3–4%, PAID SOCIAL (cold) ~1–2%, email ~15–20%. Cold social has no active intent — judge it against ~1–3%, not against search/email; routing paid clicks to a homepage can suppress CVR ~4–5×.",
+      "Levers, by leverage: (1) MESSAGE-MATCH ad↔landing page (headline/offer/visual must mirror the ad); (2) page speed (LCP <~2.5s; ~53% of mobile users abandon >~3s); (3) form length; (4) ONE clear CTA; (5) social proof above the fold.",
+      "Form length: CVR ~20–25% at 3 fields → ~17% at 5 → ~11% at 7 → ~3–7% at 10+. Keep lead forms to ~3–5 fields; ask only what sales needs; removing a field tends to lift conversion ~10–20%.",
+      "Mobile-first (most paid-social traffic is mobile) and trust/proof near the CTA matter; a weak or unclear offer caps everything downstream — systematic CRO commonly lifts CVR ~30–80% but it compounds the offer, it can't rescue a bad one.",
+      "'CPL fine but no sales' is usually NOT media: ~79% of leads never convert (slow follow-up, generic messaging, bad data). Walk the funnel in order — offer → landing page (match/speed/mobile/form/proof) → qualification → speed-to-lead → close. Shift from CPL to cost-per-QUALIFIED-lead and CPA.",
+      "Failure→action (Titan): low LP CVR with healthy CTR/CPC ⇒ landing-page/offer problem, not media — check message-match + speed first. Cheap leads + zero sales ⇒ diagnose qualification + speed-to-lead + offer before any budget change. Frame fixes as tests/ranges, never guaranteed outcomes.",
+    ].join("\n"),
+    sources: [
+      "https://www.digitalapplied.com/blog/conversion-rate-benchmarks-2026-industry-channel",
+      "https://www.apexure.com/blog/landing-page-conversion-rate-benchmarks-by-industry",
+      "https://ventureharbour.com/how-form-length-impacts-conversion-rates/",
+      "https://foundrycro.com/blog/google-ads-landing-page-best-practices-2026/",
+    ],
+  },
+  lead_gen: {
+    title: "Lead quality, qualification & close-rate benchmarks",
+    updated: "2026-06-17",
+    body: [
+      "Close-rate (lead→sale; ranges, vary by vertical/source/deal size): overall ~20% (B2B ~21%); SaaS ~22%, finance ~19%; booked-enquiry trades higher; quote/proposal-stage win rates far higher (~45–50%). Never compare an 'all-leads' rate to a 'quoted-only' rate.",
+      "Channel quality differs sharply: REFERRAL closes best (pre-trusted), organic search strong, PAID SOCIAL (cold) weakest (~8–18% MQL→SQL). Paid-social leads SHOULD close lower than referral/search — a channel-intent gap, not necessarily a broken funnel. Measure stage-to-stage; drop-off compounds.",
+      "Speed-to-lead is the biggest controllable lever: contacting within ~5 min vs ~30 min lifts contact/qualify rates dramatically; ~78% of buyers go with whoever responds first, yet only ~7% respond within 5 min — fast follow-up often beats more ad spend.",
+      "Lead-quality signals: intent/behaviour (form depth, requested a quote/booking), firmographic/geo fit, contact-data validity, source. Low reply rates, junk data, out-of-area enquiries flag a TARGETING/qualification problem, not a media-volume problem.",
+      "Media vs lead-quality/follow-up problem: cheap + plentiful leads that don't close ⇒ qualification/speed/offer (NOT the campaign); expensive/thin leads ⇒ media/creative/targeting. Shift the headline metric from CPL to cost-per-qualified-lead (CPQL) and CPA.",
+      "Break-even maths (context for AdPilot's lead-gen verdicts): beCPL = break-even CPA × close rate (= target CPA ÷ leads-per-sale). Target CPA $200 at 20% close ⇒ beCPL ≈ $40; at 10% ⇒ ≈ $20. A 'cheap' CPL above its modelled beCPL still loses money — a low close rate, not the media, is usually what makes a lead-gen account unprofitable. AUD; require the client's real numbers before a verdict; no guaranteed-results claims.",
+    ].join("\n"),
+    sources: [
+      "https://prospeo.io/s/lead-to-close-rate",
+      "https://prooflytics.io/blog/mql-to-sql-conversion-rate-benchmarks",
+      "https://www.apten.ai/blog/speed-to-lead-benchmarks-2026",
+      "https://prospeo.io/s/average-cost-per-lead",
+    ],
+  },
 };
 
 // Which knowledge domains each specialist is grounded with.
@@ -105,9 +141,9 @@ export const AGENT_KNOWLEDGE: Record<string, KnowledgeDomain[]> = {
   command: [], // router: decides which specialist owns the request — no benchmark tables needed (token saving)
   mira: ["meta", "policy"],
   travis: ["tiktok", "policy"],
-  dana: ["meta", "tiktok"],
+  dana: ["meta", "tiktok", "lead_gen"], // unit economics + close-rate / break-even-CPL maths
   stella: ["meta", "tiktok", "policy"],
-  titan: ["meta", "seo"],
+  titan: ["cro", "meta", "seo"], // offer/funnel: CRO is his core domain (was the biggest agent↔knowledge gap)
   atlas: ["meta", "tiktok"],
   riley: ["meta", "tiktok"],
   paige: ["policy", "finance_content"], // finance verticals carry the strictest claims rules

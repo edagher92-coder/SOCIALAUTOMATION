@@ -40,7 +40,14 @@ export async function POST(req: Request) {
   ]);
   const payload = repRes.status === "fulfilled" ? (repRes.value as any)?.data?.payload : null;
   const recs = recsRes.status === "fulfilled" ? ((recsRes.value as any)?.data as any[]) : null;
-  const grounding = buildGrounding(payload, recs || []);
+  // Token-count guard: cap the volatile grounding so an unusually large saved-report payload
+  // can't blow the context window / maxTokens (~4 chars/token heuristic).
+  const GROUNDING_CHAR_CAP = 12000; // ≈ 3k tokens
+  let grounding = buildGrounding(payload, recs || []);
+  if (grounding.length > GROUNDING_CHAR_CAP) {
+    console.info("[agents.run] grounding truncated", JSON.stringify({ from: grounding.length, to: GROUNDING_CHAR_CAP }));
+    grounding = grounding.slice(0, GROUNDING_CHAR_CAP) + "\n…[grounding truncated to fit the context window]";
+  }
 
   // knowledgeForAgent already falls back to baseline internally; guard the call
   // itself so an unexpected throw can't break grounding.

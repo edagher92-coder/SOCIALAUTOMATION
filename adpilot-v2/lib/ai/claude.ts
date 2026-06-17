@@ -35,11 +35,12 @@ export async function callClaude(opts: { system?: string; user: string; model?: 
         ? [{ type: "text", text: opts.system, cache_control: { type: "ephemeral" } }]
         : opts.system)
     : undefined;
+  const model = opts.model || process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
   const res = await fetch(API, {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
     body: JSON.stringify({
-      model: opts.model || process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6",
+      model,
       max_tokens: opts.maxTokens ?? 1000,
       ...(system ? { system } : {}),
       messages: [{ role: "user", content: opts.user }],
@@ -50,6 +51,13 @@ export async function callClaude(opts: { system?: string; user: string; model?: 
     throw new Error(`Claude API error ${res.status}: ${t.slice(0, 300)}`);
   }
   const j: any = await res.json();
+  // Observability: log token usage incl. prompt-cache hits/writes so the caching saving is
+  // measured, not estimated. Counts only — no prompt content or client data is logged.
+  const u = j.usage;
+  if (u) console.info("[claude.usage]", JSON.stringify({
+    model, in: u.input_tokens, out: u.output_tokens,
+    cache_read: u.cache_read_input_tokens ?? 0, cache_write: u.cache_creation_input_tokens ?? 0,
+  }));
   return (j.content || []).map((b: any) => (b.type === "text" ? b.text : "")).join("").trim();
 }
 
