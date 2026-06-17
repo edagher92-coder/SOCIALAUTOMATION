@@ -48,7 +48,8 @@ V6 shipped and merged to `main` via PR #22 (merge `c8617eb`): dual-mode UX, tier
 Next 16 / React 19 security migration, scoped right-to-erasure, connect trust chips + one-click
 "Run my first audit", and DRAFT legal frameworks (two-partner reviewed). **484 tests** green;
 verify discipline = `tsc --noEmit` + `vitest run` + `next build` (also enforced in CI, which now
-runs `npm ci` + typecheck + a resale-clean guard). Continue new work on a fresh branch off `main`.
+runs a typecheck step + a resale-clean guard). Note: `package-lock.json` is gitignored, so CI uses
+`npm install` (not `npm ci`). Continue new work on a fresh branch off `main`.
 
 ## What's next / owner-gated
 - **Build roadmap (board-reviewed, not owner-gated):** see `CPWORK/.../product/v6-skills-board/`

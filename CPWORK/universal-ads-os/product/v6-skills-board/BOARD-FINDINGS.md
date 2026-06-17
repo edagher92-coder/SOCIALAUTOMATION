@@ -44,7 +44,9 @@ queued. Read-only audits; nothing private surfaced (resale-clean).
   **484**; migrations 0001…0016 vs **…0023**; Next 14 vs **16**.
 - **Loop wins already banked:** prompt caching (~25–30% blended), Haiku routing on light routes (~60–75%
   cheaper there), right-sized `maxTokens`, bounded web-search loop.
-- **Left:** token-count guard + cache-usage logging on the AI path; (done) CI `npm ci`+cache+typecheck.
+- **Left:** token-count guard + cache-usage logging on the AI path; (done) CI typecheck step + guard.
+  (npm ci + dependency caching is contingent on the owner choosing to commit a lockfile — it's
+  currently gitignored, so CI keeps using `npm install`.)
 - **Harness adoptions recommended:** a **SessionStart verify hook** (npm ci + typecheck + test), pre-PR
   `code-review`/`security-review` gate, `fewer-permission-prompts` allowlist, `deep-research` for the
   remaining owner-gated research.
@@ -55,8 +57,8 @@ queued. Read-only audits; nothing private surfaced (resale-clean).
 1. **CLAUDE.md → V6 reality** (version/date, Next 16, engine upgrades, migrations …0023, merged status, current-state).
 2. **Decision-log skim header** (orient in one screen) + **log-archive rule** at ~500 lines.
 3. **CHANGELOG v6.0.0** entry; **package.json** 4.0.0 → 6.0.0 + description.
-4. **CI hardening:** `npm ci` + npm dependency cache + explicit **typecheck** step + a **resale-clean guard**
-   (fails the build if private tokens reach the shippable tree).
+4. **CI hardening:** explicit **typecheck** step + a **resale-clean guard** (fails the build if private
+   tokens reach the shippable tree). (npm ci + caching deferred — the lockfile is gitignored.)
 5. **AI layer:** router persona de-grounded (`command: []`, token saving); orphaned **`finance_content`**
    wired to Paige + added to the refresh-knowledge cron (no longer rots); tests updated.
 

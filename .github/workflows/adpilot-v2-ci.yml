@@ -17,10 +17,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
-          cache-dependency-path: adpilot-v2/package-lock.json
-      - name: Install (clean, from lockfile)
-        run: npm ci --no-audit --no-fund
+      # Note: package-lock.json is intentionally gitignored, so npm ci / npm cache
+      # (which require a committed lockfile) are not used here.
+      - name: Install
+        run: npm install --no-audit --no-fund
       - name: Resale-clean guard (no private business data in the shippable tree)
         run: |
           if grep -rInE "snowflow|edagher" . \

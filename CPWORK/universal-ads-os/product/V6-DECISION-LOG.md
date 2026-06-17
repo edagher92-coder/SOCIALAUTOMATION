@@ -6,7 +6,7 @@ collected in V6-MASTER-PLAN.md → "Owner decision queue" and surfaced just befo
 > **CURRENT STATE (2026-06-17) — read this first, then skip to the bottom for live detail**
 > - **V6 shipped & merged** to `main` via PR #22 (merge `c8617eb`).
 > - **484 tests** green; every commit verified `tsc` + `vitest` + `next build`; CI now also runs
->   `npm ci` + typecheck + a resale-clean guard.
+>   a typecheck step + a resale-clean guard (lockfile is gitignored, so CI uses `npm install`).
 > - **Delivered:** dual-mode UX, tier differentiation + wired AUD pricing, engine upgrades (Wilson
 >   significance gate, break-even-CPL split, diagnostics modules), AI cost routing (caching + Haiku),
 >   Next 16/React 19 migration, right-to-erasure, connect trust chips + one-click first audit,

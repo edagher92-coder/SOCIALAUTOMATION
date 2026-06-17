@@ -16,7 +16,8 @@ Shipped & merged via PR #22. Built by a parallel multi-specialist effort under P
 - **Security/privacy:** Next.js 14→16 + React 19 (cleared all critical/high production advisories);
   scoped right-to-erasure endpoint; Terms/Privacy §7 data-use/model-training DRAFT clauses.
 - **Connect:** reusable read-only trust chips + one-click "Run my first audit" + hardened token validation.
-- **Ops:** CI now runs `npm ci` + typecheck + a resale-clean guard with dependency caching. 484 tests.
+- **Ops:** CI now runs an explicit typecheck step + a resale-clean guard (fails the build if private
+  tokens reach the shippable tree). 484 tests.
 
 ## v4.0.0 — Integration & Optimisation (2026-06-16)
 
