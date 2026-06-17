@@ -14,6 +14,7 @@ export default function Settings() {
   const [avg, setAvg] = useState(200);
   const [margin, setMargin] = useState(0.6);
   const [budget, setBudget] = useState<number | "">("");
+  const [closeRate, setCloseRate] = useState<number | "">("");
   const [name, setName] = useState("");
   const [syncHours, setSyncHours] = useState(24);
   const [customMode, setCustomMode] = useState(false);
@@ -25,6 +26,7 @@ export default function Settings() {
       const s = j.settings || {};
       setAvg(s.average_sale_value ?? 200); setMargin(s.gross_margin ?? 0.6); setName(s.name || "");
       setBudget(s.monthly_budget ?? "");
+      setCloseRate(s.lead_close_rate ?? "");
       const h = s.sync_interval_hours ?? 24;
       setSyncHours(h);
       setCustomMode(!CADENCE_PRESETS.some((p) => p.v === h));
@@ -37,7 +39,7 @@ export default function Settings() {
   async function save() {
     setBusy(true); setMsg("");
     try {
-      const r = await fetch("/api/org-settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ average_sale_value: +avg, gross_margin: +margin, sync_interval_hours: cleanHours, monthly_budget: budget === "" ? null : +budget }) });
+      const r = await fetch("/api/org-settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ average_sale_value: +avg, gross_margin: +margin, sync_interval_hours: cleanHours, monthly_budget: budget === "" ? null : +budget, lead_close_rate: closeRate === "" ? null : +closeRate }) });
       setMsg(r.ok ? "Saved ✅ — scoring + auto-sync now use these." : "Couldn't save — check the values and try again.");
     } catch {
       setMsg("Network error — try again.");
@@ -51,6 +53,7 @@ export default function Settings() {
 
   const beCpa = (+avg * +margin) || 0;
   const beRoas = +margin ? 1 / +margin : 0;
+  const beCpl = closeRate !== "" && +closeRate > 0 ? beCpa * +closeRate : null;
 
   return (
     <div className="max-w-xl">
@@ -63,7 +66,12 @@ export default function Settings() {
           <input type="number" step="0.01" value={margin} onChange={(e) => setMargin(+e.target.value)} className="w-full rounded-lg border border-border-subtle p-2.5" /></div>
         <div className="rounded-lg bg-surface p-3 text-sm text-muted">
           Break-even CPA: <b>${beCpa.toFixed(2)}</b> · Break-even ROAS: <b>{beRoas.toFixed(2)}</b>
+          {beCpl != null && <> · Break-even CPL: <b>${beCpl.toFixed(2)}</b></>}
         </div>
+        <div><label className="mb-1 block text-sm font-bold">Lead→sale close rate (0–1) — optional</label>
+          <input type="number" step="0.01" min={0} max={1} value={closeRate} onChange={(e) => setCloseRate(e.target.value === "" ? "" : +e.target.value)} placeholder="e.g. 0.1 if 10% of leads become sales"
+            className="w-full rounded-lg border border-border-subtle p-2.5" />
+          <p className="mt-1 text-xs text-muted">For <b>lead-gen</b> accounts: what fraction of leads turn into sales. Set it to judge cost-per-lead against a modelled <b>break-even CPL</b>. Left blank, lead-only accounts get the conservative lead-quality read instead.</p></div>
         <div><label className="mb-1 block text-sm font-bold">Monthly ad budget (AUD) — optional</label>
           <input type="number" min={0} value={budget} onChange={(e) => setBudget(e.target.value === "" ? "" : +e.target.value)} placeholder="Leave blank to skip pacing"
             className="w-full rounded-lg border border-border-subtle p-2.5" />

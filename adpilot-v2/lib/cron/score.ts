@@ -16,7 +16,7 @@ function breaches(result: any): string[] {
 
 export async function scoreAndAlertOrg(
   admin: any,
-  org: { id: string; name?: string; average_sale_value?: number; gross_margin?: number; monthly_budget?: number | null },
+  org: { id: string; name?: string; average_sale_value?: number; gross_margin?: number; monthly_budget?: number | null; lead_close_rate?: number | null },
 ): Promise<{ scored: boolean; alerted: boolean }> {
   const since = new Date(Date.now() - 14 * 864e5).toISOString().slice(0, 10);
   const { data: snaps } = await admin.from("campaign_snapshots")
@@ -44,6 +44,7 @@ export async function scoreAndAlertOrg(
     // average-sale-value or margin would produce garbage break-even/ROAS economics.
     average_sale_value: Number(org.average_sale_value) > 0 ? Number(org.average_sale_value) : 200,
     gross_margin: Number(org.gross_margin) > 0 ? Number(org.gross_margin) : 0.6, currency: "AUD",
+    lead_close_rate: Number(org.lead_close_rate) > 0 ? Number(org.lead_close_rate) : null,
     pacing: { monthlyBudget, spendToDate, daysElapsed: now.getUTCDate(), daysInMonth },
     lead_quality_avg: leadQualityAvg,
   });

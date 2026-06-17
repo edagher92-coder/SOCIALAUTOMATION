@@ -46,7 +46,21 @@ export function decide(row: Row, cfg: Cfg, ctrPeak?: number | null, health?: num
       return out("kill", `CPA ${M.fmt(cpa)} > 1.5× break-even ${M.fmt(be)}, and the loss is statistically significant.`, "Pause this ad (reversible). Reallocate to a winner.");
     return out("reduce", `CPA ${M.fmt(cpa)} > 1.5× break-even ${M.fmt(be)}, but the sample isn't yet a statistically confident loss.`, "Reduce budget and let the result confirm before pausing; test a fresh angle as a paused duplicate.");
   }
-  if (leads > 0 && purchases === 0)
-    return out("keep", `CPL ${M.fmt(M.cpl(spend, leads))} but no sales recorded — likely a lead quality / qualification / follow-up / offer issue, not media.`, "Route to lead-quality + offer/funnel review; don't scale on CPL alone.");
+  if (leads > 0 && purchases === 0) {
+    const cplVal = M.cpl(spend, leads);
+    // Break-even CPL split: when a lead→sale close rate is configured we can judge CPL against a
+    // modelled break-even CPL; without it, we keep the conservative lead-quality routing (no kill —
+    // lead-gen sales are often offline, so the most we ever propose here is a reversible reduce).
+    const beCpl = M.breakEvenCpl(cfg.average_sale_value, cfg.gross_margin, cfg.lead_close_rate ?? null);
+    if (beCpl != null && cplVal != null) {
+      const ratePct = Math.round((cfg.lead_close_rate || 0) * 100);
+      if (cplVal > beCpl * 1.5)
+        return out("reduce", `CPL ${M.fmt(cplVal)} is above 1.5× the modelled break-even CPL ${M.fmt(beCpl)} (at a ${ratePct}% close rate), with no sales recorded.`, "Reduce budget; review lead quality + offer before adding spend. Reversible — no live edit.");
+      if (cplVal <= beCpl)
+        return out("keep", `CPL ${M.fmt(cplVal)} is within the modelled break-even CPL ${M.fmt(beCpl)} (${ratePct}% close rate), but no sales are recorded yet.`, "Keep running; confirm the lead→sale close rate and offline-conversion tracking before any budget increase.");
+      return out("keep", `CPL ${M.fmt(cplVal)} is modestly above the break-even CPL ${M.fmt(beCpl)} (${ratePct}% close rate); lead quality / close rate matter more than media here.`, "Monitor; tighten lead quality + follow-up; don't scale on CPL alone.");
+    }
+    return out("keep", `CPL ${M.fmt(cplVal)} but no sales recorded — likely a lead quality / qualification / follow-up / offer issue, not media.`, "Route to lead-quality + offer/funnel review; don't scale on CPL alone.");
+  }
   return out("keep", "Within acceptable range.", "Monitor; no change proposed.");
 }

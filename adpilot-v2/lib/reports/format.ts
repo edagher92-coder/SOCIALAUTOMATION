@@ -73,6 +73,7 @@ export function buildReportMarkdown(payload: ReportPayload, opts: ReportOpts): s
   out.push(`| CPL | ${money(s.cpl, ccy)} |`);
   out.push(`| CPA | ${money(s.cpa, ccy)} |`);
   out.push(`| Break-even CPA | ${money(s.break_even_cpa, ccy)} |`);
+  if (s.break_even_cpl != null) out.push(`| Break-even CPL | ${money(s.break_even_cpl, ccy)} |`);
   out.push(`| ROAS | ${x(s.roas)} |`);
   out.push(`| Break-even ROAS | ${x(s.break_even_roas)} |`);
   out.push(`| MER | ${x(s.mer)} |`);

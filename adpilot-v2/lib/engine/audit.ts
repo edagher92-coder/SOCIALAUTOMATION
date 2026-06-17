@@ -119,6 +119,7 @@ export function scoreAccount(rows: Row[], cfg: Cfg): AccountScore {
   const res = computeHealth(factors, na) as AccountScore;
   res.agg = agg;
   res.break_even_cpa = be;
+  res.break_even_cpl = M.breakEvenCpl(cfg.average_sale_value, cfg.gross_margin, cfg.lead_close_rate ?? null);
   res.findings = findings(factors, agg, be, freq, na);
   return res;
 }

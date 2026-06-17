@@ -57,7 +57,7 @@ export async function POST(req: Request) {
 
   const admin = createAdminClient();
   // Validate org exists (and get economics for optional scoring).
-  const { data: org } = await admin.from("organisations").select("id,average_sale_value,gross_margin").eq("id", orgId).maybeSingle();
+  const { data: org } = await admin.from("organisations").select("id,average_sale_value,gross_margin,lead_close_rate").eq("id", orgId).maybeSingle();
   if (!org) return NextResponse.json({ error: "Unknown organisation" }, { status: 404 });
 
   const snaps = rows.map((r: any) => ({
@@ -77,6 +77,7 @@ export async function POST(req: Request) {
       const result = analyse(rows as any, {
         average_sale_value: average_sale_value ?? (org as any).average_sale_value ?? 200,
         gross_margin: gross_margin ?? (org as any).gross_margin ?? 0.6, currency: "AUD",
+        lead_close_rate: Number((org as any).lead_close_rate) > 0 ? Number((org as any).lead_close_rate) : null,
       });
       await admin.from("health_scores").insert({ organisation_id: orgId, scope: "account", total: result.health.total, band: result.health.band, breakdown: result.health.breakdown });
       const { data: rep } = await admin.from("reports").insert({ organisation_id: orgId, title: `Ingest — health ${Math.round(result.health.total)}`, period: new Date().toISOString().slice(0, 10), payload: result }).select("id").single();

@@ -24,7 +24,7 @@ export async function GET(req: Request) {
 
   const admin = createAdminClient();
   const { data: orgs } = await admin.from("organisations")
-    .select("id,name,average_sale_value,gross_margin,monthly_budget,sync_interval_hours,last_synced_at");
+    .select("id,name,average_sale_value,gross_margin,monthly_budget,lead_close_rate,sync_interval_hours,last_synced_at");
 
   // Auto-sync is a top-two-tier feature: map every org's active plan up front.
   const { data: subs } = await admin.from("billing_subscriptions").select("organisation_id,plan,status");
