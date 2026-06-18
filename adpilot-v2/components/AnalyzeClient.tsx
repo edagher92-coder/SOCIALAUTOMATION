@@ -13,7 +13,12 @@ const FACTORLABEL: Record<string, string> = {
   offer_strength: "Offer strength", landing_page_alignment: "Landing-page alignment", budget_pacing: "Budget pacing",
   data_confidence: "Data confidence",
 };
-const f2 = (v: number | null) => (v == null ? "N/A" : (Math.round(v * 100) / 100).toLocaleString());
+// Unit-aware formatters (en-AU) so KPI tiles carry their units: $ for money, × for ratios, integers for counts.
+const num2 = (v: number) => (Math.round(v * 100) / 100).toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = (v: number | null) => (v == null ? "N/A" : "$" + num2(v));
+const ratio = (v: number | null) => (v == null ? "N/A" : num2(v) + "×");
+const intf = (v: number | null) => (v == null ? "N/A" : Math.round(v).toLocaleString("en-AU"));
+const kfmt = (v: number | null, kind: "money" | "ratio" | "int") => (kind === "money" ? money(v) : kind === "ratio" ? ratio(v) : intf(v));
 
 const SAMPLES: Record<string, string> = {
   clean: `business_name,platform,campaign_name,date,spend,impressions,reach,clicks,leads,purchases,revenue,three_second_views,thruplays,lead_quality_score,utm_source,utm_medium,utm_campaign,tracking_status
@@ -197,16 +202,16 @@ export default function AnalyzeClient() {
             <div>
               <p className="mb-2.5 text-xs font-bold uppercase tracking-widest text-muted">Key metrics</p>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {[["Spend", res.summary.spend], ["CPA", res.summary.cpa], ["Break-even CPA", res.summary.break_even_cpa],
-                  ["ROAS", res.summary.roas], ["Break-even ROAS", res.summary.break_even_roas], ["MER", res.summary.mer],
-                  ["Leads", res.summary.leads], ["Purchases", res.summary.purchases]].map(([k, v], i) => {
-                  const def = METRIC_GLOSSARY[k as string];
+                {([["Spend", res.summary.spend, "money"], ["CPA", res.summary.cpa, "money"], ["Break-even CPA", res.summary.break_even_cpa, "money"],
+                  ["ROAS", res.summary.roas, "ratio"], ["Break-even ROAS", res.summary.break_even_roas, "ratio"], ["MER", res.summary.mer, "ratio"],
+                  ["Leads", res.summary.leads, "int"], ["Purchases", res.summary.purchases, "int"]] as [string, number | null, "money" | "ratio" | "int"][]).map(([k, v, kind], i) => {
+                  const def = METRIC_GLOSSARY[k];
                   return (
-                    <div key={k as string} className="rounded-xl border border-border-subtle bg-surface p-3 shadow-inner-sm">
-                      <div className="text-lg font-extrabold tabular-nums text-ink">{f2(v as number)}</div>
+                    <div key={k} className="rounded-xl border border-border-subtle bg-surface p-3 shadow-inner-sm">
+                      <div className="text-lg font-extrabold tabular-nums text-ink">{kfmt(v, kind)}</div>
                       <div className="mt-0.5 flex items-center gap-1 text-2xs font-medium text-muted">
                         <span>{k}</span>
-                        {def && <Tip label={k as string} term={def.term} align={i % 2 === 0 ? "left" : "right"}>{def.what}</Tip>}
+                        {def && <Tip label={k} term={def.term} align={i % 2 === 0 ? "left" : "right"}>{def.what}</Tip>}
                       </div>
                     </div>
                   );

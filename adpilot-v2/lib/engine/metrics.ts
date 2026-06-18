@@ -33,5 +33,7 @@ export const isRoasAnomaly = (r: Num): boolean => r != null && r >= ROAS_ANOMALY
 export const blendedCpa = (spends: number[], convs: number[]): Num =>
   safeDiv(spends.reduce((a, b) => a + b, 0), convs.reduce((a, b) => a + b, 0));
 
+// Pinned to en-AU (AUD product) so numbers render with the same separators on every runtime
+// (and CI), not the host locale. AUD/AU formatting still yields e.g. "5,000.00".
 export const fmt = (v: Num, dp = 2): string =>
-  v == null ? "N/A" : Number(v).toLocaleString(undefined, { minimumFractionDigits: dp, maximumFractionDigits: dp });
+  v == null ? "N/A" : Number(v).toLocaleString("en-AU", { minimumFractionDigits: dp, maximumFractionDigits: dp });

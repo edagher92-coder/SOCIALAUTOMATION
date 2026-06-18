@@ -8,6 +8,7 @@ import { fmt } from "@/lib/engine/metrics";
 import ModeAware from "@/components/ModeAware";
 import ReadOnlyBadge from "@/components/ReadOnlyBadge";
 import Tip from "@/components/Tip";
+import Sparkline from "@/components/Sparkline";
 
 export const dynamic = "force-dynamic";
 
@@ -118,8 +119,11 @@ export default async function CommandCenter() {
                 <Tip tone="dark" align="right" label="Campaign Health Score" term={metricDef("Campaign Health Score")!.term}>{metricDef("Campaign Health Score")!.what}</Tip>
               </div>
               {trend.n >= 3 && (
-                <div className="mt-1 text-xs text-white/70" title="Trend over your saved health-score history">
-                  {trendArrow} {trend.trend}{trendWow != null ? ` · ${trendWow >= 0 ? "+" : ""}${trendWow}% WoW` : ""}
+                <div className="mt-1 text-xs text-white/80">
+                  <span title="Trend over your saved health-score history">
+                    {trendArrow} {trend.trend}{trendWow != null ? ` · ${trendWow >= 0 ? "+" : ""}${trendWow}% WoW` : ""}
+                  </span>
+                  <Sparkline values={trendHist} className="ml-auto mt-1 block text-white/60" />
                 </div>
               )}
             </div>
@@ -152,7 +156,7 @@ export default async function CommandCenter() {
             const n = byVerdict[v] || 0;
             const def = metricDef(VERDICT_GLOSSARY_KEY[v]);
             return (
-              <span key={v} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ${n ? "bg-white/15 text-white" : "bg-white/5 text-white/40"}`}>
+              <span key={v} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ${n ? "bg-white/15 text-white" : "bg-white/5 text-white/55"}`}>
                 {m.emoji} {m.label} {n > 0 && <b>{n}</b>}
                 {def && <Tip tone="dark" label={m.label} term={def.term}>{def.what}</Tip>}
               </span>
