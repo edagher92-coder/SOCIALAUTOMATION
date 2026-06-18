@@ -21,6 +21,7 @@ const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
     { href: "/actions", label: "Ad Actions", icon: "🛠️", desc: "Guarded live changes (Expert)", advanced: true, feature: "ad_write" },
   ] },
   { title: "Social", items: [
+    { href: "/audience", label: "Audience", icon: "🎯", desc: "Who follows you + AI suggestions", advanced: true, feature: "ai_team" },
     { href: "/content", label: "Content Studio", icon: "🎬", desc: "Plan, schedule & publish posts", advanced: true, feature: "content_publish" },
     { href: "/content/calendar", label: "Content Calendar", icon: "📅", desc: "Scheduled posts at a glance", advanced: true, feature: "content_publish" },
     { href: "/creative", label: "Creative Library", icon: "🖼️", desc: "Link or upload audio/video/photo", advanced: true, feature: "creative_studio" },
