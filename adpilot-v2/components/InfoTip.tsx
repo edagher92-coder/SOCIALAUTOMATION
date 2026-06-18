@@ -3,8 +3,8 @@ import { useState, useId, useRef, useEffect } from "react";
 
 // Reusable, accessible "?" info tip. Hover or focus to preview, click to pin; Esc / outside-click
 // closes. Used to explain metrics, factors and any jargon across the app (numbers-first, plain English).
-export default function InfoTip({ label, term, children, align = "center" }: {
-  label?: string; term?: string; children: React.ReactNode; align?: "center" | "left" | "right";
+export default function InfoTip({ label, term, children, align = "center", tone = "light" }: {
+  label?: string; term?: string; children: React.ReactNode; align?: "center" | "left" | "right"; tone?: "light" | "dark";
 }) {
   const [open, setOpen] = useState(false);
   const id = useId();
@@ -23,7 +23,7 @@ export default function InfoTip({ label, term, children, align = "center" }: {
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen((o) => !o); }}
         onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}
         onFocus={() => setOpen(true)}
-        className="grid h-[15px] w-[15px] cursor-help place-items-center rounded-full border border-border-subtle text-[9px] font-bold leading-none text-muted transition hover:border-brand hover:bg-brand hover:text-white focus:outline-none focus-visible:shadow-ring-brand">?</button>
+        className={`grid h-[15px] w-[15px] cursor-help place-items-center rounded-full border text-[9px] font-bold leading-none transition focus:outline-none focus-visible:shadow-ring-brand ${tone === "dark" ? "border-white/40 text-white/70 hover:border-white hover:bg-white/20 hover:text-white" : "border-border-subtle text-muted hover:border-brand hover:bg-brand hover:text-white"}`}>?</button>
       {open && (
         <span role="tooltip" id={id} className={`absolute bottom-full z-30 mb-2 w-[90vw] max-w-[15rem] ${pos} cursor-default rounded-xl border border-border-subtle bg-surface-raised p-3 text-left shadow-card`}>
           {term && <span className="mb-1 block text-2xs font-bold uppercase tracking-wide text-brand">{term}</span>}
