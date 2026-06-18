@@ -17,9 +17,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+      # Note: package-lock.json is intentionally gitignored, so npm ci / npm cache
+      # (which require a committed lockfile) are not used here.
       - name: Install
         run: npm install --no-audit --no-fund
-      - name: Engine parity tests (must pass)
+      - name: Resale-clean guard (no private business data in the shippable tree)
+        run: |
+          if grep -rInE "snowflow|edagher" . \
+              --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.git \
+              --exclude=package-lock.json; then
+            echo "::error::Private business data found in the shippable tree — resale-clean guard failed."
+            exit 1
+          fi
+          echo "resale-clean guard passed"
+      - name: Typecheck (tsc --noEmit)
+        run: npm run typecheck
+      - name: Engine + app tests (must pass)
         run: npm test
       - name: Production build (typechecks pages + app)
         run: npm run build

@@ -37,7 +37,11 @@ describe("knowledgeFor", () => {
   it("covers every configured agent: each mapped agent yields all its domain titles", () => {
     for (const [agentId, domains] of Object.entries(AGENT_KNOWLEDGE)) {
       const text = knowledgeFor(agentId);
-      expect(text).not.toBe("");
+      if (domains.length === 0) {
+        // routers (e.g. 'command') carry no benchmark knowledge by design — token saving
+        expect(text).toBe("");
+        continue;
+      }
       for (const d of domains) {
         expect(text).toContain(KNOWLEDGE[d].title);
       }

@@ -40,6 +40,10 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
   const [mediaType, setMediaType] = useState("reel");
   const [brief, setBrief] = useState({ topic: "", offer: "", audience: "" });
   const [ai, setAi] = useState("");
+  const [imgPrompt, setImgPrompt] = useState("");
+  const [imgAspect, setImgAspect] = useState("1:1");
+  const [imgN, setImgN] = useState(1);
+  const [images, setImages] = useState<{ url: string; seed?: number }[]>([]);
   const [busy, setBusy] = useState("");
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
@@ -71,6 +75,26 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
       if (!r.ok) { setErr(j.error || "AI error"); return; }
       setAi(j.text); if (!caption) setCaption(j.text);
     } catch (e: any) { setErr(e?.message || "AI error"); } finally { setBusy(""); }
+  }
+
+  async function genImage() {
+    setBusy("img"); setMsg(""); setErr(""); setImages([]);
+    try {
+      const r = await fetch("/api/creative/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: imgPrompt.trim(), aspect: imgAspect, numVariations: imgN }) });
+      const j = await r.json();
+      if (!r.ok) { setErr(j.error || "Couldn't generate the image"); return; }
+      setImages(j.images || []);
+    } catch (e: any) { setErr(e?.message || "Couldn't generate the image"); } finally { setBusy(""); }
+  }
+
+  async function varyImage(ref: string) {
+    setBusy("img"); setMsg(""); setErr("");
+    try {
+      const r = await fetch("/api/creative/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: imgPrompt.trim() || "Create a fresh on-brand advertising variation of this image. Keep the product and style faithful. No text, no people.", aspect: imgAspect, referenceImage: ref }) });
+      const j = await r.json();
+      if (!r.ok) { setErr(j.error || "Couldn't vary the image"); return; }
+      setImages(j.images || []);
+    } catch (e: any) { setErr(e?.message || "Couldn't vary the image"); } finally { setBusy(""); }
   }
 
   async function save() {
@@ -152,6 +176,44 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
               </button>
               {ai && <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap rounded-lg border border-border-subtle bg-surface p-3 text-xs">{ai}</pre>}
               <p className="mt-1.5 text-2xs text-muted">Grounded in your analysis · then design in <a className="underline" href="https://www.canva.com/create/" target="_blank" rel="noreferrer">Canva</a> / Adobe Express and paste the media URL above.</p>
+
+              {/* Firefly image generation */}
+              <div className="mt-3 border-t border-brand-200/60 pt-3">
+                <span className="text-sm font-bold">🖼️ Generate an ad image</span>
+                <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+                  <input value={imgPrompt} onChange={(e) => setImgPrompt(e.target.value)} placeholder="Describe the image — e.g. warm flat-lay of a coffee subscription box on a kitchen bench" className="rounded-lg border border-border-subtle p-2 text-sm" />
+                  <select value={imgAspect} onChange={(e) => setImgAspect(e.target.value)} className="rounded-lg border border-border-subtle p-2 text-sm">
+                    <option value="1:1">1:1 feed</option>
+                    <option value="9:16">9:16 story/reel</option>
+                    <option value="16:9">16:9 landscape</option>
+                    <option value="4:3">4:3</option>
+                    <option value="3:4">3:4</option>
+                  </select>
+                  <select value={imgN} onChange={(e) => setImgN(Number(e.target.value))} className="rounded-lg border border-border-subtle p-2 text-sm" title="How many variations to generate">
+                    <option value={1}>1 image</option>
+                    <option value={2}>2 variations</option>
+                    <option value={4}>4 variations</option>
+                  </select>
+                </div>
+                <button onClick={genImage} disabled={busy === "img" || imgPrompt.trim().length < 3} className="mt-2 rounded-lg border border-brand px-3 py-1.5 text-sm font-bold text-brand disabled:opacity-50">
+                  {busy === "img" ? "Generating… (20–40s)" : "Generate image"}
+                </button>
+                {images.length > 0 && (
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {images.map((im, i) => (
+                      <div key={i} className="rounded-lg border border-border-subtle p-1.5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={im.url} alt="Generated ad creative" className="w-full rounded" />
+                        <div className="mt-1.5 flex gap-1.5">
+                          <button onClick={() => { setMediaUrl(im.url); setMediaType("image"); setMsg("Image set as media — save your draft."); }} className="flex-1 rounded-md bg-brand px-2 py-1 text-xs font-bold text-white">Use</button>
+                          <button onClick={() => varyImage(im.url)} disabled={busy === "img"} title="Make an on-brand variation / edit of this image" className="flex-1 rounded-md border border-brand px-2 py-1 text-xs font-bold text-brand disabled:opacity-50">✨ Vary</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="mt-1.5 text-2xs text-muted">Generated by your creative engine (Gemini/Imagen or Adobe Firefly). Save/re-host before publishing. Needs a creative key on the server.</p>
+              </div>
             </>
           )}
         </div>

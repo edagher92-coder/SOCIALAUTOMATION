@@ -41,7 +41,7 @@ export default function SyncButton({ platform }: { platform: "meta" | "tiktok" }
       </button>
       {msg && <span className={`text-xs ${ok ? "text-green-600" : "text-red-600"}`} role="status">{msg}</span>}
       {tokenIssue && (
-        <a href="#token-help" className="text-xs font-semibold text-brand underline">🔑 Token expired — how to get a non-expiring token</a>
+        <a href="/connect/guide" className="text-xs font-semibold text-brand underline">🔑 Token expired — get a never-expiring token (guide)</a>
       )}
     </span>
   );

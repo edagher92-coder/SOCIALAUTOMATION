@@ -1,5 +1,24 @@
 # Changelog — AdPilot OS
 
+## v6.0.0 — Dual-mode, tiering, engine upgrades & hardening (2026-06-17)
+
+Shipped & merged via PR #22. Built by a parallel multi-specialist effort under PM/board governance.
+
+- **Dual-mode UX:** Simple (10-second answer) vs Advanced (`useMode`/`<ModeAware>`); Command Center
+  health-trend + money-at-stake line; nav lock badges for plan-gated features.
+- **Tiering & pricing:** `PLANS` ↔ `entitlements` single source + `FEATURE_DESC` benefit lines;
+  `PlanMatrix` on billing + landing; AUD prices wired for display (Starter $49 / Pro $149 / Expert $399).
+- **Engine:** Wilson **significance gate** on scale/kill (conservative — only ever softens);
+  **break-even-CPL split** for lead-gen (`break_even_cpl`, opt-in `lead_close_rate`, migration 0023);
+  new `timeseries`/`stats`/`fatigue`/`pacing` diagnostics. Read-only invariant + Python parity intact.
+- **AI efficiency:** prompt caching on the static system prefix; `MODELS`/`modelFor` route light
+  creative to Haiku; router persona de-grounded; orphaned `finance_content` domain wired to Paige + cron.
+- **Security/privacy:** Next.js 14→16 + React 19 (cleared all critical/high production advisories);
+  scoped right-to-erasure endpoint; Terms/Privacy §7 data-use/model-training DRAFT clauses.
+- **Connect:** reusable read-only trust chips + one-click "Run my first audit" + hardened token validation.
+- **Ops:** CI now runs an explicit typecheck step + a resale-clean guard (fails the build if private
+  tokens reach the shippable tree). 484 tests.
+
 ## v4.0.0 — Integration & Optimisation (2026-06-16)
 
 The convergence release: a 10-specialist parallel mapping pass over the markdown framework
@@ -38,7 +57,7 @@ in a conflict-free order. Wave A below; Wave B is the dated fast-follow.
 - **Billing:** Stripe webhook no longer silently drops a paid subscription when the subscription
   id is empty (partial-index `ON CONFLICT` edge).
 - **Privacy/resale:** removed private business data from the shippable tree (6 locations); a
-  grep-clean guard (`snowflow|edagher`) gates distribution.
+  grep-clean guard over the known private-data tokens gates distribution (enforced in CI).
 - a11y labels (agency colour pickers, brand-logo alt); non-blocking ESLint config.
 
 ### Wave B (fast-follow — tracked in CPWORK/universal-ads-os/product/V4-INTEGRATION-PLAN.md)

@@ -166,13 +166,13 @@ describe("GET per-domain isolation + upsert", () => {
     delete process.env.ANTHROPIC_API_KEY;
   });
 
-  it("refreshes all four domains when every research call returns a good doc", async () => {
+  it("refreshes all seven domains when every research call returns a good doc", async () => {
     research.mockImplementation(async () => JSON.stringify(goodDoc("x")));
     const r = await GET(req({ key: SECRET }));
     const j = await r.json();
-    expect(j.refreshed).toBe(4);
+    expect(j.refreshed).toBe(7);
     expect(j.errors).toEqual([]);
-    expect(upserts).toHaveLength(4);
+    expect(upserts).toHaveLength(7);
     // Upsert payload shape is correct.
     expect(upserts[0]).toMatchObject({ domain: expect.any(String), title: expect.any(String), body: expect.any(String) });
     expect(Array.isArray(upserts[0].sources)).toBe(true);
@@ -188,10 +188,10 @@ describe("GET per-domain isolation + upsert", () => {
     });
     const r = await GET(req({ key: SECRET }));
     const j = await r.json();
-    expect(j.refreshed).toBe(3);            // 4 domains, 1 failed
+    expect(j.refreshed).toBe(6);            // 7 domains, 1 failed
     expect(j.errors).toHaveLength(1);
     expect(j.errors[0]).toContain("rate limited");
-    expect(upserts).toHaveLength(3);        // the failed domain never upserted
+    expect(upserts).toHaveLength(6);        // the failed domain never upserted
   });
 
   it("isolates an unparseable/garbage reply (records error, keeps going)", async () => {
@@ -203,9 +203,9 @@ describe("GET per-domain isolation + upsert", () => {
     });
     const r = await GET(req({ key: SECRET }));
     const j = await r.json();
-    expect(j.refreshed).toBe(3);
+    expect(j.refreshed).toBe(6);
     expect(j.errors.some((e: string) => e.includes("unparseable"))).toBe(true);
-    expect(upserts).toHaveLength(3);
+    expect(upserts).toHaveLength(6);
   });
 
   it("rejects a too-short body as unparseable (does not overwrite the baseline)", async () => {
@@ -213,7 +213,7 @@ describe("GET per-domain isolation + upsert", () => {
     const r = await GET(req({ key: SECRET }));
     const j = await r.json();
     expect(j.refreshed).toBe(0);
-    expect(j.errors).toHaveLength(4);
+    expect(j.errors).toHaveLength(7);
     expect(upserts).toHaveLength(0);
   });
 
@@ -223,7 +223,7 @@ describe("GET per-domain isolation + upsert", () => {
     upsertError = () => (++calls === 1 ? { message: "duplicate key" } : null);
     const r = await GET(req({ key: SECRET }));
     const j = await r.json();
-    expect(j.refreshed).toBe(3);            // first upsert errored
+    expect(j.refreshed).toBe(6);            // first upsert errored
     expect(j.errors.some((e: string) => e.includes("duplicate key"))).toBe(true);
   });
 

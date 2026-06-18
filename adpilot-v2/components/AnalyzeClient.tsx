@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useMode } from "./mode";
+import InfoTip from "./InfoTip";
+import { METRIC_GLOSSARY } from "@/lib/metric-glossary";
 
 const BANDC: Record<string, string> = { Green: "#16a34a", Yellow: "#ca8a04", Orange: "#ea580c", Red: "#dc2626" };
 const SEVC: Record<string, string> = { CRITICAL: "#dc2626", HIGH: "#ea580c", MEDIUM: "#ca8a04", LOW: "#16a34a", INFO: "#5a6577" };
@@ -161,10 +163,13 @@ export default function AnalyzeClient() {
             <div className="flex flex-wrap items-center gap-5 rounded-2xl border border-border-subtle bg-surface p-5">
               <Gauge score={res.health.total} band={res.health.band} />
               <div className="min-w-0 flex-1">
-                <span
-                  className="inline-block rounded-full px-3 py-1 text-sm font-extrabold text-white shadow-sm"
-                  style={{ background: BANDC[res.health.band] || "#5a6577" }}>
-                  {res.health.band}
+                <span className="inline-flex items-center gap-1.5">
+                  <span
+                    className="inline-block rounded-full px-3 py-1 text-sm font-extrabold text-white shadow-sm"
+                    style={{ background: BANDC[res.health.band] || "#5a6577" }}>
+                    {res.health.band}
+                  </span>
+                  {METRIC_GLOSSARY[res.health.band] && <InfoTip label={`${res.health.band} band`} term={METRIC_GLOSSARY[res.health.band].term} align="left">{METRIC_GLOSSARY[res.health.band].what}</InfoTip>}
                 </span>
                 <p className="mt-2 text-base font-bold text-ink leading-snug">{res.health.guidance}</p>
                 {res.health.weakest?.length > 0 && (
@@ -173,9 +178,16 @@ export default function AnalyzeClient() {
                   </p>
                 )}
                 {res.health.breakdown?.data_confidence?.score != null && (
-                  <p className="mt-0.5 text-xs text-muted">
-                    Data confidence:{" "}
+                  <p className="mt-0.5 flex items-center gap-1 text-xs text-muted">
+                    <span>Data confidence:</span>
                     <span className="font-semibold text-ink">{Math.round(res.health.breakdown.data_confidence.score)}/100</span>
+                    <InfoTip label="Data confidence" term={METRIC_GLOSSARY["Data confidence"].term} align="left">{METRIC_GLOSSARY["Data confidence"].what}</InfoTip>
+                  </p>
+                )}
+                {res.health.breakdown?.lead_quality?.score != null && (
+                  <p className="mt-0.5 text-xs text-muted">
+                    Lead quality:{" "}
+                    <span className="font-semibold text-ink">{Math.round(res.health.breakdown.lead_quality.score)}/100</span>
                   </p>
                 )}
               </div>
@@ -187,12 +199,18 @@ export default function AnalyzeClient() {
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {[["Spend", res.summary.spend], ["CPA", res.summary.cpa], ["Break-even CPA", res.summary.break_even_cpa],
                   ["ROAS", res.summary.roas], ["Break-even ROAS", res.summary.break_even_roas], ["MER", res.summary.mer],
-                  ["Leads", res.summary.leads], ["Purchases", res.summary.purchases]].map(([k, v]) => (
-                  <div key={k as string} className="rounded-xl border border-border-subtle bg-surface p-3 shadow-inner-sm">
-                    <div className="text-lg font-extrabold tabular-nums text-ink">{f2(v as number)}</div>
-                    <div className="text-2xs font-medium text-muted">{k}</div>
-                  </div>
-                ))}
+                  ["Leads", res.summary.leads], ["Purchases", res.summary.purchases]].map(([k, v], i) => {
+                  const def = METRIC_GLOSSARY[k as string];
+                  return (
+                    <div key={k as string} className="rounded-xl border border-border-subtle bg-surface p-3 shadow-inner-sm">
+                      <div className="text-lg font-extrabold tabular-nums text-ink">{f2(v as number)}</div>
+                      <div className="mt-0.5 flex items-center gap-1 text-2xs font-medium text-muted">
+                        <span>{k}</span>
+                        {def && <InfoTip label={k as string} term={def.term} align={i % 2 === 0 ? "left" : "right"}>{def.what}</InfoTip>}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -217,7 +235,12 @@ export default function AnalyzeClient() {
                         .sort((a: any, b: any) => b[1].weight - a[1].weight)
                         .map(([k, b]: any) => (
                           <tr key={k} className="border-b border-border-subtle last:border-0 hover:bg-surface">
-                            <td className="py-2 pr-4 font-medium text-ink">{FACTORLABEL[k] || k}</td>
+                            <td className="py-2 pr-4 font-medium text-ink">
+                              <span className="inline-flex items-center gap-1">
+                                {FACTORLABEL[k] || k}
+                                {METRIC_GLOSSARY[FACTORLABEL[k]] && <InfoTip label={FACTORLABEL[k]} term={METRIC_GLOSSARY[FACTORLABEL[k]].term} align="left">{METRIC_GLOSSARY[FACTORLABEL[k]].what}</InfoTip>}
+                              </span>
+                            </td>
                             <td className="py-2 pr-4 tabular-nums text-muted">{b.score == null ? "N/A" : Math.round(b.score) + "/100"}</td>
                             <td className="py-2 pr-4 tabular-nums text-muted">{b.weight}%</td>
                             <td className="py-2 tabular-nums text-muted">{b.score == null ? "—" : Math.round(b.weighted_points * 10) / 10 + " pts"}</td>

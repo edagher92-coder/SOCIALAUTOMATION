@@ -59,6 +59,8 @@ export function buildReportMarkdown(payload: ReportPayload, opts: ReportOpts): s
   if (h.total != null) {
     out.push(`**Campaign Health Score: ${num(h.total)} / 100 — ${h.band || ""}**`);
     if (h.guidance) out.push(h.guidance);
+    const lq = h.breakdown?.lead_quality?.score;
+    if (lq != null) out.push(`Lead quality: ${num(lq)} / 100`);
     out.push("");
   }
 
