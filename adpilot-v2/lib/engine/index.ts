@@ -16,11 +16,29 @@ import * as M from "./metrics";
 export function analyse(rows: Row[], cfg: Cfg) {
   const res = scoreAccount(rows, cfg);
   const campaigns = scoreByCampaign(rows, cfg);
-  const decisions = rows.map((r) => ({
-    ...decide(r, cfg),
-    name: r.ad_name || r.campaign_name || r.ad_id || "(ad)",
-    platform: r.platform || "?",
-  }));
+
+  // Per-campaign verdict context. `scale` is only ever proposed for a winner whose OWN campaign is
+  // healthy (≥70) — not merely the account average — and creative-fatigue (`refresh`) needs that
+  // campaign's peak CTR to detect a real drop. Grouped by the same key scoreByCampaign uses, so a
+  // row's decision is gated on its campaign, not the whole account.
+  const campKey = (r: Row) => r.campaign_name || r.campaign_id || "(unnamed)";
+  const campHealth: Record<string, number> = {};
+  for (const c of campaigns) campHealth[c.campaign] = c.health;
+  const campCtrPeak: Record<string, number> = {};
+  for (const r of rows) {
+    const k = campKey(r);
+    const c = r.ctr != null ? r.ctr : M.ctr(r.clicks || 0, r.impressions || 0);
+    if (c != null && Number.isFinite(c)) campCtrPeak[k] = Math.max(campCtrPeak[k] ?? 0, c);
+  }
+
+  const decisions = rows.map((r) => {
+    const k = campKey(r);
+    return {
+      ...decide(r, cfg, campCtrPeak[k] ?? null, campHealth[k] ?? null),
+      name: r.ad_name || r.campaign_name || r.ad_id || "(ad)",
+      platform: r.platform || "?",
+    };
+  });
   return {
     config: cfg,
     summary: {

@@ -55,7 +55,8 @@ function makeAdmin(opts: {
 }
 
 // Real-engine snapshots: two KillCamp rows (meta + tiktok) => two distinct 'kill'
-// recommendations; one ScaleCamp row => 'keep' (non-actionable, dropped).
+// recommendations; one ScaleCamp row => 'scale' (a healthy, statistically-significant
+// winner — now reachable via the per-campaign gate, and actionable).
 const snapshots = [
   { campaign_name: "KillCamp", platform: "meta", date: "2026-06-13", spend: 2000, impressions: 50000, reach: 20000, clicks: 600, leads: 5, purchases: 4, revenue: 400, tracking_status: "ok" },
   { campaign_name: "ScaleCamp", platform: "meta", date: "2026-06-13", spend: 600, impressions: 30000, reach: 16000, clicks: 600, leads: 40, purchases: 12, revenue: 3600, tracking_status: "ok", lead_quality_score: 82 },
@@ -84,13 +85,13 @@ describe("scoreAndAlertOrg", () => {
     expect(writes.health_scores[0].organisation_id).toBe("org-1");
     expect(writes.reports).toHaveLength(1);
 
-    // 'keep' (ScaleCamp) dropped; two 'kill' rows survive because they're on
-    // different platforms (platform-aware dedupe keeps them distinct).
+    // ScaleCamp is a healthy, significant winner -> 'scale' (actionable, kept). The two KillCamp
+    // rows survive on different platforms (platform-aware dedupe keeps them distinct), in row order.
     const recs = writes.recommendations_insert;
-    expect(recs.map((r) => r.verdict)).toEqual(["kill", "kill"]);
-    expect(recs.map((r) => r.platform).sort()).toEqual(["meta", "tiktok"]);
+    expect(recs.map((r) => r.verdict)).toEqual(["kill", "scale", "kill"]);
+    expect(recs.map((r) => r.entity_name)).toEqual(["KillCamp", "ScaleCamp", "KillCamp"]);
+    expect(recs.filter((r) => r.verdict === "kill").map((r) => r.platform).sort()).toEqual(["meta", "tiktok"]);
     expect(recs.every((r) => r.organisation_id === "org-1")).toBe(true);
-    expect(recs.every((r) => r.entity_name === "KillCamp")).toBe(true);
 
     // the previously-open row is cleared (insert-before-delete safety)
     expect(deletes.find((d) => d.table === "recommendations")).toMatchObject({ ids: ["old-rec"] });
