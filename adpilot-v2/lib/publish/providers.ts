@@ -22,6 +22,24 @@ export class NotConfiguredError extends Error {
 }
 export const isNotConfigured = (e: any) => e?.name === "NotConfiguredError";
 
+// Single source for the Meta Graph API version — bump META_GRAPH_API_VERSION in env when Meta
+// increments, rather than editing call sites. (TikTok uses its own versioned host, below.)
+const GRAPH_API_VERSION = process.env.META_GRAPH_API_VERSION ?? "v21.0";
+
+// Instagram video/Reels containers process ASYNCHRONOUSLY. Calling media_publish before the
+// container is FINISHED fails with media_container_in_progress, so poll status_code first
+// (~2s x 15 ≈ 30s). Photos are synchronous and skip this.
+async function pollContainerReady(containerId: string, token: string): Promise<void> {
+  for (let i = 0; i < 15; i++) {
+    const r = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${containerId}?fields=status_code&access_token=${encodeURIComponent(token)}`);
+    const j: any = await r.json().catch(() => ({}));
+    if (j.status_code === "FINISHED") return;
+    if (j.status_code === "ERROR") throw new Error(j.error?.message || "Instagram media processing failed.");
+    await new Promise((res) => setTimeout(res, 2000));
+  }
+  throw new Error("Instagram media is still processing (timed out after ~30s). Try publishing again shortly.");
+}
+
 // Media URLs must be public HTTPS — the platform APIs fetch them server-side and reject
 // (or silently fail) on non-https. We re-validate here as a defensive backstop even though
 // create-time validation already enforces it, so the publish path can never send a bad URL.
@@ -41,7 +59,7 @@ async function publishFacebook(post: PublishablePost): Promise<PublishResult> {
   // Photo post: requires an https media URL.
   if (post.media_type === "image") {
     const url = requireHttpsMedia(post);
-    const r = await fetch(`https://graph.facebook.com/v21.0/${pageId}/photos`, {
+    const r = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${pageId}/photos`, {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ url, caption: post.caption || "", access_token: token }),
     });
@@ -55,7 +73,7 @@ async function publishFacebook(post: PublishablePost): Promise<PublishResult> {
   const link = post.media_url?.trim();
   if (link && !link.startsWith("https://")) throw new Error("media_url must be a public https URL.");
   if (!caption && !link) throw new Error("Facebook needs a caption (or a link) to publish.");
-  const r = await fetch(`https://graph.facebook.com/v21.0/${pageId}/feed`, {
+  const r = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${pageId}/feed`, {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ message: caption, ...(link ? { link } : {}), access_token: token }),
   });
@@ -76,13 +94,15 @@ async function publishInstagram(post: PublishablePost): Promise<PublishResult> {
   if (isVideo) { params.media_type = post.media_type === "reel" ? "REELS" : "VIDEO"; params.video_url = url; }
   else { params.image_url = url; }
   // 1) create media container
-  const c = await fetch(`https://graph.facebook.com/v21.0/${igId}/media`, {
+  const c = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${igId}/media`, {
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(params),
   });
   const cj: any = await c.json().catch(() => ({}));
   if (!c.ok || !cj.id) throw new Error(cj.error?.message || `Instagram container failed (HTTP ${c.status})`);
+  // 1b) video/Reels containers must finish processing before publish — poll status_code.
+  if (isVideo) await pollContainerReady(cj.id, token);
   // 2) publish the container
-  const p = await fetch(`https://graph.facebook.com/v21.0/${igId}/media_publish`, {
+  const p = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${igId}/media_publish`, {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ creation_id: cj.id, access_token: token }),
   });

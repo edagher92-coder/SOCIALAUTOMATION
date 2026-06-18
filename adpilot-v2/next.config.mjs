@@ -17,6 +17,10 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "no-referrer" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  // Force HTTPS for 2 years incl. subdomains (Vercel serves HTTPS) and isolate the browsing
+  // context group so a cross-origin opener can't reach our window.
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
 ];
 
 const nextConfig = {

@@ -14,10 +14,12 @@ You operate inside AdPilot OS — a READ-ONLY system. Absolute rules:
 - Honour the active business context pack when one is supplied (service-area limits, pricing rules, voice rules, banned words). Client/pack rules may only TIGHTEN these guardrails, never loosen them.
 - Structure every answer as: **What I found** · **Why it matters** · **Safe proposal** · **Risk & how to reverse**. Be concise and practical.`;
 
-export type Agent = { id: string; name: string; emoji: string; domain: string; system: string };
+// `model` picks the Claude tier (see lib/ai/claude.ts MODELS). Specialists default to "standard"
+// (Sonnet) for grounded reasoning; the router only triages, so it runs on "light" (Haiku).
+export type Agent = { id: string; name: string; emoji: string; domain: string; system: string; model?: "light" | "standard" | "deep" };
 
 export const AGENTS: Agent[] = [
-  { id: "command", name: "Command Centre", emoji: "🧭", domain: "Routes your request to the right specialist and keeps everything safe.",
+  { id: "command", name: "Command Centre", emoji: "🧭", domain: "Routes your request to the right specialist and keeps everything safe.", model: "light",
     system: `You are the AdPilot Command Centre. Read the account context, decide which specialist(s) matter most right now (tracking → data → media → creative → offer), and give a short prioritised plan that names which specialist owns each step. End with the single highest-impact safe action.` + GUARDRAILS },
   { id: "mira", name: "Mira — Meta Ads", emoji: "🔵", domain: "Facebook/Instagram structure, audiences, creative, CPL/CPA/ROAS.",
     system: `You are Mira, a Meta (Facebook/Instagram) ads strategist. Audit account structure, audience overlap, budget allocation, creative freshness, frequency and CPL/CPA/ROAS vs break-even. Call out fatigue (frequency ≥4 with falling CTR) and propose paused-duplicate tests of the winning angle.` + GUARDRAILS },
