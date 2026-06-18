@@ -22,6 +22,7 @@ const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
   ] },
   { title: "Social", items: [
     { href: "/content", label: "Content Studio", icon: "🎬", desc: "Plan, schedule & publish posts", advanced: true, feature: "content_publish" },
+    { href: "/content/calendar", label: "Content Calendar", icon: "📅", desc: "Scheduled posts at a glance", advanced: true, feature: "content_publish" },
     { href: "/creative", label: "Creative Library", icon: "🖼️", desc: "Link or upload audio/video/photo", advanced: true, feature: "creative_studio" },
     { href: "/canva-creator", label: "Canva Creator", icon: "🎨", desc: "On-brand creative briefs & prompts", advanced: true, feature: "creative_studio" },
     { href: "/messenger", label: "Messenger", icon: "💬", desc: "Auto-replies, greeting & menu", advanced: true, feature: "messenger_automation" },
@@ -45,6 +46,10 @@ const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
     { href: "/manual", label: "User Manual", icon: "📖", desc: "How-to + download PDF", advanced: true },
   ] },
 ];
+
+// All nav destinations — used so a parent (e.g. /content) doesn't also light up when the active
+// path is itself a deeper nav item (e.g. /content/calendar).
+const NAV_HREFS = new Set(NAV_GROUPS.flatMap((g) => g.items.map((i) => i.href)));
 
 function ModeToggle() {
   const { mode, setMode } = useMode();
@@ -144,7 +149,7 @@ function Sidebar({ email, plan, onNav }: { email?: string; plan: Plan; onNav?: (
                   </Link>
                 );
               }
-              const active = path === n.href || path?.startsWith(n.href + "/");
+              const active = path === n.href || (!!path && path.startsWith(n.href + "/") && !NAV_HREFS.has(path));
               return (
                 <Link
                   key={n.href}
