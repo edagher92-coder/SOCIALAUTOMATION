@@ -1,4 +1,5 @@
 import type { AudienceInsights } from "./types";
+import { getLiveAudience } from "./live";
 
 // A representative AU audience used until a Facebook Page / Instagram account is
 // connected (real follower demographics need a Page/IG id + the
@@ -40,12 +41,13 @@ export const SAMPLE_AUDIENCE: AudienceInsights = {
 /**
  * Aggregate follower demographics for an org's connected profile.
  *
- * For now this returns the clearly-labelled SAMPLE_AUDIENCE: the live path needs a
- * connected Page/IG account id (not just the ad-account token we store today) plus
- * the `instagram_manage_insights` scope — that connection upgrade is owner-gated,
- * exactly like the real-account ad audit. When it lands, the live Graph/TikTok read
- * slots in here behind the same shape, and `source` flips off "sample".
+ * Tries the live platform read first (Facebook Page / Instagram via Graph, then TikTok —
+ * see ./live). Live needs a Page/IG token with the audience scopes (pages_read_engagement /
+ * instagram_manage_insights), which is owner-gated like the real-account ad audit; until that
+ * connection exists — or if a platform withholds a breakdown (needs ~100+ followers) — we fall
+ * back to the clearly-labelled SAMPLE_AUDIENCE so the UI never passes partial data off as real.
  */
-export async function getAudienceInsights(_orgId: string): Promise<AudienceInsights> {
-  return SAMPLE_AUDIENCE;
+export async function getAudienceInsights(orgId: string): Promise<AudienceInsights> {
+  const live = orgId ? await getLiveAudience(orgId).catch(() => null) : null;
+  return live ?? SAMPLE_AUDIENCE;
 }

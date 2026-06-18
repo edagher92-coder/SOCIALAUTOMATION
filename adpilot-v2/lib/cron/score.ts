@@ -3,6 +3,8 @@ import { analyse } from "@/lib/engine";
 import { sendEmail } from "@/lib/email/resend";
 import { refreshOpenRecommendations } from "@/lib/proposals";
 import { evaluateAlertRules } from "@/lib/cron/alerts";
+import { getAudienceInsights } from "@/lib/audience/insights";
+import { buildAudienceProposals } from "@/lib/audience/proposals";
 
 // Shared scheduled scoring + breach-alert logic, used by both the daily
 // auto-analysis cron and the cadence-driven auto-sync cron so they never diverge.
@@ -49,6 +51,18 @@ export async function scoreAndAlertOrg(
     lead_quality_avg: leadQualityAvg,
   });
   await admin.from("health_scores").insert({ organisation_id: org.id, scope: "account", total: result.health.total, band: result.health.band, breakdown: result.health.breakdown });
+
+  // Attach live follower demographics to the report payload when a real profile is connected
+  // (Facebook Page / Instagram / TikTok). Best-effort + live-only — sample data never lands in a
+  // client report, and a slow/failed audience read must never block scoring.
+  try {
+    const ai = await getAudienceInsights(org.id);
+    if (ai && ai.source !== "sample") {
+      const p = buildAudienceProposals(ai);
+      (result as any).audience = { platform: ai.platform, handle: ai.handle, followerCount: ai.followerCount, source: ai.source, summary: p.reportSummary };
+    }
+  } catch { /* audience enrichment is best-effort */ }
+
   await admin.from("reports").insert({ organisation_id: org.id, title: `Scheduled — health ${Math.round(result.health.total)}`, period: new Date().toISOString().slice(0, 10), payload: result });
 
   // V6 P1: upsert the per-day account rollup (one row per org per day) for fast trend reads.
