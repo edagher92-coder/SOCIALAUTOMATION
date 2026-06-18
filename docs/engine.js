@@ -75,10 +75,18 @@
     for (let i = 0; i < pts.length - 1; i++) { const [x0, y0] = pts[i], [x1, y1] = pts[i + 1]; if (over >= x0 && over <= x1) return y0 + (over - x0) / (x1 - x0) * (y1 - y0); }
     return 10;
   }
-  function ctrScore(ctr) {
+  function ctrScore(ctr, platform) {
     if (ctr == null) return 50; const p = ctr * 100;
+    if (platform === "tiktok") {
+      if (p >= 1.5) return 95; if (p >= 0.85) return 70 + (p - 0.85) / (1.5 - 0.85) * 25; if (p >= 0.5) return 45 + (p - 0.5) / (0.85 - 0.5) * 25;
+      return Math.max(10, p / 0.5 * 45);
+    }
     if (p >= 2) return 95; if (p >= 1) return 60 + (p - 1) * 35; if (p >= 0.5) return 30 + (p - 0.5) / 0.5 * 30;
     return Math.max(10, p / 0.5 * 30);
+  }
+  function cpcScore(spend, clicks) {
+    if (spend == null || clicks == null || clicks <= 0) return 50; const cpc = spend / clicks;
+    if (cpc <= 0.5) return 95; if (cpc <= 1.0) return 85; if (cpc <= 2.0) return 65; if (cpc <= 4.0) return 40; return 20;
   }
   function freshnessScore(freq) { if (freq == null || freq < 1) return 80; if (freq <= 2) return 90; if (freq <= 3) return 65; if (freq <= 4) return 35; return 12; }
   function convRateScore(cr) { if (cr == null) return 50; const p = cr * 100; if (p >= 3) return 90; if (p >= 1.5) return 55 + (p - 1.5) / 1.5 * 35; if (p >= 0.5) return 25 + (p - 0.5) / 1.0 * 30; return Math.max(10, p / 0.5 * 25); }
@@ -115,7 +123,8 @@
     const factors = {}; const na = [];
     factors.tracking_quality = trackingScore(rows, agg);
     const cs = cpaScore(agg.cpa, be); if (cs == null) na.push("cpa"); else factors.cpa = cs;
-    factors.ctr = ctrScore(agg.ctr);
+    const ps = [...new Set(rows.map(r => (r.platform || "").toLowerCase()).filter(Boolean))];
+    factors.ctr = ctrScore(agg.ctr, ps.length === 1 ? ps[0] : undefined);
     factors.conversion_rate = convRateScore(agg.conv_rate);
     factors.creative_freshness = freshnessScore(freq);
     factors.naming_quality = namingScore(rows);
@@ -125,7 +134,7 @@
     const lq = rows.map(r => r.lead_quality_score).filter(v => v); if (!lq.length) na.push("lead_quality"); else factors.lead_quality = lq.reduce((a, b) => a + b, 0) / lq.length;
     const effBase = cs == null ? 50 : cs;
     factors.spend_efficiency = 0.6 * effBase + 0.4 * factors.data_confidence;
-    factors.cpc = 0.5 * factors.ctr + 0.5 * NEUTRAL;
+    factors.cpc = cpcScore(agg.spend, agg.clicks);
     factors.offer_strength = NEUTRAL; factors.landing_page_alignment = NEUTRAL;
     const res = computeHealth(factors, na);
     res.agg = agg; res.break_even_cpa = be; res.findings = findings(factors, agg, be, freq, na);

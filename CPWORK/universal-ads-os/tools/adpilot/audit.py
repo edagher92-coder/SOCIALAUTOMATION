@@ -47,10 +47,20 @@ def _cpa_score(cpa, be_cpa) -> float | None:
     return 10.0
 
 
-def _ctr_score(ctr) -> float:
+def _ctr_score(ctr, platform=None) -> float:
+    # TikTok in-feed CTR norms run well below Meta's, so a TikTok-only set is judged on a TikTok
+    # curve (~0.85% = healthy); Meta / mixed / unknown keep the original curve unchanged.
     if ctr is None:
         return 50.0
     pct = ctr * 100
+    if platform == "tiktok":
+        if pct >= 1.5:
+            return 95.0
+        if pct >= 0.85:
+            return 70 + (pct - 0.85) / (1.5 - 0.85) * 25   # 0.85%→70, 1.5%→95
+        if pct >= 0.5:
+            return 45 + (pct - 0.5) / (0.85 - 0.5) * 25     # 0.5%→45, 0.85%→70
+        return max(10.0, pct / 0.5 * 45)
     if pct >= 2.0:
         return 95.0
     if pct >= 1.0:
@@ -58,6 +68,22 @@ def _ctr_score(ctr) -> float:
     if pct >= 0.5:
         return 30 + (pct - 0.5) / 0.5 * 30       # 0.5%→30, 1%→60
     return max(10.0, pct / 0.5 * 30)
+
+
+def _cpc_score(spend, clicks) -> float:
+    """CPC health from the real signal (spend / clicks), AUD bands. Replaces the old CTR proxy."""
+    if spend is None or clicks is None or clicks <= 0:
+        return 50.0
+    cpc = spend / clicks
+    if cpc <= 0.5:
+        return 95.0
+    if cpc <= 1.0:
+        return 85.0
+    if cpc <= 2.0:
+        return 65.0
+    if cpc <= 4.0:
+        return 40.0
+    return 20.0
 
 
 def _freshness_score(freq) -> float:
@@ -151,7 +177,10 @@ def score_account(rows: list[dict], cfg: dict) -> dict:
         na.append("cpa")
     else:
         factors["cpa"] = cpa_s
-    factors["ctr"] = _ctr_score(agg["ctr"])
+    # CTR benchmark is platform-specific: use the TikTok curve only when the whole set is TikTok.
+    plats = {(r.get("platform") or "").lower() for r in rows if r.get("platform")}
+    one_platform = next(iter(plats)) if len(plats) == 1 else None
+    factors["ctr"] = _ctr_score(agg["ctr"], one_platform)
     factors["conversion_rate"] = _conv_rate_score(agg["conv_rate"])
     factors["creative_freshness"] = _freshness_score(freq)
     factors["naming_quality"] = _naming_score(rows)
@@ -170,8 +199,8 @@ def score_account(rows: list[dict], cfg: dict) -> dict:
     # spend_efficiency: blends CPA health + data confidence (proxy for "spend well used").
     eff_base = cpa_s if cpa_s is not None else 50.0
     factors["spend_efficiency"] = round(0.6 * eff_base + 0.4 * factors["data_confidence"], 1)
-    # cpc: proxy from CTR health (cheaper clicks track with stronger CTR/relevance).
-    factors["cpc"] = round(0.5 * factors["ctr"] + 0.5 * NEUTRAL, 1)
+    # cpc: real signal from spend / clicks (replaces the old CTR proxy).
+    factors["cpc"] = _cpc_score(agg["spend"], agg["clicks"])
     # Not derivable from media data — neutral + flagged for human input.
     factors["offer_strength"] = NEUTRAL
     factors["landing_page_alignment"] = NEUTRAL

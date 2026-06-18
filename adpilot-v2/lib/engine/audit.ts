@@ -18,13 +18,31 @@ function cpaScore(cpa: number | null, be: number): number | null {
   }
   return 10;
 }
-function ctrScore(c: number | null): number {
+// CTR→score. TikTok in-feed CTR norms run well below Meta's, so a TikTok-only set is judged on a
+// TikTok curve (~0.85% = healthy); Meta / mixed / unknown keep the original curve unchanged.
+function ctrScore(c: number | null, platform?: string): number {
   if (c == null) return 50;
   const p = c * 100;
+  if (platform === "tiktok") {
+    if (p >= 1.5) return 95;
+    if (p >= 0.85) return 70 + ((p - 0.85) / (1.5 - 0.85)) * 25; // 0.85%→70, 1.5%→95
+    if (p >= 0.5) return 45 + ((p - 0.5) / (0.85 - 0.5)) * 25;   // 0.5%→45, 0.85%→70
+    return Math.max(10, (p / 0.5) * 45);
+  }
   if (p >= 2) return 95;
   if (p >= 1) return 60 + (p - 1) * 35;
   if (p >= 0.5) return 30 + ((p - 0.5) / 0.5) * 30;
   return Math.max(10, (p / 0.5) * 30);
+}
+// CPC→score from the real signal (spend ÷ clicks), replacing the old CTR proxy. AUD bands.
+function cpcScore(spend: number | null, clicks: number | null): number {
+  if (spend == null || clicks == null || clicks <= 0) return 50;
+  const cpc = spend / clicks;
+  if (cpc <= 0.5) return 95;
+  if (cpc <= 1.0) return 85;
+  if (cpc <= 2.0) return 65;
+  if (cpc <= 4.0) return 40;
+  return 20;
 }
 function freshnessScore(freq: number | null): number {
   if (freq == null || freq < 1) return 80;
@@ -94,7 +112,10 @@ export function scoreAccount(rows: Row[], cfg: Cfg): AccountScore {
   factors.tracking_quality = trackingScore(rows, agg);
   const cs = cpaScore(agg.cpa, be);
   if (cs == null) na.push("cpa"); else factors.cpa = cs;
-  factors.ctr = ctrScore(agg.ctr);
+  // CTR benchmark is platform-specific: use the TikTok curve only when the whole set is TikTok.
+  const ps = Array.from(new Set(rows.map((r) => (r.platform || "").toLowerCase()).filter(Boolean)));
+  const onePlatform = ps.length === 1 ? ps[0] : undefined;
+  factors.ctr = ctrScore(agg.ctr, onePlatform);
   factors.conversion_rate = convRateScore(agg.conv_rate);
   factors.creative_freshness = freshnessScore(freq);
   factors.naming_quality = namingScore(rows);
@@ -112,9 +133,9 @@ export function scoreAccount(rows: Row[], cfg: Cfg): AccountScore {
   if (lqAvg == null) na.push("lead_quality"); else factors.lead_quality = lqAvg;
   const effBase = cs == null ? 50 : cs;
   factors.spend_efficiency = 0.6 * effBase + 0.4 * factors.data_confidence;
-  factors.cpc = 0.5 * factors.ctr + 0.5 * NEUTRAL;
-  factors.offer_strength = NEUTRAL;
-  factors.landing_page_alignment = NEUTRAL;
+  factors.cpc = cpcScore(agg.spend, agg.clicks);
+  factors.offer_strength = NEUTRAL;          // no offer signal in media data — neutral + flagged
+  factors.landing_page_alignment = NEUTRAL;  // no landing-page signal in media data — neutral + flagged
 
   const res = computeHealth(factors, na) as AccountScore;
   res.agg = agg;
