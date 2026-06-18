@@ -16,13 +16,31 @@ const CreateBody = z.object({
   source: z.enum(["upload", "studio"]).default("upload"),
 });
 
-export async function GET() {
+const POST_COLS = "id,platform,caption,media_url,media_type,status,scheduled_at,published_at,external_id,error,source,created_at";
+
+export async function GET(req: Request) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+
+  // Calendar mode: with a date window (?from&to, ISO), return posts by scheduled date so a
+  // calendar can bucket them. Without it, keep the queue's "latest first" behaviour (≤200).
+  const url = new URL(req.url);
+  const fromRaw = url.searchParams.get("from");
+  const toRaw = url.searchParams.get("to");
+  const from = fromRaw && !Number.isNaN(Date.parse(fromRaw)) ? fromRaw : null;
+  const to = toRaw && !Number.isNaN(Date.parse(toRaw)) ? toRaw : null;
+  if (from || to) {
+    let q = supabase.from("content_posts").select(POST_COLS).eq("organisation_id", orgId);
+    if (from) q = q.gte("scheduled_at", from);
+    if (to) q = q.lte("scheduled_at", to);
+    const { data } = await q.order("scheduled_at", { ascending: true }).limit(500);
+    return NextResponse.json({ posts: data || [] });
+  }
+
   const { data } = await supabase.from("content_posts")
-    .select("id,platform,caption,media_url,media_type,status,scheduled_at,published_at,error,source,created_at")
+    .select(POST_COLS)
     .eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(200);
   return NextResponse.json({ posts: data || [] });
 }
