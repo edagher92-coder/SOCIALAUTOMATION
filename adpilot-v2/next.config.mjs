@@ -1,18 +1,7 @@
 /** @type {import('next').NextConfig} */
-const csp = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https:",
-  "connect-src 'self' https://*.supabase.co https://api.stripe.com",
-  "frame-src https://js.stripe.com https://checkout.stripe.com",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "frame-ancestors 'none'",
-].join("; ");
-
+// NOTE: Content-Security-Policy is set per-request in proxy.ts (it needs a per-request script
+// nonce, which a static header can't provide). The static headers below apply to every route.
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: csp },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "no-referrer" },
