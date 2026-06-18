@@ -62,7 +62,7 @@ export default async function Connect(props: { searchParams: Promise<{ connected
       {accounts?.some((a: any) => a.status === "disconnected" || a.status === "error") && (
         <div className="mb-4 rounded-xl border border-band-red/30 bg-band-red/5 p-3 text-sm font-semibold text-band-red">
           ⚠ One or more accounts need reconnecting — AdPilot can&apos;t pull fresh data until you do, so your scores may be stale.{" "}
-          <a href="#token-help" className="underline">How to get a token that won&apos;t expire →</a>
+          <a href="/connect/guide" className="underline">Watch the guide — get a token that won&apos;t expire →</a>
         </div>
       )}
 
