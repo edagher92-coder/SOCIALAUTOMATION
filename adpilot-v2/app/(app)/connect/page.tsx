@@ -73,7 +73,7 @@ export default async function Connect(props: { searchParams: Promise<{ connected
             <>
               <div>
                 <div className="font-bold text-ink">✅ Connected &amp; scored</div>
-                <p className="text-sm text-muted">Your Campaign Health Score is live in the Command Center.</p>
+                <p className="text-sm text-muted">Your Campaign Health Score is live in the Command Centre.</p>
               </div>
               <a href="/command" className="rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white">View your score →</a>
             </>

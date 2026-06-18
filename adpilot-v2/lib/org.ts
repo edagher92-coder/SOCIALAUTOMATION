@@ -1,17 +1,20 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalisePlan, type Plan } from "@/lib/entitlements";
 
 // Active subscription plan for an org (defaults to "free" when none/inactive).
-export async function planForOrg(orgId: string): Promise<Plan> {
+// Wrapped in React.cache so the layout + the page it renders share one lookup
+// per request instead of each re-querying billing on every navigation.
+export const planForOrg = cache(async (orgId: string): Promise<Plan> => {
   const admin = createAdminClient();
   const { data } = await admin
     .from("billing_subscriptions").select("plan,status").eq("organisation_id", orgId)
     .order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (!data || (data as any).status !== "active") return "free";
   return normalisePlan((data as any).plan);
-}
+});
 
 // Returns the user's organisation id, creating a personal org + owner membership
 // on first use. Server-only (uses the service role).
@@ -35,14 +38,14 @@ export async function ensureOrg(userId: string, email?: string): Promise<string>
 
 // Returns the user's ACTIVE org id (from the `active_org` cookie if they're a
 // member of it), else their first org, else bootstraps one. Drives multi-client.
-export async function getActiveOrgId(userId: string, email?: string): Promise<string> {
+export const getActiveOrgId = cache(async (userId: string, email?: string): Promise<string> => {
   const admin = createAdminClient();
   const { data: mems } = await admin.from("memberships").select("organisation_id").eq("user_id", userId);
   const ids = (mems || []).map((m: any) => m.organisation_id as string);
   if (ids.length === 0) return ensureOrg(userId, email);
   const want = (await cookies()).get("active_org")?.value;
   return want && ids.includes(want) ? want : ids[0];
-}
+});
 
 // List the orgs a user belongs to (id, name, role) + the active one.
 export async function listOrgs(userId: string): Promise<{ orgs: { id: string; name: string; role: string }[]; activeId: string }> {

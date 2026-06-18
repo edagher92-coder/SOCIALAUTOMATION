@@ -16,7 +16,7 @@ const PERSONAS: Record<PersonaKey, {
     login: "creator.demo@adpilot.app", score: "80 / 100", band: "Green",
     blurb: "A creator who's crushing it: strong 2.2× ROAS across Meta + TikTok. AdPilot says she's healthy and clear-to-scale — the proposals are about pouring fuel on the winners.",
     tour: [
-      { step: "See the score land", href: "/command", cta: "Open Command Center", look: "Health 80 / Green and a live verdict strip — two 🚀 Scale proposals are waiting." },
+      { step: "See the score land", href: "/command", cta: "Open Command Centre", look: "Health 80 / Green and a live verdict strip — two 🚀 Scale proposals are waiting." },
       { step: "Approve a safe win", href: "/proposals", cta: "Open Proposals", look: "Approve the Scale on the TikTok ‘Day-1 Hook Reel’ (2.5× ROAS) and the Free-Guide funnel." },
       { step: "Read the 13-factor breakdown", href: "/dashboard", cta: "Open Ads Health", look: "Why the score is 80 — strong CPA, tracking & efficiency; 6 months of campaigns underneath." },
       { step: "Schedule content", href: "/content", cta: "Open Content Studio", look: "Published reels, a scheduled leg-day post, and a meal-prep draft ready to go." },
@@ -29,7 +29,7 @@ const PERSONAS: Record<PersonaKey, {
     login: "cafe.demo@adpilot.app", score: "58 / 100", band: "Orange",
     blurb: "A small business turning it around. AdPilot finds the leaks: a budget bleeder to kill, broken tracking to fix, a tired creative to refresh — and the one winner to scale.",
     tour: [
-      { step: "See what needs action", href: "/command", cta: "Open Command Center", look: "Health 58 / Orange with five proposals ranked most-urgent-first." },
+      { step: "See what needs action", href: "/command", cta: "Open Command Centre", look: "Health 58 / Orange with five proposals ranked most-urgent-first." },
       { step: "Work the proposal queue", href: "/proposals", cta: "Open Proposals", look: "🛑 Kill the ‘Menu Launch’ bleeder, 🛠️ fix Loyalty tracking, 🔻 reduce Catering, 🚀 scale Brunch." },
       { step: "Find the leak in the score", href: "/dashboard", cta: "Open Ads Health", look: "The breakdown pinpoints weak tracking & CPA — exactly where the money's going." },
       { step: "Auto-reply to customers", href: "/messenger", cta: "Open Messenger Setup", look: "A greeting + menu / hours / booking auto-replies already configured." },

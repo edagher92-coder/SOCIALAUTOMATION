@@ -21,13 +21,6 @@ export type MessengerConfig = {
   persistent_menu?: MenuItem[];
 };
 
-export class NoMessengerTokenError extends Error {
-  constructor() {
-    super("No Page token. Paste a Page token (pages_messaging + pages_manage_metadata) or set META_PAGE_ACCESS_TOKEN.");
-    this.name = "NoMessengerTokenError";
-  }
-}
-
 async function graph(method: string, path: string, token: string, body?: any, params?: Record<string, string>) {
   const qs = new URLSearchParams({ ...(params || {}), access_token: token });
   const r = await fetch(`https://graph.facebook.com/${V}/${path}?${qs.toString()}`, {

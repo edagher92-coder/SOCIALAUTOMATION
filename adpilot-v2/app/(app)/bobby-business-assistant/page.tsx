@@ -50,6 +50,9 @@ export default function Bobby() {
           ))}
         </div>
         <ul className="mt-4 list-disc space-y-1.5 pl-5 text-sm">{PLAYBOOKS[topic].map((x, i) => <li key={i}>{x}</li>)}</ul>
+        <p className="mt-4 border-t border-border-subtle pt-3 text-2xs leading-relaxed text-muted">
+          General business information only — not financial, tax, legal or accounting advice. Figures are examples, not guarantees. Check your own numbers and speak to your accountant or adviser before acting.
+        </p>
       </div>
 
       <div className="mt-5 rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">

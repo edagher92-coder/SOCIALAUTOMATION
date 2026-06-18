@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgId } from "@/lib/org";
-import { verdictMeta } from "@/lib/proposals";
+import { verdictMeta, VERDICT_GLOSSARY_KEY } from "@/lib/proposals";
+import { metricDef } from "@/lib/metric-glossary";
 import PageHeader from "@/components/PageHeader";
 import RecActions from "@/components/RecActions";
+import Tip from "@/components/Tip";
 
 export const dynamic = "force-dynamic";
 
@@ -63,12 +65,14 @@ export default async function Proposals() {
         <div className="space-y-3">
           {list.map((r: any) => {
             const m = verdictMeta(r.verdict);
+            const def = metricDef(VERDICT_GLOSSARY_KEY[r.verdict] || "");
             return (
               <div key={r.id} className="rounded-2xl border border-border-subtle bg-white p-4 shadow-card">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={`text-sm font-extrabold ${m.cls}`}>{m.emoji} {m.label}</span>
+                      {def && <Tip label={m.label} term={def.term} align="left">{def.what}</Tip>}
                       <span className="truncate text-sm font-semibold text-ink">· {r.entity_name}</span>
                       {r.platform && r.platform !== "?" && (
                         <span className="rounded-full bg-surface px-2 py-0.5 text-2xs font-bold uppercase text-muted">{r.platform}</span>

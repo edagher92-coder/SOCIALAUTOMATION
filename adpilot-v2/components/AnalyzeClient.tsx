@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useMode } from "./mode";
-import InfoTip from "./InfoTip";
+import Tip from "./Tip";
 import { METRIC_GLOSSARY } from "@/lib/metric-glossary";
 
 const BANDC: Record<string, string> = { Green: "#16a34a", Yellow: "#ca8a04", Orange: "#ea580c", Red: "#dc2626" };
@@ -169,7 +169,7 @@ export default function AnalyzeClient() {
                     style={{ background: BANDC[res.health.band] || "#5a6577" }}>
                     {res.health.band}
                   </span>
-                  {METRIC_GLOSSARY[res.health.band] && <InfoTip label={`${res.health.band} band`} term={METRIC_GLOSSARY[res.health.band].term} align="left">{METRIC_GLOSSARY[res.health.band].what}</InfoTip>}
+                  {METRIC_GLOSSARY[res.health.band] && <Tip label={`${res.health.band} band`} term={METRIC_GLOSSARY[res.health.band].term} align="left">{METRIC_GLOSSARY[res.health.band].what}</Tip>}
                 </span>
                 <p className="mt-2 text-base font-bold text-ink leading-snug">{res.health.guidance}</p>
                 {res.health.weakest?.length > 0 && (
@@ -181,7 +181,7 @@ export default function AnalyzeClient() {
                   <p className="mt-0.5 flex items-center gap-1 text-xs text-muted">
                     <span>Data confidence:</span>
                     <span className="font-semibold text-ink">{Math.round(res.health.breakdown.data_confidence.score)}/100</span>
-                    <InfoTip label="Data confidence" term={METRIC_GLOSSARY["Data confidence"].term} align="left">{METRIC_GLOSSARY["Data confidence"].what}</InfoTip>
+                    <Tip label="Data confidence" term={METRIC_GLOSSARY["Data confidence"].term} align="left">{METRIC_GLOSSARY["Data confidence"].what}</Tip>
                   </p>
                 )}
                 {res.health.breakdown?.lead_quality?.score != null && (
@@ -206,7 +206,7 @@ export default function AnalyzeClient() {
                       <div className="text-lg font-extrabold tabular-nums text-ink">{f2(v as number)}</div>
                       <div className="mt-0.5 flex items-center gap-1 text-2xs font-medium text-muted">
                         <span>{k}</span>
-                        {def && <InfoTip label={k as string} term={def.term} align={i % 2 === 0 ? "left" : "right"}>{def.what}</InfoTip>}
+                        {def && <Tip label={k as string} term={def.term} align={i % 2 === 0 ? "left" : "right"}>{def.what}</Tip>}
                       </div>
                     </div>
                   );
@@ -238,7 +238,7 @@ export default function AnalyzeClient() {
                             <td className="py-2 pr-4 font-medium text-ink">
                               <span className="inline-flex items-center gap-1">
                                 {FACTORLABEL[k] || k}
-                                {METRIC_GLOSSARY[FACTORLABEL[k]] && <InfoTip label={FACTORLABEL[k]} term={METRIC_GLOSSARY[FACTORLABEL[k]].term} align="left">{METRIC_GLOSSARY[FACTORLABEL[k]].what}</InfoTip>}
+                                {METRIC_GLOSSARY[FACTORLABEL[k]] && <Tip label={FACTORLABEL[k]} term={METRIC_GLOSSARY[FACTORLABEL[k]].term} align="left">{METRIC_GLOSSARY[FACTORLABEL[k]].what}</Tip>}
                               </span>
                             </td>
                             <td className="py-2 pr-4 tabular-nums text-muted">{b.score == null ? "N/A" : Math.round(b.score) + "/100"}</td>
@@ -288,8 +288,7 @@ export default function AnalyzeClient() {
                         <td className="py-3 pl-4 pr-3 align-top">
                           <span className={`inline-block rounded-md px-2 py-0.5 text-2xs font-bold capitalize ${
                             d.verdict === "scale" ? "bg-green-100 text-band-green" :
-                            d.verdict === "pause" ? "bg-red-100 text-band-red" :
-                            d.verdict === "kill"  ? "bg-red-100 text-band-red" :
+                            d.verdict === "kill" || d.verdict === "fix-tracking" ? "bg-red-100 text-band-red" :
                             "bg-gray-100 text-muted"
                           }`}>
                             {d.verdict}

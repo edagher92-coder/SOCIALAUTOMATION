@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ModeProvider, useMode } from "./mode";
+import { ModeProvider, useMode, useHelpTips } from "./mode";
 import OrgSwitcher from "./OrgSwitcher";
 import { can, requiredPlan, PLAN_LABEL, FEATURE_LABEL, type Feature, type Plan } from "@/lib/entitlements";
 
@@ -70,6 +70,30 @@ function ModeToggle() {
   );
 }
 
+function HelpToggle() {
+  const { helpTips, setHelpTips } = useHelpTips();
+  return (
+    <div className="rounded-xl border border-border-subtle bg-surface p-1.5">
+      <button
+        type="button"
+        onClick={() => setHelpTips(!helpTips)}
+        aria-pressed={helpTips}
+        className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs font-bold text-ink transition hover:bg-white hover:shadow-sm focus-visible:shadow-ring-brand">
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden className="grid h-[15px] w-[15px] place-items-center rounded-full border border-current text-[9px] font-bold leading-none">?</span>
+          Help tips
+        </span>
+        <span className={`relative inline-block h-4 w-7 flex-shrink-0 rounded-full transition-colors ${helpTips ? "bg-brand" : "bg-border-subtle"}`} aria-hidden>
+          <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-all ${helpTips ? "left-[0.875rem]" : "left-0.5"}`} />
+        </span>
+      </button>
+      <p className="px-1 pt-1.5 text-2xs text-muted">
+        {helpTips ? "Plain-English “?” explainers are on." : "Explainers hidden — switch on anytime."}
+      </p>
+    </div>
+  );
+}
+
 function Sidebar({ email, plan, onNav }: { email?: string; plan: Plan; onNav?: () => void }) {
   const path = usePathname();
   const { mode } = useMode();
@@ -87,7 +111,7 @@ function Sidebar({ email, plan, onNav }: { email?: string; plan: Plan; onNav?: (
       <Link href="/command" className="flex items-center gap-2.5 px-1 py-1 text-base font-extrabold tracking-tight text-ink transition hover:text-brand">
         <span className="inline-block h-7 w-7 flex-shrink-0 rounded-xl bg-gradient-to-br from-brand to-teal shadow-sm" />
         <span>AdPilot OS</span>
-        <span className="ml-0.5 rounded-full bg-brand-50 px-2 py-0.5 text-2xs font-bold text-brand">V4</span>
+        <span className="ml-0.5 rounded-full bg-brand-50 px-2 py-0.5 text-2xs font-bold text-brand">V6</span>
       </Link>
 
       {/* Org switcher */}

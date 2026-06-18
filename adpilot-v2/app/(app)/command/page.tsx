@@ -1,11 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
 import { can, PLAN_LABEL } from "@/lib/entitlements";
-import { verdictMeta, bandMeta, cadenceText } from "@/lib/proposals";
+import { verdictMeta, bandMeta, cadenceText, VERDICT_GLOSSARY_KEY } from "@/lib/proposals";
+import { metricDef } from "@/lib/metric-glossary";
 import { summariseSeries } from "@/lib/engine/timeseries";
 import { fmt } from "@/lib/engine/metrics";
 import ModeAware from "@/components/ModeAware";
 import ReadOnlyBadge from "@/components/ReadOnlyBadge";
+import Tip from "@/components/Tip";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +32,7 @@ export default async function CommandCenter() {
       <div className="animate-fade-in">
         <div className="rounded-3xl border border-dashed border-border-subtle bg-surface-raised p-10 text-center">
           <div className="text-3xl">🛰️</div>
-          <p className="mt-2 text-lg font-bold text-ink">Sign in to open your Command Center</p>
+          <p className="mt-2 text-lg font-bold text-ink">Sign in to open your Command Centre</p>
           <p className="mt-1 text-sm text-muted">
             Your Campaign Health Score and safe proposals live here once you’re signed in.
           </p>
@@ -97,7 +99,7 @@ export default async function CommandCenter() {
         <div className="absolute -bottom-12 -left-8 h-40 w-40 rounded-full bg-teal/25 blur-3xl" aria-hidden />
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="text-xs font-bold uppercase tracking-widest text-white/60">Command Center</div>
+            <div className="text-xs font-bold uppercase tracking-widest text-white/60">Command Centre</div>
             <h1 className="mt-1 text-2xl font-extrabold tracking-tight md:text-3xl">{name}</h1>
             <p className="mt-1 text-sm text-white/70">
               {apiEnabled
@@ -111,7 +113,10 @@ export default async function CommandCenter() {
           <div className="flex items-center gap-4 rounded-2xl bg-white/10 px-5 py-4 backdrop-blur">
             <div className="text-right">
               <div className="text-4xl font-extrabold leading-none">{total ?? "—"}<span className="text-lg text-white/50">/100</span></div>
-              <div className="mt-1 text-xs font-bold uppercase tracking-wide text-white/70">{(score as any)?.band || "no score"} · {band.label}</div>
+              <div className="mt-1 flex items-center justify-end gap-1 text-xs font-bold uppercase tracking-wide text-white/70">
+                <span>{(score as any)?.band || "no score"} · {band.label}</span>
+                <Tip tone="dark" align="right" label="Campaign Health Score" term={metricDef("Campaign Health Score")!.term}>{metricDef("Campaign Health Score")!.what}</Tip>
+              </div>
               {trend.n >= 3 && (
                 <div className="mt-1 text-xs text-white/70" title="Trend over your saved health-score history">
                   {trendArrow} {trend.trend}{trendWow != null ? ` · ${trendWow >= 0 ? "+" : ""}${trendWow}% WoW` : ""}
@@ -145,9 +150,11 @@ export default async function CommandCenter() {
           {(["fix-tracking", "kill", "reduce", "refresh", "scale"] as const).map((v) => {
             const m = verdictMeta(v);
             const n = byVerdict[v] || 0;
+            const def = metricDef(VERDICT_GLOSSARY_KEY[v]);
             return (
-              <span key={v} className={`rounded-full px-3 py-1 text-xs font-bold ${n ? "bg-white/15 text-white" : "bg-white/5 text-white/40"}`}>
+              <span key={v} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ${n ? "bg-white/15 text-white" : "bg-white/5 text-white/40"}`}>
                 {m.emoji} {m.label} {n > 0 && <b>{n}</b>}
+                {def && <Tip tone="dark" label={m.label} term={def.term}>{def.what}</Tip>}
               </span>
             );
           })}

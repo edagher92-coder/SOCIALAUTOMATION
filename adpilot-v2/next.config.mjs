@@ -21,8 +21,8 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
-  // Lint is style-level; don't fail production builds on it. Type errors still fail the build.
-  eslint: { ignoreDuringBuilds: true },
+  // Note: Next 16 no longer runs ESLint during `next build` (it's a separate `next lint`/CI
+  // step), so the old `eslint.ignoreDuringBuilds` key is unsupported and has been removed.
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

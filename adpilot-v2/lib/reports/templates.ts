@@ -26,21 +26,6 @@ export const SAFETY_HEADER =
 export const BREAK_EVEN_NOTE =
   "Break-even CPA = average sale value × gross margin · Break-even ROAS = 1 ÷ gross margin.";
 
-// Documents how each template {{client.*}} variable maps to live data (or has no source yet).
-// Keeps later contributors honest about what the app actually stores.
-export const TEMPLATE_VAR_MAP: Record<string, string> = {
-  "client.business_name": "organisations.name / payload.config.business_name (else 'your account')",
-  "client.currency": "organisations.currency (default 'AUD')",
-  "client.average_sale_value": "organisations.average_sale_value / payload.config.average_sale_value",
-  "client.gross_margin": "organisations.gross_margin / payload.config.gross_margin",
-  "client.monthly_budget": "NONE — render 'Not set' (needs a Settings field)",
-  "client.reporting_frequency": "proxy: organisations.sync_interval_hours",
-  "client.platform_focus": "derive from distinct campaign_snapshots.platform",
-  "client.primary_goal": "NONE — needs human input",
-  "client.target_audience": "NONE — needs human input",
-  "client.brand_voice": "NONE — needs human input",
-};
-
 export const REPORT_KINDS: ReportKind[] = ["daily", "weekly", "monthly", "audit-meta", "audit-tiktok"];
 
 export function isReportKind(v: unknown): v is ReportKind {
