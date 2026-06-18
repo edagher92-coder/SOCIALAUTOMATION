@@ -41,14 +41,14 @@ export default function RecActions({ id }: { id: string }) {
     );
   }
   return (
-    <div className="flex flex-shrink-0 flex-col items-end gap-1">
+    <div className="flex w-full flex-shrink-0 flex-col items-stretch gap-1 sm:w-auto sm:items-end">
       <div className="flex gap-2">
         <button onClick={() => set("approved")} disabled={!!busy}
-          className="rounded-lg bg-brand px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50">
+          className="flex-1 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white transition disabled:opacity-50 sm:flex-none">
           {busy === "approved" ? "…" : "Approve"}
         </button>
         <button onClick={() => set("dismissed")} disabled={!!busy}
-          className="rounded-lg border border-border-subtle px-3 py-1.5 text-xs font-semibold text-muted hover:bg-white disabled:opacity-50">
+          className="flex-1 rounded-lg border border-border-subtle px-3 py-2 text-xs font-semibold text-muted transition hover:bg-white disabled:opacity-50 sm:flex-none">
           {busy === "dismissed" ? "…" : "Dismiss"}
         </button>
       </div>
