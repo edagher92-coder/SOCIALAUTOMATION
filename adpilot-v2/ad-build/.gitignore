@@ -7,3 +7,7 @@ fonts/
 frame.png
 frame-v3.png
 package-lock.json
+frames-tut/
+preview-tut/
+frame-tut.png
+out/
