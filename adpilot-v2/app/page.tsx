@@ -29,13 +29,13 @@ export default function Landing() {
       </nav>
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <header className="relative overflow-hidden border-b border-border-subtle bg-gradient-to-b from-white via-white to-surface px-5 py-24 sm:py-32">
+      <header className="relative overflow-hidden border-b border-border-subtle bg-gradient-to-b from-white via-white to-surface px-5 py-16 sm:py-24 lg:py-28">
         {/* subtle decorative orb */}
         <div aria-hidden className="pointer-events-none absolute -top-32 left-1/2 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-brand-50 opacity-50 blur-3xl" />
         <div className="relative mx-auto max-w-3xl text-center">
           <span className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3.5 py-1.5 text-sm font-semibold text-brand">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand" />
-            Meta &amp; TikTok · explainable · safe by design
+            For social media managers, agencies &amp; creators
           </span>
           <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-ink sm:text-6xl">
             Know exactly what your ads are{" "}
@@ -43,9 +43,10 @@ export default function Landing() {
               doing to your money.
             </span>
           </h1>
-          <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted">
-            An explainable Campaign Health Score, the findings leaking budget, and safe,
-            numbers-first recommendations — without ever touching a live ad.
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted">
+            One workspace for paid and organic: an explainable Campaign Health Score and safe,
+            numbers-first fixes for your ads, plus content scheduling, DM auto-replies and
+            white-label client reports. Read-only on ads — it proposes, you approve.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link href="/command"
@@ -74,6 +75,46 @@ export default function Landing() {
             </span>
           ))}
         </div>
+      </section>
+
+      {/* ── Built for social media managers ─────────────────── */}
+      <section className="mx-auto max-w-6xl px-5 py-16 sm:py-20">
+        <div className="text-center">
+          <span className="text-sm font-bold uppercase tracking-widest text-brand">Built for social media managers</span>
+          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Paid and organic, run from one place</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-base text-muted">
+            Everything a social media manager juggles — campaigns, content, DMs and client reporting — in one calm workspace. Numbers-first, no fluff.
+          </p>
+        </div>
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {([
+            ["📊", "Explainable ad health", "A 0–100 Campaign Health Score with the findings leaking budget and safe, numbers-first fixes. Read-only — nothing changes on Meta/TikTok until you approve."],
+            ["🎬", "Plan & schedule content", "Compose, schedule and publish posts and reels to Facebook, Instagram and TikTok from one place."],
+            ["🎨", "Create on-brand", "Brief and generate ad and post creative with the AI Creative Studio, and keep your assets in one library."],
+            ["💬", "Auto-reply to DMs", "Set a greeting, ice breakers, a menu and keyword auto-replies for Messenger and Instagram."],
+            ["👥", "Manage every client", "Switch between clients in a click and see each one's health at a glance."],
+            ["🗃️", "White-label reports", "Send client-ready reports and PDFs branded as your agency — your logo, your colours."],
+          ] as [string, string, string][]).map(([icon, title, body]) => (
+            <div key={title} className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+              <div className="text-2xl" aria-hidden>{icon}</div>
+              <h3 className="mt-2 font-bold text-ink">{title}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-muted">{body}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          {([
+            ["Agencies & freelancers", "Run many clients without the chaos — multi-client switching, white-label reports and a tidy portfolio."],
+            ["Solo & in-house teams", "One brand, end to end: schedule content, watch the health score, and keep DMs answered."],
+            ["Content-led creators", "Lead with creative — generate on-brand assets, schedule reels, and grow with the numbers behind you."],
+          ] as [string, string][]).map(([title, body]) => (
+            <div key={title} className="rounded-2xl border border-brand-200 bg-brand-50/40 p-5">
+              <h3 className="font-bold text-ink">{title}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-muted">{body}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-6 text-center text-xs text-muted">Read-only on ads · numbers-first · no earnings or results guarantees.</p>
       </section>
 
       {/* ── Pricing ──────────────────────────────────────────── */}

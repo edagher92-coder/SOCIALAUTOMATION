@@ -111,7 +111,7 @@ export default async function CommandCenter() {
           </div>
 
           {/* Health gauge */}
-          <div className="flex items-center gap-4 rounded-2xl bg-white/10 px-5 py-4 backdrop-blur">
+          <div className="flex w-full items-center justify-end gap-4 rounded-2xl bg-white/10 px-5 py-4 backdrop-blur sm:w-auto">
             <div className="text-right">
               <div className="text-4xl font-extrabold leading-none">{total ?? "—"}<span className="text-lg text-white/50">/100</span></div>
               <div className="mt-1 flex items-center justify-end gap-1 text-xs font-bold uppercase tracking-wide text-white/70">

@@ -11,23 +11,27 @@ import { can, requiredPlan, PLAN_LABEL, FEATURE_LABEL, type Feature, type Plan }
 type NavItem = { href: string; label: string; icon: string; desc: string; advanced?: boolean; feature?: Feature };
 const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
   { title: null, items: [
-    { href: "/command", label: "Command Center", icon: "🛰️", desc: "Your live ads control room" },
+    { href: "/command", label: "Command Centre", icon: "🛰️", desc: "Your live control room" },
   ] },
-  { title: "Workspace", items: [
+  { title: "Ads", items: [
     { href: "/proposals", label: "Proposals", icon: "✅", desc: "Approve safe, prioritised fixes" },
     { href: "/dashboard", label: "Ads Health", icon: "📊", desc: "Score a CSV export" },
     { href: "/connect", label: "Connect & Sync", icon: "🔗", desc: "Meta & TikTok + auto-sync" },
-    { href: "/reports", label: "Reports", icon: "🗃️", desc: "Your analysis history", feature: "reports" },
     { href: "/utm-builder", label: "UTM Builder", icon: "🏷️", desc: "Consistent names & tagged URLs", advanced: true },
-    { href: "/content", label: "Content Studio", icon: "🎬", desc: "Create, schedule & publish posts", advanced: true, feature: "content_publish" },
-    { href: "/messenger", label: "Messenger Setup", icon: "💬", desc: "Greeting, ice breakers & menu", advanced: true, feature: "messenger_automation" },
     { href: "/actions", label: "Ad Actions", icon: "🛠️", desc: "Guarded live changes (Expert)", advanced: true, feature: "ad_write" },
+  ] },
+  { title: "Social", items: [
+    { href: "/content", label: "Content Studio", icon: "🎬", desc: "Plan, schedule & publish posts", advanced: true, feature: "content_publish" },
+    { href: "/creative", label: "Creative Library", icon: "🖼️", desc: "Link or upload audio/video/photo", advanced: true, feature: "creative_studio" },
+    { href: "/canva-creator", label: "Canva Creator", icon: "🎨", desc: "On-brand creative briefs & prompts", advanced: true, feature: "creative_studio" },
+    { href: "/messenger", label: "Messenger", icon: "💬", desc: "Auto-replies, greeting & menu", advanced: true, feature: "messenger_automation" },
+    { href: "/portfolio", label: "Clients", icon: "👥", desc: "All your clients at a glance", advanced: true, feature: "multi_client" },
+    { href: "/reports", label: "Reports", icon: "🗃️", desc: "Client-ready reports & PDFs", feature: "reports" },
+    { href: "/agency", label: "White-label", icon: "🏷️", desc: "Brand reports as your agency", advanced: true, feature: "white_label" },
   ] },
   { title: "AI Team", items: [
     { href: "/ai-specialists", label: "AI Specialists", icon: "🧭", desc: "Agents grounded in your numbers", feature: "ai_team" },
     { href: "/policy-check", label: "Policy Check", icon: "🛡️", desc: "Paige checks copy for policy risk", advanced: true, feature: "ai_team" },
-    { href: "/canva-creator", label: "Canva Creator", icon: "🎨", desc: "Ad creative briefs & prompts", advanced: true, feature: "creative_studio" },
-    { href: "/creative", label: "Creative Library", icon: "🖼️", desc: "Link or upload audio/video/photo", advanced: true, feature: "creative_studio" },
     { href: "/bobby-business-assistant", label: "Bobby — Business", icon: "🤝", desc: "Plain-English business help", advanced: true, feature: "ai_team" },
     { href: "/aria-course-creator", label: "Aria — Courses", icon: "🎓", desc: "Turn expertise into a course", advanced: true, feature: "ai_team" },
     { href: "/crm-maintenance", label: "CRM Maintenance", icon: "🧹", desc: "Keep your pipeline clean", advanced: true },
@@ -36,8 +40,6 @@ const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
   { title: "Account", items: [
     { href: "/billing", label: "Billing", icon: "💳", desc: "Plan & subscription" },
     { href: "/settings", label: "Settings", icon: "⚙️", desc: "Economics & auto-sync" },
-    { href: "/portfolio", label: "Portfolio", icon: "🗂️", desc: "All clients at a glance", advanced: true, feature: "multi_client" },
-    { href: "/agency", label: "White-label", icon: "🏷️", desc: "Brand reports as your agency", advanced: true, feature: "white_label" },
     { href: "/notifications", label: "Notifications", icon: "🔔", desc: "Weekly digest & alerts", advanced: true },
     { href: "/claude-api", label: "Claude API", icon: "🔌", desc: "Connect AI generation", advanced: true },
     { href: "/manual", label: "User Manual", icon: "📖", desc: "How-to + download PDF", advanced: true },
@@ -135,7 +137,7 @@ function Sidebar({ email, plan, onNav }: { email?: string; plan: Plan; onNav?: (
                   <Link key={n.href} href="/billing" onClick={onNav}
                     title={`${FEATURE_LABEL[n.feature!]} — included in ${PLAN_LABEL[need]}`}
                     aria-label={`${n.label}, locked — upgrade to ${PLAN_LABEL[need]}`}
-                    className="group flex items-center gap-2.5 rounded-xl px-3 py-2 text-muted/80 transition-all duration-150 hover:bg-white/60 hover:text-ink focus-visible:shadow-ring-brand">
+                    className="group flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-muted/80 transition-all duration-150 hover:bg-white/60 hover:text-ink focus-visible:shadow-ring-brand">
                     <span className="text-base leading-none opacity-70" aria-hidden>{n.icon}</span>
                     <span className="text-sm font-semibold">{n.label}</span>
                     <span className="ml-auto flex items-center gap-1 rounded-full bg-brand-50 px-1.5 py-0.5 text-2xs font-bold text-brand" aria-hidden>🔒 {PLAN_LABEL[need]}</span>
@@ -149,7 +151,7 @@ function Sidebar({ email, plan, onNav }: { email?: string; plan: Plan; onNav?: (
                   href={n.href}
                   onClick={onNav}
                   aria-current={active ? "page" : undefined}
-                  className={`group rounded-xl px-3 py-2 transition-all duration-150 focus-visible:shadow-ring-brand ${
+                  className={`group rounded-xl px-3 py-2.5 transition-all duration-150 focus-visible:shadow-ring-brand ${
                     active
                       ? "bg-brand text-white shadow-sm"
                       : "text-ink hover:bg-white hover:shadow-sm"
@@ -192,8 +194,8 @@ export default function AppShell({ children, email, plan = "free" }: { children:
   return (
     <ModeProvider>
       <div className="min-h-screen bg-surface md:grid md:grid-cols-[260px_1fr]">
-        {/* Mobile top bar */}
-        <div className="flex items-center justify-between border-b border-border-subtle bg-white px-4 py-3 md:hidden print:hidden">
+        {/* Mobile top bar (sticky so the menu is always reachable) */}
+        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-border-subtle bg-white px-4 py-3 md:hidden print:hidden">
           <span className="flex items-center gap-2 font-extrabold text-ink">
             <span className="inline-block h-6 w-6 rounded-lg bg-gradient-to-br from-brand to-teal shadow-sm" aria-hidden />
             AdPilot OS
@@ -202,16 +204,21 @@ export default function AppShell({ children, email, plan = "free" }: { children:
             onClick={() => setOpen(!open)}
             aria-expanded={open}
             aria-label="Toggle navigation menu"
-            className="rounded-lg border border-border-subtle bg-white px-3 py-1.5 text-sm font-bold text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:shadow-ring-brand">
+            className="rounded-lg border border-border-subtle bg-white px-4 py-2 text-sm font-bold text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:shadow-ring-brand">
             {open ? "Close" : "Menu"}
           </button>
         </div>
 
-        {/* Sidebar */}
+        {/* Mobile drawer backdrop — tap to close */}
+        {open && (
+          <div className="fixed inset-0 z-40 bg-black/40 md:hidden print:hidden" aria-hidden onClick={() => setOpen(false)} />
+        )}
+
+        {/* Sidebar — overlay drawer on mobile (doesn't push content; scroll-capped), static column on desktop */}
         <aside
-          className={`${open ? "block" : "hidden"} border-r border-border-subtle bg-[#eef2f8] md:block print:hidden`}
+          className={`${open ? "fixed inset-y-0 left-0 z-50 w-[85vw] max-w-[320px] overflow-y-auto shadow-2xl" : "hidden"} border-r border-border-subtle bg-[#eef2f8] md:static md:z-auto md:block md:w-auto md:max-w-none md:overflow-visible md:shadow-none print:hidden`}
           aria-label="Sidebar">
-          <div className="md:sticky md:top-0 md:h-screen">
+          <div className="md:sticky md:top-0 md:h-screen md:overflow-y-auto">
             <Sidebar email={email} plan={plan} onNav={() => setOpen(false)} />
           </div>
         </aside>
