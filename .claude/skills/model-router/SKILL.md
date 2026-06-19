@@ -59,7 +59,10 @@ If lowering cost or latency could plausibly degrade the result, **don't** — st
 | **Opus 4.8** | $5 / $25 | slower (reasons more) | hard reasoning, long-horizon agentic, gnarly multi-file debugging, architecture, design, high-stakes/irreversible, security, ambiguous-but-important, anything that failed on a lower tier |
 | **Fable 5** | $10 / $50 | slowest | only on explicit request, or frontier reasoning Opus genuinely can't carry |
 
-Sonnet is exactly 0.6× Opus on both input and output → ~40% less limit burn, and faster, for the same work.
+Sonnet is exactly 0.6× Opus on both input and output → ~40% cheaper per token. **Cost is the reliable
+saving; speed is task-dependent** — on small, well-specified tasks Opus can be *more* decisive (fewer tool
+calls, fewer tokens), so don't promise Sonnet is "faster" in general. Don't bias model choice on latency
+alone; choose on the quality/cost axes and treat speed as a tie-breaker for light, interactive turns.
 
 ## Effort
 
@@ -148,6 +151,23 @@ for a one-off sub-task.
 | "Audit 200 files for a security pattern" | Fan-out: parallel Haiku subagents scan, Opus synthesises findings. |
 | "Sonnet's refactor broke the build" (retry) | Escalate → Opus, xhigh. Prior-attempt failure. |
 | Interactive chat, user waiting, simple Q | Sonnet (or current model), low effort — fast + cheap. |
+
+## Field notes (validated by an A/B test)
+
+A controlled A/B on the same well-specified coding task (build a pure analytics module + vitest suite),
+one **Sonnet** arm vs one **Opus** arm, judged by `tsc --strict` + the real `vitest` suite:
+
+- **Quality was equal.** Both compiled strict-clean and passed their own suites (Sonnet 10/10, Opus 8/8).
+  No bugs in either. → The "Sonnet for everyday well-specified coding" call holds: equal quality, lower cost.
+- **The saving was ~30%, and it came from the rate, not fewer tokens.** Sonnet actually used *more* tokens
+  and tool calls and was slightly slower on this task; it still cost ~30% less purely because of the 0.6×
+  price. Bank the cost win; don't assume a speed win.
+- **Opus self-verified** (ran its own type-check + logic port) without being asked — a real edge for
+  high-stakes/irreversible work. Keep the stakes gate.
+- **Ambiguous specs make tiers diverge — defensibly, not as bugs.** Cross-running one arm's tests against
+  the other's code failed only on the genuinely under-specified points (e.g. "posts per week" = count÷span
+  vs interval-rate). The model can't read intent: **pin ambiguous requirements in the spec** rather than
+  expecting a higher tier to guess them.
 
 ## Output: the routing tag
 
