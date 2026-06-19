@@ -13,11 +13,17 @@ create table if not exists organic_posts (
   impressions bigint not null default 0,
   engagements bigint not null default 0,
   external_id text,                          -- platform's post/media id, when synced
-  source text not null default 'manual',     -- 'manual' (entry/CSV) | future sync sources
+  source text not null default 'manual'      -- 'manual' (entry/CSV) | future sync sources
+    check (source in ('manual','meta_sync','tiktok_sync')),
   created_at timestamptz not null default now()
 );
 
 create index if not exists organic_posts_org_posted_idx on organic_posts (organisation_id, posted_at);
+
+-- Synced rows carry the platform's post id; dedupe them so a re-run can't multiply rows.
+-- (Manual rows have a null external_id and are kept idempotent by the store's replace-on-save.)
+create unique index if not exists organic_posts_external_uniq
+  on organic_posts (organisation_id, external_id) where external_id is not null;
 
 alter table organic_posts enable row level security;
 

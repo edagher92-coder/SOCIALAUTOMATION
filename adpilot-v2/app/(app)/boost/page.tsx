@@ -16,6 +16,8 @@ export default async function BoostPage() {
   const plan = orgId ? await planForOrg(orgId) : "free";
   // Same organic-content tier as the rest of the Social surfaces.
   const entitled = can(plan, "content_publish");
+  // The AI explainer is the Pro+ specialist team — gate the button so Starter doesn't hit a 402.
+  const canExplain = entitled && can(plan, "ai_team");
   // Ground projections in the account's real CPM (from the ad data we already pull); null -> benchmark.
   const admin = entitled && orgId ? createAdminClient() : null;
   const accountCpm = admin
@@ -45,7 +47,7 @@ export default async function BoostPage() {
           <a href="/billing" className="inline-block rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white">Upgrade</a>
         </div>
       ) : (
-        <BoostWorkspace accountCpm={accountCpm} initialPosts={initialPosts} />
+        <BoostWorkspace accountCpm={accountCpm} initialPosts={initialPosts} canExplain={canExplain} />
       )}
     </div>
   );

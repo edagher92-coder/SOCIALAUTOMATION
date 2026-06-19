@@ -106,3 +106,28 @@ describe("projectBoost — guards", () => {
     expect(p.engagementRateRange.high).toBeGreaterThanOrEqual(p.engagementRate);
   });
 });
+
+describe("projectBoost — edge fixes", () => {
+  it("calls a high-reach, zero-engagement post BELOW benchmark (not insufficient-data)", () => {
+    const p = projectBoost({
+      post: { platform: "meta", reach: 50000, impressions: 100000, engagements: 0 },
+      budget: 100,
+      cpm: 10,
+    });
+    // 0 engagements over 50k reach is conclusive — improve organically, don't "wait for more data".
+    expect(p.confidence).toBe("below");
+    expect(p.verdict).toBe("improve-organic-first");
+  });
+
+  it("caps engagement rate at 100% so the point never exceeds its own (clamped) CI", () => {
+    const p = projectBoost({
+      post: { platform: "meta", reach: 5000, impressions: 8000, engagements: 8000 }, // 160% raw
+      budget: 100,
+      cpm: 10,
+    });
+    expect(p.engagementRate).toBeLessThanOrEqual(1);
+    expect(p.engagementRate).toBeLessThanOrEqual(p.engagementRateRange.high);
+    // damped + bounded: projected added engagements can't exceed the incremental reach
+    expect(p.projectedAddedEngagements).toBeLessThanOrEqual(p.incrementalReach);
+  });
+});

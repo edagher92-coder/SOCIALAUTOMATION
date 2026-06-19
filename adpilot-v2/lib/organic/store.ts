@@ -45,9 +45,13 @@ export async function listOrganicPosts(admin: any, orgId: string): Promise<Organ
 }
 
 /**
- * Insert validated organic posts for an org. Coerces numeric fields, clamps negatives to 0,
- * and skips rows whose platform isn't meta/tiktok. Returns the count inserted (0 if none valid).
- * Surfaces DB errors by throwing.
+ * Save validated organic posts for an org. Coerces numeric fields, clamps negatives to 0, and
+ * skips rows whose platform isn't meta/tiktok. Returns the count saved (0 if none valid).
+ *
+ * REPLACE semantics for the manual set: the editable list in the UI is seeded from the org's
+ * stored posts, so a save means "this is my current set." We therefore clear the org's existing
+ * `manual` rows first, then insert — so re-saving can never double-count reach/budget. Synced
+ * rows (other `source` values) are untouched. Surfaces DB errors by throwing.
  */
 export async function addOrganicPosts(admin: any, orgId: string, posts: OrganicPostInput[]): Promise<number> {
   const rows = (posts || [])
@@ -64,103 +68,15 @@ export async function addOrganicPosts(admin: any, orgId: string, posts: OrganicP
       source: "manual",
     }));
   if (rows.length === 0) return 0;
+  // Clear the prior manual set, then insert the current one (idempotent re-save).
+  const { error: delErr } = await admin
+    .from("organic_posts").delete().eq("organisation_id", orgId).eq("source", "manual");
+  if (delErr) throw new Error(delErr.message || "Failed to refresh organic posts");
   const { error } = await admin.from("organic_posts").insert(rows);
   if (error) throw new Error(error.message || "Failed to save organic posts");
   return rows.length;
 }
 
-// ---------------------------------------------------------------------------
-// CSV parsing — PURE, no I/O, unit-testable. Accepts pasted CSV with a header
-// row; tolerant of header order and casing. Recognised headers (aliases):
-//   name | title | caption        -> name
-//   platform                       -> platform (meta|tiktok; "facebook"/"instagram"/"fb"/"ig" -> meta)
-//   date | posted_at | posted      -> date
-//   reach                          -> reach
-//   impressions | impr             -> impressions
-//   engagements | engagement | eng -> engagements
-// Rows with no valid platform, or with no numeric metrics at all, are skipped.
-// ---------------------------------------------------------------------------
-
-const HEADER_ALIASES: Record<string, keyof OrganicPostInput> = {
-  name: "name", title: "name", caption: "name",
-  platform: "platform",
-  date: "date", posted_at: "date", posted: "date",
-  reach: "reach",
-  impressions: "impressions", impr: "impressions",
-  engagements: "engagements", engagement: "engagements", eng: "engagements",
-};
-
-function normalisePlatform(v: string): OrganicPlatform | null {
-  const s = v.trim().toLowerCase();
-  if (s === "meta" || s === "facebook" || s === "instagram" || s === "fb" || s === "ig") return "meta";
-  if (s === "tiktok" || s === "tt") return "tiktok";
-  return null;
-}
-
-// Split a single CSV line, honouring double-quoted fields (with "" escapes).
-function splitCsvLine(line: string): string[] {
-  const out: string[] = [];
-  let cur = "";
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (inQuotes) {
-      if (ch === '"') {
-        if (line[i + 1] === '"') { cur += '"'; i++; } else { inQuotes = false; }
-      } else cur += ch;
-    } else if (ch === '"') {
-      inQuotes = true;
-    } else if (ch === ",") {
-      out.push(cur); cur = "";
-    } else cur += ch;
-  }
-  out.push(cur);
-  return out.map((s) => s.trim());
-}
-
-const toNum = (v: any): number => {
-  const n = Number(String(v ?? "").replace(/[,\s]/g, ""));
-  return Number.isFinite(n) && n > 0 ? Math.round(n) : 0;
-};
-
-export function parseOrganicCsv(csv: string): OrganicPostInput[] {
-  const lines = String(csv ?? "")
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0);
-  if (lines.length < 2) return [];
-
-  // Map each header column to a known field (or null to ignore it).
-  const headers = splitCsvLine(lines[0]).map((h) => HEADER_ALIASES[h.toLowerCase()] ?? null);
-  if (!headers.includes("platform")) return [];
-
-  const out: OrganicPostInput[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cells = splitCsvLine(lines[i]);
-    const rec: Partial<Record<keyof OrganicPostInput, string>> = {};
-    headers.forEach((field, idx) => {
-      if (field) rec[field] = cells[idx];
-    });
-
-    const platform = normalisePlatform(rec.platform ?? "");
-    if (!platform) continue; // junk / missing platform -> skip
-
-    const reach = toNum(rec.reach);
-    const impressions = toNum(rec.impressions);
-    const engagements = toNum(rec.engagements);
-    // A row with no numeric signal at all is junk; skip it.
-    if (reach === 0 && impressions === 0 && engagements === 0) continue;
-
-    const name = (rec.name ?? "").trim();
-    const date = (rec.date ?? "").trim();
-    out.push({
-      platform,
-      ...(name ? { name } : {}),
-      ...(date ? { date } : {}),
-      reach,
-      impressions,
-      engagements,
-    });
-  }
-  return out;
-}
+// CSV parsing lives in the shared, browser-safe lib/organic/csv so the client UI and this server
+// route use ONE parser (no rule drift). Re-exported here for existing import sites.
+export { parseOrganicCsv } from "./csv";

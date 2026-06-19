@@ -7,7 +7,7 @@ import { projectBoost, type OrganicPlatform } from "./boost";
 import type { CpmByPlatform } from "./cpm";
 import type {
   OrganicPostInput, OrganicSummary, PlatformSummary, BoostRecommendation,
-  AccountOrganicAnalysis, AccountAnalysisOptions,
+  AccountOrganicAnalysis, AccountAnalysisOptions, HeldPost,
 } from "./types";
 
 const DEFAULT_BUDGET = 100;
@@ -63,7 +63,14 @@ export function analyseAccount(
   }));
 
   const winners = projected.filter((x) => x.projection.verdict === "worth-boosting");
-  const holds = projected.filter((x) => x.projection.verdict !== "worth-boosting");
+  // Held posts carry the honest reason from the verdict: "below-benchmark" only when engagement is
+  // CONFIDENTLY below; anything inconclusive (incl. insufficient data) is "needs-more-data".
+  const holds: HeldPost[] = projected
+    .filter((x) => x.projection.verdict !== "worth-boosting")
+    .map((x) => ({
+      post: x.post,
+      reason: x.projection.confidence === "below" ? "below-benchmark" : "needs-more-data",
+    }));
 
   // Rank winners by projected impact (added engagements), strongest first.
   winners.sort((a, b) => b.projection.projectedAddedEngagements - a.projection.projectedAddedEngagements);
@@ -98,7 +105,7 @@ export function analyseAccount(
       `${recommendations.length} ${recommendations.length === 1 ? "post is" : "posts are"} resonating above benchmark with enough signal — boosting amplifies what's already working.`,
     );
   }
-  const belowCount = holds.filter((h) => h.projection.confidence === "below").length;
+  const belowCount = holds.filter((h) => h.reason === "below-benchmark").length;
   const thinCount = holds.length - belowCount;
   if (belowCount > 0) explanations.push(`${belowCount} ${belowCount === 1 ? "post is" : "posts are"} below benchmark — strengthen the hook/offer before paying to widen reach.`);
   if (thinCount > 0) explanations.push(`${thinCount} ${thinCount === 1 ? "post needs" : "posts need"} more organic reach before a confident call can be made.`);
@@ -106,7 +113,7 @@ export function analyseAccount(
   return {
     summary,
     recommendations,
-    hold: holds.map((h) => h.post),
+    hold: holds,
     expectations,
     explanations,
     totalRecommendedBudget,

@@ -3,7 +3,7 @@
 // sections-as-data PLUS a full GitHub-flavoured markdown rendering. No I/O, no `server-only`, no
 // AI — every number comes straight from the analysis (never invented). Mirrors the house style in
 // lib/reports/* (tables as data, anti-hype, "proposals you approve", estimates not guarantees).
-import type { AccountOrganicAnalysis, BoostRecommendation, OrganicPostInput } from "./types";
+import type { AccountOrganicAnalysis, BoostRecommendation, OrganicPostInput, HoldReason } from "./types";
 import type { OrganicPlatform } from "./boost";
 
 // --- Section/report shape (sections-as-data, so any surface can render or download it). ---
@@ -37,15 +37,12 @@ function safe(n: number): number {
 const platformLabel = (p: OrganicPlatform): string => (p === "tiktok" ? "TikTok" : "Meta");
 const postLabel = (post: OrganicPostInput): string => post.name?.trim() || `${platformLabel(post.platform)} post`;
 
-// Short, plain-English reason a held post isn't boost-ready. The public analysis carries held
-// posts WITHOUT their projections, so we can't read the Wilson verdict here — we infer the most
-// honest, actionable note from the numbers: too little reach to call vs below the benchmark.
-const MIN_REACH_FLOOR = 200; // mirrors lib/organic/boost.ts — below this there's too little signal
-function holdReason(post: OrganicPostInput): string {
-  const reach = safe(post.reach);
-  const engagements = safe(post.engagements);
-  if (reach < MIN_REACH_FLOOR || engagements <= 0) return "needs more reach before we can call it";
-  return "below benchmark — strengthen the post before paying to widen reach";
+// Short, plain-English note for a held post, driven by the engine's own reason (carried on each
+// HeldPost) so the report never re-infers the verdict from the raw numbers.
+function holdReasonText(reason: HoldReason): string {
+  return reason === "below-benchmark"
+    ? "below benchmark — strengthen the post before paying to widen reach"
+    : "needs more reach before we can call it";
 }
 
 export function buildOrganicReport(
@@ -134,7 +131,7 @@ export function buildOrganicReport(
         : "Nothing on hold — every analysed post is accounted for above.",
     bullets:
       hold.length > 0
-        ? hold.map((p) => `${postLabel(p)} (${platformLabel(p.platform)}) — ${holdReason(p)}.`)
+        ? hold.map((h) => `${postLabel(h.post)} (${platformLabel(h.post.platform)}) — ${holdReasonText(h.reason)}.`)
         : undefined,
   });
 

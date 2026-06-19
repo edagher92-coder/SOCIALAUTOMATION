@@ -4,6 +4,7 @@ import { useMode } from "./mode";
 import Tip from "./Tip";
 import { analyseAccount } from "@/lib/organic/account";
 import { buildOrganicReport } from "@/lib/organic/report";
+import { parseOrganicCsv } from "@/lib/organic/csv";
 import type { OrganicPostInput } from "@/lib/organic/types";
 import type { CpmByPlatform } from "@/lib/organic/cpm";
 import type { OrganicPlatform } from "@/lib/organic/boost";
@@ -45,28 +46,10 @@ function rowsFromPosts(posts: OrganicPostInput[]): Row[] {
   }));
 }
 
-// Tolerant CSV parse: `name,platform,reach,impressions,engagements`. Skips a header row,
-// blank lines, and ignores rows without a usable reach. Local + simple, no dependencies.
-function parseCsv(text: string): Row[] {
-  const out: Row[] = [];
-  for (const raw of text.split(/\r?\n/)) {
-    const line = raw.trim();
-    if (!line) continue;
-    const cells = line.split(",").map((c) => c.trim());
-    // Skip a header row (no numeric reach in the reach column).
-    const looksHeader = /name|platform|reach|impression|engage/i.test(cells.slice(0, 2).join(" ")) && !Number(cells[2]);
-    if (looksHeader) continue;
-    const [name = "", platformRaw = "", reach = "", impressions = "", engagements = ""] = cells;
-    if (num(reach) <= 0) continue;
-    const platform: OrganicPlatform = /tiktok|tt/i.test(platformRaw) ? "tiktok" : "meta";
-    out.push({ key: `r${rowSeq++}`, name, platform, reach, impressions, engagements });
-  }
-  return out;
-}
-
-export default function OrganicAccountClient({ accountCpm, initialPosts }: {
+export default function OrganicAccountClient({ accountCpm, initialPosts, canExplain }: {
   accountCpm: CpmByPlatform;
   initialPosts?: OrganicPostInput[];
+  canExplain?: boolean;
 }) {
   const { mode } = useMode();
   const advanced = mode === "advanced";
@@ -84,8 +67,8 @@ export default function OrganicAccountClient({ accountCpm, initialPosts }: {
   function addRow() { setRows((rs) => [...rs, blankRow()]); }
   function removeRow(key: string) { setRows((rs) => (rs.length > 1 ? rs.filter((r) => r.key !== key) : rs)); }
   function importCsv() {
-    const parsed = parseCsv(csv);
-    if (parsed.length) { setRows(parsed); setCsv(""); setShowCsv(false); }
+    const parsed = parseOrganicCsv(csv); // shared, quote/alias-aware parser (same as the server)
+    if (parsed.length) { setRows(rowsFromPosts(parsed)); setCsv(""); setShowCsv(false); }
   }
 
   // Build the validated post inputs the engine needs (reach > 0). Impressions falls back to reach.
@@ -193,10 +176,10 @@ export default function OrganicAccountClient({ accountCpm, initialPosts }: {
         {showCsv && (
           <div className="mt-3 rounded-xl border border-border-subtle bg-surface p-3">
             <label htmlFor="organic-csv" className="mb-1.5 block text-xs font-semibold text-ink">
-              Paste rows: <code className="text-2xs text-muted">name,platform,reach,impressions,engagements</code> (one per line; a header row is fine)
+              Include a <b>header row</b>, then one post per line. Columns can be in any order — we recognise <code className="text-2xs text-muted">name, platform, reach, impressions, engagements</code> (plus aliases like caption, fb/ig, impr, eng).
             </label>
             <textarea id="organic-csv" value={csv} onChange={(e) => setCsv(e.target.value)} rows={4}
-              placeholder={"Launch reel,tiktok,8200,15000,640\nSale post,meta,5000,9000,150"}
+              placeholder={"name,platform,reach,impressions,engagements\nLaunch reel,tiktok,8200,15000,640\nSale post,meta,5000,9000,150"}
               className="w-full rounded-lg border border-border-subtle bg-white px-3 py-2 font-mono text-xs text-ink shadow-inner-sm transition placeholder:text-muted focus:border-brand focus:outline-none focus:shadow-ring-brand" />
             <div className="mt-2 flex justify-end">
               <button type="button" onClick={importCsv} disabled={!csv.trim()}
@@ -311,10 +294,17 @@ export default function OrganicAccountClient({ accountCpm, initialPosts }: {
               className="rounded-lg border border-border-subtle bg-white px-3 py-2 text-xs font-bold text-ink shadow-card transition hover:border-brand hover:text-brand disabled:opacity-60">
               {saveState === "saving" ? "Saving…" : saveState === "saved" ? "✓ Saved to account" : saveState === "error" ? "Save failed — retry" : "Save posts to account"}
             </button>
-            <button type="button" onClick={explain} disabled={aiBusy}
-              className="rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-60">
-              {aiBusy ? "Thinking…" : ai ? "🧠 Re-explain with AI" : "🧠 Explain with AI"}
-            </button>
+            {canExplain ? (
+              <button type="button" onClick={explain} disabled={aiBusy}
+                className="rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-60">
+                {aiBusy ? "Thinking…" : ai ? "🧠 Re-explain with AI" : "🧠 Explain with AI"}
+              </button>
+            ) : (
+              <a href="/billing" title="The AI explainer is a Pro & Expert feature"
+                className="rounded-lg border border-border-subtle bg-white px-3 py-2 text-xs font-bold text-muted shadow-card transition hover:border-brand hover:text-brand">
+                🧠 Explain with AI — Pro
+              </a>
+            )}
           </div>
           {aiErr && <p className="rounded-xl bg-band-red/10 px-3 py-2 text-sm text-band-red">{aiErr}</p>}
           {ai && (
@@ -418,15 +408,18 @@ export default function OrganicAccountClient({ accountCpm, initialPosts }: {
                 These aren’t boost-ready: either engagement is below benchmark (improve the hook/offer organically first) or there isn’t enough reach yet to call it.
               </p>
               <div className="mt-3 space-y-2">
-                {analysis.hold.map((p, i) => (
-                  <div key={i} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-surface px-3 py-2 text-sm">
-                    <span className="min-w-0 truncate text-muted">
-                      <span className="font-semibold text-ink">{p.name || `Untitled ${PLATFORM_SHORT[p.platform]} post`}</span>
-                      <span className="ml-2 text-2xs">{PLATFORM_SHORT[p.platform]} · {intf(p.reach)} reach · {pct(p.reach > 0 ? p.engagements / p.reach : 0)} eng.</span>
-                    </span>
-                    <span className="flex-shrink-0 text-2xs text-muted">{p.reach < 200 ? "needs more data" : "improve organically first"}</span>
-                  </div>
-                ))}
+                {analysis.hold.map((h, i) => {
+                  const p = h.post;
+                  return (
+                    <div key={i} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-surface px-3 py-2 text-sm">
+                      <span className="min-w-0 truncate text-muted">
+                        <span className="font-semibold text-ink">{p.name || `Untitled ${PLATFORM_SHORT[p.platform]} post`}</span>
+                        <span className="ml-2 text-2xs">{PLATFORM_SHORT[p.platform]} · {intf(p.reach)} reach · {pct(p.reach > 0 ? p.engagements / p.reach : 0)} eng.</span>
+                      </span>
+                      <span className="flex-shrink-0 text-2xs text-muted">{h.reason === "needs-more-data" ? "needs more data" : "below benchmark"}</span>
+                    </div>
+                  );
+                })}
               </div>
             </section>
           )}

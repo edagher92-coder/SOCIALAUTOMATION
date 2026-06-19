@@ -44,11 +44,19 @@ export interface BoostRecommendation {
   rank: number;                     // 1 = strongest candidate
 }
 
+// A post that isn't boost-ready, with the honest reason (carried from the engine verdict so the
+// report/UI never have to re-infer it): below the benchmark vs simply not enough reach yet.
+export type HoldReason = "below-benchmark" | "needs-more-data";
+export interface HeldPost {
+  post: OrganicPostInput;
+  reason: HoldReason;
+}
+
 // The full account analysis the UI + reports render.
 export interface AccountOrganicAnalysis {
   summary: OrganicSummary;
   recommendations: BoostRecommendation[];  // worth-boosting, strongest first
-  hold: OrganicPostInput[];                // improve-organically-first / not-enough-data
+  hold: HeldPost[];                        // not boost-ready, each with its reason
   expectations: string[];                  // "boost the top N for $X → expect ~Y" (numbers-first)
   explanations: string[];                  // plain-English why
   totalRecommendedBudget: number;

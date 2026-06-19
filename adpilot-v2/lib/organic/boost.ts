@@ -89,9 +89,12 @@ export function projectBoost(input: BoostInput): BoostProjection {
   const cpmUsed = hasAccount ? (input.cpm as number) : model.benchmarkCpm;
   const cpmSource: "account" | "benchmark" = hasAccount ? "account" : "benchmark";
 
-  // Organic engagement rate + its Wilson CI (engagements as "successes" over reach "trials").
-  const ci = wilsonInterval(engagements, reach);
-  const engagementRate = reach > 0 ? engagements / reach : 0;
+  // Organic engagement rate + its Wilson CI. Cap "successes" at reach (a person can engage more
+  // than once, but as a PROPORTION of reached people the rate is bounded to 100%) so the point
+  // estimate stays inside its own clamped CI rather than sitting above it on viral posts.
+  const ratedEng = Math.min(engagements, reach);
+  const ci = wilsonInterval(ratedEng, reach);
+  const engagementRate = reach > 0 ? ratedEng / reach : 0;
   const engagementRateRange: Range = { low: ci?.low ?? 0, high: ci?.high ?? 0 };
 
   // Boost reach maths: impressions the budget buys, then unique reach via assumed frequency.
@@ -120,12 +123,15 @@ export function projectBoost(input: BoostInput): BoostProjection {
   let confidence: "above" | "below" | "inconclusive";
   let rationale: string;
 
-  if (reach < MIN_REACH_FLOOR || engagements <= 0) {
+  if (reach < MIN_REACH_FLOOR) {
+    // Too little reach to judge at all — even 0 engagements here isn't conclusive yet.
     verdict = "insufficient-data";
     confidence = "inconclusive";
     rationale = `Only ${r0(reach).toLocaleString("en-AU")} organic reach so far — too little signal to judge whether this post is worth boosting. Let it run organically until it clears ~${MIN_REACH_FLOOR} reach, then re-check.`;
   } else {
-    confidence = rateConfidence(engagements, reach, model.engagementBenchmark);
+    // With enough reach, run the significance gate. Note: 0 engagements over real reach is
+    // conclusive evidence of being BELOW benchmark (not "insufficient"), which this handles.
+    confidence = rateConfidence(ratedEng, reach, model.engagementBenchmark);
     if (confidence === "above") {
       verdict = "worth-boosting";
       rationale = `This post is resonating: ${pct(engagementRate)} organic engagement is confidently above the ~${pct(model.engagementBenchmark)} ${platformLabel} benchmark. Boosting amplifies a proven winner — an estimated +${r0(incrementalReach).toLocaleString("en-AU")} reach for ${`$${r0(budget)}`}.`;

@@ -29,7 +29,8 @@ export default function BoostClient({ accountCpm }: { accountCpm: CpmByPlatform 
   const [engagements, setEngagements] = useState("");
   const [budget, setBudget] = useState("100");
 
-  const num = (s: string) => { const v = Number(s); return Number.isFinite(v) && v > 0 ? v : 0; };
+  // Strip thousands separators/spaces so a pasted "5,000" doesn't silently evaluate to 0.
+  const num = (s: string) => { const v = Number(String(s).replace(/[,\s]/g, "")); return Number.isFinite(v) && v > 0 ? v : 0; };
   const cpm = accountCpm[platform];
 
   const proj: BoostProjection | null = useMemo(() => {

@@ -30,7 +30,7 @@ const PostInput = z.object({
 });
 
 const CreateBody = z.object({
-  posts: z.array(PostInput).optional(),
+  posts: z.array(PostInput).max(1000).optional(), // bound the batch so one request can't flood a table
   csv: z.string().max(2_000_000).optional(),
 });
 

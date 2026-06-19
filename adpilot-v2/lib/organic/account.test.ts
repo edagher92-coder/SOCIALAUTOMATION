@@ -33,9 +33,13 @@ describe("analyseAccount", () => {
     expect(a.recommendations.every((r) => r.projection.verdict === "worth-boosting")).toBe(true);
   });
 
-  it("holds everything that isn't boost-ready", () => {
+  it("holds everything that isn't boost-ready, each tagged with its reason", () => {
     expect(a.hold).toHaveLength(3);
-    expect(a.hold.map((p) => p.name)).toEqual(expect.arrayContaining(["Weak", "Small", "Tiny"]));
+    expect(a.hold.map((h) => h.post.name)).toEqual(expect.arrayContaining(["Weak", "Small", "Tiny"]));
+    // "Weak" (0.6% over 4,000 reach) is CONFIDENTLY below benchmark; "Small"/"Tiny" are thin samples.
+    expect(a.hold.find((h) => h.post.name === "Weak")?.reason).toBe("below-benchmark");
+    expect(a.hold.find((h) => h.post.name === "Small")?.reason).toBe("needs-more-data");
+    expect(a.hold.find((h) => h.post.name === "Tiny")?.reason).toBe("needs-more-data");
   });
 
   it("totals the recommended budget and projected added reach", () => {

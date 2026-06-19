@@ -14,6 +14,7 @@ let CURRENT_USER: any = { id: "u1", email: "e@x.com" };
 let CURRENT_PLAN = "starter";
 let LIST_ROWS: any[] = [];
 const inserted: Array<{ table: string; rows: any }> = [];
+const deleted: Array<{ table: string }> = [];
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: () => ({ auth: { getUser: async () => ({ data: { user: CURRENT_USER } }) } }),
@@ -27,6 +28,7 @@ vi.mock("@/lib/supabase/admin", () => ({
       const result = { data: LIST_ROWS, error: null };
       const api: any = {
         insert(rows: any) { inserted.push({ table, rows }); return Promise.resolve({ data: null, error: null }); },
+        delete() { deleted.push({ table }); return api; }, // replace-on-save: clears the manual set first
         select() { return api; },
         eq() { return api; },
         order() { return api; },
@@ -58,6 +60,7 @@ beforeEach(() => {
   CURRENT_PLAN = "starter";
   LIST_ROWS = [];
   inserted.length = 0;
+  deleted.length = 0;
 });
 
 describe("auth", () => {
@@ -89,6 +92,8 @@ describe("POST ingest", () => {
     const ins = inserted.find((x) => x.table === "organic_posts");
     expect(ins?.rows).toHaveLength(2);
     expect(ins?.rows[0]).toMatchObject({ organisation_id: "org-1", platform: "meta", name: "A", reach: 1000, source: "manual" });
+    // replace-on-save clears the org's prior manual set before inserting (idempotent re-save)
+    expect(deleted.some((d) => d.table === "organic_posts")).toBe(true);
   });
 
   it("clamps negative metrics to 0 and skips non meta/tiktok platforms", async () => {

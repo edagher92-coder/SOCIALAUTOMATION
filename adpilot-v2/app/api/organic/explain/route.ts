@@ -30,6 +30,9 @@ export async function POST(req: Request) {
   const posts: OrganicPostInput[] = Array.isArray(body?.posts) ? body.posts : [];
   const budgetPerPost = Number(body?.budgetPerPost) > 0 ? Number(body.budgetPerPost) : 100;
   if (posts.length === 0) return NextResponse.json({ error: "Add at least one post to explain." }, { status: 400 });
+  // Cap the batch: this endpoint runs the engine over every post AND fires a paid AI call, so an
+  // unbounded posts[] is a cost/CPU amplifier. 200 is far more than any real account needs at once.
+  if (posts.length > 200) return NextResponse.json({ error: "Too many posts — analyse up to 200 at a time." }, { status: 400 });
 
   // Recompute from the real account CPM; never trust client-supplied verdicts.
   const cpm = await getAccountCpmByPlatform(createAdminClient(), orgId).catch(() => ({ meta: null, tiktok: null }));

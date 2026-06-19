@@ -9,9 +9,10 @@ type Tab = "post" | "account";
 
 // Two ways into the same engine: project ONE post, or analyse the WHOLE account at once.
 // Defaults to the account view when the org already has saved organic posts.
-export default function BoostWorkspace({ accountCpm, initialPosts }: {
+export default function BoostWorkspace({ accountCpm, initialPosts, canExplain }: {
   accountCpm: CpmByPlatform;
   initialPosts?: OrganicPostInput[];
+  canExplain?: boolean;
 }) {
   const [tab, setTab] = useState<Tab>(initialPosts && initialPosts.length ? "account" : "post");
   const tabs: [Tab, string, string][] = [
@@ -30,7 +31,7 @@ export default function BoostWorkspace({ accountCpm, initialPosts }: {
       </div>
       {tab === "post"
         ? <BoostClient accountCpm={accountCpm} />
-        : <OrganicAccountClient accountCpm={accountCpm} initialPosts={initialPosts} />}
+        : <OrganicAccountClient accountCpm={accountCpm} initialPosts={initialPosts} canExplain={canExplain} />}
     </div>
   );
 }
