@@ -3,7 +3,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
 import { can, PLAN_LABEL } from "@/lib/entitlements";
 import { getAccountCpmByPlatform } from "@/lib/organic/cpm";
-import BoostClient from "@/components/BoostClient";
+import { listOrganicPosts } from "@/lib/organic/store";
+import type { OrganicPostInput } from "@/lib/organic/types";
+import BoostWorkspace from "@/components/BoostWorkspace";
 
 export const dynamic = "force-dynamic";
 
@@ -15,15 +17,19 @@ export default async function BoostPage() {
   // Same organic-content tier as the rest of the Social surfaces.
   const entitled = can(plan, "content_publish");
   // Ground projections in the account's real CPM (from the ad data we already pull); null -> benchmark.
-  const accountCpm = entitled && orgId
-    ? await getAccountCpmByPlatform(createAdminClient(), orgId).catch(() => ({ meta: null, tiktok: null }))
+  const admin = entitled && orgId ? createAdminClient() : null;
+  const accountCpm = admin
+    ? await getAccountCpmByPlatform(admin, orgId).catch(() => ({ meta: null, tiktok: null }))
     : { meta: null, tiktok: null };
+  const initialPosts: OrganicPostInput[] = admin
+    ? await listOrganicPosts(admin, orgId).catch(() => [])
+    : [];
 
   return (
     <div className="max-w-3xl">
       <h1 className="text-2xl font-extrabold tracking-tight">Boost &amp; Reach</h1>
       <p className="mb-2 mt-1 text-muted">
-        See the reach an organic post already has — and a numbers-first estimate of what boosting it would add, costed at your real CPM.
+        See the reach your organic posts already have — and a numbers-first estimate of what boosting them would add, costed at your real CPM. Analyse a <b>single post</b> or your <b>whole account</b>.
       </p>
       <p className="mb-5 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">
         🔒 <b>Read-only.</b> Every figure below is an <b>estimate you approve</b> — projections, not guarantees. Nothing is boosted or charged for you.
@@ -39,7 +45,7 @@ export default async function BoostPage() {
           <a href="/billing" className="inline-block rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white">Upgrade</a>
         </div>
       ) : (
-        <BoostClient accountCpm={accountCpm} />
+        <BoostWorkspace accountCpm={accountCpm} initialPosts={initialPosts} />
       )}
     </div>
   );

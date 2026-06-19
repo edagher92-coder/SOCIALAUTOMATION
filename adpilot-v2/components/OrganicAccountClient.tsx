@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useMode } from "./mode";
 import Tip from "./Tip";
 import { analyseAccount } from "@/lib/organic/account";
+import { buildOrganicReport } from "@/lib/organic/report";
 import type { OrganicPostInput } from "@/lib/organic/types";
 import type { CpmByPlatform } from "@/lib/organic/cpm";
 import type { OrganicPlatform } from "@/lib/organic/boost";
@@ -127,6 +128,50 @@ export default function OrganicAccountClient({ accountCpm, initialPosts }: {
       analysis.safety,
     ].join("\n");
   }, [analysis]);
+
+  // --- Actions: download report, save posts to the account, AI explainer ---
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [ai, setAi] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiErr, setAiErr] = useState("");
+
+  function downloadReport() {
+    if (!analysis) return;
+    const report = buildOrganicReport(analysis, { generatedAt: new Date().toLocaleDateString("en-AU") });
+    const blob = new Blob([report.markdown], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "organic-boost-report.md";
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  async function savePosts() {
+    if (!validPosts.length) return;
+    setSaveState("saving");
+    try {
+      const r = await fetch("/api/organic/posts", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ posts: validPosts }),
+      });
+      setSaveState(r.ok ? "saved" : "error");
+    } catch { setSaveState("error"); }
+  }
+
+  async function explain() {
+    if (!validPosts.length) return;
+    setAiBusy(true); setAiErr(""); setAi("");
+    try {
+      const r = await fetch("/api/organic/explain", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ posts: validPosts, budgetPerPost: budget }),
+      });
+      const j = await r.json();
+      if (r.ok) setAi(j.text || "");
+      else setAiErr(j.error || "Couldn’t run the explainer.");
+    } catch { setAiErr("Network error — try again."); }
+    finally { setAiBusy(false); }
+  }
 
   return (
     <div className="space-y-6">
@@ -255,6 +300,29 @@ export default function OrganicAccountClient({ accountCpm, initialPosts }: {
               tip={["RECOMMENDED BUDGET", "Budget per post × the number of boost-ready posts. You approve any spend in Ads Manager."]}
               value={money(analysis.totalRecommendedBudget)} />
           </div>
+
+          {/* Actions: report / save / AI explainer */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" onClick={downloadReport}
+              className="rounded-lg border border-border-subtle bg-white px-3 py-2 text-xs font-bold text-ink shadow-card transition hover:border-brand hover:text-brand">
+              ⬇ Download report (.md)
+            </button>
+            <button type="button" onClick={savePosts} disabled={saveState === "saving" || saveState === "saved"}
+              className="rounded-lg border border-border-subtle bg-white px-3 py-2 text-xs font-bold text-ink shadow-card transition hover:border-brand hover:text-brand disabled:opacity-60">
+              {saveState === "saving" ? "Saving…" : saveState === "saved" ? "✓ Saved to account" : saveState === "error" ? "Save failed — retry" : "Save posts to account"}
+            </button>
+            <button type="button" onClick={explain} disabled={aiBusy}
+              className="rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-60">
+              {aiBusy ? "Thinking…" : ai ? "🧠 Re-explain with AI" : "🧠 Explain with AI"}
+            </button>
+          </div>
+          {aiErr && <p className="rounded-xl bg-band-red/10 px-3 py-2 text-sm text-band-red">{aiErr}</p>}
+          {ai && (
+            <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+              <h3 className="font-bold text-ink">🧠 Dana explains</h3>
+              <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap rounded-xl bg-surface p-3 text-sm leading-relaxed text-ink">{ai}</pre>
+            </section>
+          )}
 
           {/* Per-platform breakdown */}
           {analysis.summary.byPlatform.length > 0 && (
