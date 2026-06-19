@@ -158,11 +158,31 @@ export async function syncOrgPlatform(admin: any, orgId: string, platform: Platf
   if (ids.length === 0) throw new Error(`No ${platform} ad account on file.`);
 
   const token = decrypt({ ciphertext: tok.ciphertext, iv: tok.iv, authTag: tok.auth_tag });
-  // Accumulate across every connected account for this platform. If any account's pull
-  // fails we throw — callers (manual sync / auto-sync) decide whether to swallow per-platform.
+  // Accumulate across every connected account for this platform. Pull each account
+  // INDEPENDENTLY: one unreadable account (e.g. Meta (#200) "owner has not granted ads_read"
+  // for an account that isn't assigned to this token) must NOT abort the whole sync. Such an
+  // account is auto-marked `disconnected` so it stops blocking every future pull, and we keep
+  // the rows from the accounts that did succeed. We only hard-fail when EVERY account failed
+  // (e.g. a dead/invalid token), so callers still surface a real connection problem.
   let rows: any[] = [];
+  const failures: { id: string; message: string }[] = [];
   for (const id of ids) {
-    rows = rows.concat(platform === "meta" ? await metaPull(token, id, orgId) : await tiktokPull(token, id, orgId));
+    try {
+      rows = rows.concat(platform === "meta" ? await metaPull(token, id, orgId) : await tiktokPull(token, id, orgId));
+    } catch (e: any) {
+      const message = String(e?.message || "pull failed");
+      failures.push({ id, message });
+      // Permission / not-assigned errors mean this token can't read this account — drop it so it
+      // stops poisoning the batch. (Meta #200 / "ads_read" / "ads_management" / "permission".)
+      if (/\(?#?\s*200\)?|ads_read|ads_management|not\s+grant|permission/i.test(message)) {
+        await admin.from("connected_ad_accounts").update({ status: "disconnected" })
+          .eq("organisation_id", orgId).eq("platform", platform).eq("external_account_id", id);
+      }
+    }
+  }
+  // Every account failed → surface the first error so a genuinely broken token isn't silent.
+  if (rows.length === 0 && failures.length === ids.length && failures.length > 0) {
+    throw new Error(failures[0].message);
   }
 
   // Idempotent refresh: clear the API-sourced rows in the rolling window, then insert.
