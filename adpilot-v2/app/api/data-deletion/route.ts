@@ -10,7 +10,11 @@ export const runtime = "nodejs";
 // Read-only by design: this records the *request* only; it never returns or echoes PII.
 // A separate, authenticated back-office process actions the deletion.
 
-const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "privacy@adpilot.example";
+// Honour the documented `SUPPORT_EMAIL` (server-only) first; keep `NEXT_PUBLIC_SUPPORT_EMAIL`
+// as a fallback so any existing deploy that set that name keeps working. Falls back to a
+// placeholder only when neither is configured.
+const SUPPORT_EMAIL =
+  process.env.SUPPORT_EMAIL || process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "privacy@adpilot.example";
 
 // Stable, non-reversible confirmation code derived from the subject + a per-request nonce.
 // We never log or return the raw subject (email / Meta user id) — only its hash + a fresh code.

@@ -31,7 +31,7 @@ live ad** without an explicit typed-YES (and the live-write path is Expert-only 
   (pricing display truth), kept in sync by a drift-alarm test. Tiers: free / starter / pro / expert
   (`agency`→`expert`). `PlanMatrix` surfaces the differentiation on billing + landing.
 - Billing: Stripe (recurring subscriptions). Crons: constant-time `CRON_SECRET` (`lib/cron-auth.ts`).
-- Migrations: `supabase/migrations/0001…0023` (intentional gaps; never backfill). Every table is RLS-scoped (`is_org_member`).
+- Migrations: `adpilot-v2/supabase/migrations/0001…0026` (intentional gaps 0012–0015; never backfill). Every table is RLS-scoped (`is_org_member`).
 
 ## Operating rules (apply to all work + all AI output)
 - **Australian English, AUD by default**; AU frameworks (GST/ATO/ACCC/super/PAYG). Numbers-first,
@@ -91,5 +91,6 @@ runs a typecheck step + a resale-clean guard). Note: `package-lock.json` is giti
   admitted-solicitor sign-off of the DRAFT Terms/Privacy frameworks (`CPWORK/.../legal/` — key open
   issue: lead-hash likely personal info); paste a **non-expiring Meta System User token** to run the
   real-account audit. Live-write: board recommends `ADS_WRITE_ENABLED` stays **OFF** for launch
-  (memo in `product/v6-governance/`). Production deploy needs Vercel env + Supabase migrations 0001–0023.
+  (memo in `product/v6-governance/`). Production deploy needs Vercel env + Supabase migrations 0001–0026
+  — full steps in `adpilot-v2/docs/DEPLOY-RUNBOOK.md`.
 - Full detail: `adpilot-v2/CHANGELOG.md` and `CPWORK/universal-ads-os/product/V6-*.md`.
