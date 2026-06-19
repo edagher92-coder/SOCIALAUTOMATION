@@ -9,6 +9,8 @@ import ModeAware from "@/components/ModeAware";
 import ReadOnlyBadge from "@/components/ReadOnlyBadge";
 import Tip from "@/components/Tip";
 import Sparkline from "@/components/Sparkline";
+import { analyseAccount } from "@/lib/organic/account";
+import { getAccountCpmByPlatform } from "@/lib/organic/cpm";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +49,7 @@ export default async function CommandCenter() {
   const aiEnabled = can(plan, "ai_team");
   const apiEnabled = can(plan, "api_connect");
 
-  const [orgRes, scoreRes, openRecsRes, accountsRes, reportsRes, trendRes, latestReportRes] = await Promise.all([
+  const [orgRes, scoreRes, openRecsRes, accountsRes, reportsRes, trendRes, latestReportRes, organicRes, organicCpm] = await Promise.all([
     supabase.from("organisations").select("name,last_synced_at,sync_interval_hours").eq("id", orgId).maybeSingle(),
     supabase.from("health_scores").select("total,band,created_at").eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("recommendations").select("id,verdict,entity_name,platform,proposal").eq("organisation_id", orgId).eq("status", "open").order("created_at", { ascending: false }).limit(100),
@@ -55,6 +57,9 @@ export default async function CommandCenter() {
     supabase.from("reports").select("id,title,created_at").eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(5),
     supabase.from("health_scores").select("total,created_at").eq("organisation_id", orgId).order("created_at", { ascending: true }).limit(60),
     supabase.from("reports").select("payload").eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    // Organic boost tile (Starter+): the org's saved organic posts + its real CPM (RLS-scoped reads).
+    supabase.from("organic_posts").select("id,platform,name,posted_at,reach,impressions,engagements").eq("organisation_id", orgId),
+    getAccountCpmByPlatform(supabase, orgId).catch(() => ({ meta: null, tiktok: null })),
   ]);
 
   // Surface a clear banner if the data layer is unreachable, but still render the shell.
@@ -86,6 +91,16 @@ export default async function CommandCenter() {
   const accts = (accounts || []) as any[];
   const cadence = cadenceText((org as any)?.sync_interval_hours);
   const name = (org as any)?.name || "your workspace";
+
+  // Organic boost roll-up (Starter+). Degrades gracefully if the table/posts aren't there yet.
+  const organicEntitled = can(plan, "content_publish");
+  const organicPosts = ((organicRes.data || []) as any[])
+    .map((r) => ({
+      id: r.id, platform: r.platform, name: r.name ?? undefined, date: r.posted_at ?? undefined,
+      reach: Number(r.reach) || 0, impressions: Number(r.impressions) || 0, engagements: Number(r.engagements) || 0,
+    }))
+    .filter((p) => p.platform === "meta" || p.platform === "tiktok");
+  const organic = organicEntitled && organicPosts.length ? analyseAccount(organicPosts, organicCpm as any) : null;
 
   return (
     <div className="animate-fade-in">
@@ -228,6 +243,34 @@ export default async function CommandCenter() {
               <p className="text-sm text-muted">Mira, Travis, Dana, Atlas, Paige & more — grounded in your live numbers, proposals only.</p>
             ) : (
               <p className="text-sm text-muted">🔒 The AI specialist team is a Pro & Expert feature. <a className="font-semibold text-brand" href="/billing">Upgrade</a>.</p>
+            )}
+          </div>
+
+          {/* Organic boost */}
+          <div className="rounded-2xl border border-border-subtle bg-white p-4 shadow-card">
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="font-bold">Organic boost</h3>
+              <a href="/boost" className="text-xs font-semibold text-brand">Open →</a>
+            </div>
+            {!organicEntitled ? (
+              <p className="text-sm text-muted">🔒 Analyse organic posts & project boost reach on Starter+. <a className="font-semibold text-brand" href="/billing">Upgrade</a>.</p>
+            ) : !organic ? (
+              <p className="text-sm text-muted">No saved organic posts yet. <a className="font-semibold text-brand" href="/boost">Add posts</a> to see which are worth boosting.</p>
+            ) : (
+              <div className="text-sm">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-extrabold text-ink">{organic.recommendations.length}</span>
+                  <span className="text-muted">boost-ready {organic.recommendations.length === 1 ? "post" : "posts"} of {organic.summary.posts}</span>
+                </div>
+                {organic.recommendations.length > 0 ? (
+                  <p className="mt-1 text-muted">
+                    Projected <b className="text-ink">+{Math.round(organic.projectedAddedReach).toLocaleString("en-AU")}</b> reach for ${Math.round(organic.totalRecommendedBudget).toLocaleString("en-AU")}
+                    <span className="ml-1 text-2xs">· estimate, your call in Ads Manager</span>
+                  </p>
+                ) : (
+                  <p className="mt-1 text-muted">Nothing clears the benchmark yet — keep testing organically.</p>
+                )}
+              </div>
             )}
           </div>
 
