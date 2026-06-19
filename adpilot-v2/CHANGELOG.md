@@ -1,5 +1,13 @@
 # Changelog — AdPilot OS
 
+## Hotfix — Meta live-sync (2026-06-19)
+
+- **Live Meta sync returned 0 rows; Command Centre stayed on demo numbers** — three `lib/sync/pull.ts`
+  fixes: `landing_page_views` (an invalid Ads Insights field → error #100) now read from `actions[]`
+  (`a36e1b4`); one unreadable account (#200) no longer aborts the whole pull — per-account resilience
+  auto-disconnects it (`5b78e25`); insights now paginate so the 14-day scoring window is populated
+  (`b94999b`). Full engineering record: `docs/DIAGNOSTICS-meta-sync-fix-2026-06-19.md`.
+
 ## v6.0.0 — Dual-mode, tiering, engine upgrades & hardening (2026-06-17)
 
 Shipped & merged via PR #22. Built by a parallel multi-specialist effort under PM/board governance.
