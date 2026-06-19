@@ -77,6 +77,43 @@ export async function addOrganicPosts(admin: any, orgId: string, posts: OrganicP
   return rows.length;
 }
 
+/**
+ * Replace an org's SYNCED posts for one source (e.g. 'meta_sync') with a fresh pull. Dedupes the
+ * batch by external_id, then clears the prior set for that source and inserts the new one — so a
+ * re-run can never duplicate rows. A no-op (keeps prior rows) when the pull returns nothing, so a
+ * transient empty fetch can't wipe a good set. Never touches 'manual' rows. Throws on DB error.
+ */
+export async function replaceSyncedPosts(admin: any, orgId: string, source: string, posts: OrganicPostInput[]): Promise<number> {
+  const seen = new Set<string>();
+  const rows = (posts || [])
+    .filter((p) => p && isPlatform(p.platform))
+    .filter((p) => {
+      const k = p.id ?? "";
+      if (!k) return true;            // no external id -> can't dedupe, keep it
+      if (seen.has(k)) return false;  // drop a repeat of the same post id
+      seen.add(k);
+      return true;
+    })
+    .map((p) => ({
+      organisation_id: orgId,
+      platform: p.platform,
+      name: p.name ?? null,
+      posted_at: p.date ?? null,
+      reach: count(p.reach),
+      impressions: count(p.impressions),
+      engagements: count(p.engagements),
+      external_id: p.id ?? null,
+      source,
+    }));
+  if (rows.length === 0) return 0; // empty pull -> leave the existing set untouched
+  const { error: delErr } = await admin
+    .from("organic_posts").delete().eq("organisation_id", orgId).eq("source", source);
+  if (delErr) throw new Error(delErr.message || "Failed to refresh synced posts");
+  const { error } = await admin.from("organic_posts").insert(rows);
+  if (error) throw new Error(error.message || "Failed to insert synced posts");
+  return rows.length;
+}
+
 // CSV parsing lives in the shared, browser-safe lib/organic/csv so the client UI and this server
 // route use ONE parser (no rule drift). Re-exported here for existing import sites.
 export { parseOrganicCsv } from "./csv";
