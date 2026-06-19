@@ -4,6 +4,7 @@
     { "path": "/api/cron/publish", "schedule": "*/15 * * * *" },
     { "path": "/api/cron/auto-analysis", "schedule": "0 21 * * *" },
     { "path": "/api/cron/weekly-digest", "schedule": "0 23 * * 5" },
-    { "path": "/api/cron/refresh-knowledge", "schedule": "0 8 * * 1" }
+    { "path": "/api/cron/refresh-knowledge", "schedule": "0 8 * * 1" },
+    { "path": "/api/cron/organic-sync", "schedule": "0 7 * * *" }
   ]
 }
