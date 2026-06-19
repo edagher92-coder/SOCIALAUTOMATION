@@ -41,6 +41,11 @@ live ad** without an explicit typed-YES (and the live-write path is Expert-only 
   (`snowflow|edagher`) gates distribution; private context loads only via
   `ADPILOT_CONTEXT_PACK_JSON` at runtime.
 - Don't touch production data; ask before deleting/overwriting.
+- **Before opening a PR:** run the verify discipline (`tsc --noEmit` + `vitest run` + `next build`); for
+  non-trivial diffs run `/code-review`, and `/security-review` for anything touching auth / crypto / PII /
+  money / RLS. A `.claude/` **SessionStart hook** installs `adpilot-v2` deps on web sessions so these run
+  immediately (and seeds the model-router). Note: `npm run lint` is currently broken (Next 16 removed
+  `next lint`) — migrate it to the ESLint CLI before relying on it.
 
 ## Model & effort routing (auto-applied; quality-first)
 > Goal: **best possible output, always.** Subject to that — and only when it provably doesn't change the
