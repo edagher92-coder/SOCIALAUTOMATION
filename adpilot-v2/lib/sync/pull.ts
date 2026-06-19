@@ -32,19 +32,25 @@ export type MetaAction = { action_type?: string; value?: any };
 
 const META_LEAD_TYPES = new Set(["lead", "onsite_conversion.lead_grouped", "leadgen.other"]);
 const META_PURCHASE_TYPES = new Set(["purchase", "omni_purchase"]);
+// Landing page views are NOT a valid Ads Insights field — Meta returns them inside `actions[]`.
+// Requesting `landing_page_views` in the `fields` param fails with
+// "(#100) landing_page_views is not valid for fields param", so we read it from actions here.
+const META_LPV_TYPES = new Set(["landing_page_view", "omni_landing_page_view"]);
 
 export function extractMetaConversions(
   actions?: MetaAction[] | null,
   actionValues?: MetaAction[] | null,
-): { leads: number; purchases: number; revenue: number } {
+): { leads: number; purchases: number; revenue: number; landing_page_views: number } {
   let leads = 0;
   let purchases = 0;
   let revenue = 0;
+  let landing_page_views = 0;
 
   for (const a of actions || []) {
     const t = String(a?.action_type || "");
     if (META_LEAD_TYPES.has(t)) leads += num(a?.value);
     else if (META_PURCHASE_TYPES.has(t)) purchases += num(a?.value);
+    else if (META_LPV_TYPES.has(t)) landing_page_views += num(a?.value);
   }
   // Revenue comes from the monetary `action_values[]`, summing the purchase value(s).
   for (const a of actionValues || []) {
@@ -52,7 +58,7 @@ export function extractMetaConversions(
     if (META_PURCHASE_TYPES.has(t)) revenue += num(a?.value);
   }
 
-  return { leads, purchases, revenue };
+  return { leads, purchases, revenue, landing_page_views };
 }
 
 export async function metaPull(token: string, accountId: string, orgId: string) {
@@ -62,7 +68,7 @@ export async function metaPull(token: string, accountId: string, orgId: string) 
     "campaign_id", "campaign_name", "adset_id", "adset_name", "ad_id", "ad_name",
     "spend", "impressions", "reach", "clicks", "frequency", "ctr", "cpc", "cpm",
     "actions", "action_values",
-    "video_play_actions", "video_thruplay_watched_actions", "landing_page_views",
+    "video_play_actions", "video_thruplay_watched_actions",
   ].join(",");
   const r = await fetch(`https://graph.facebook.com/v21.0/${act}/insights?level=ad&date_preset=last_30d&time_increment=1&fields=${encodeURIComponent(fields)}&access_token=${encodeURIComponent(token)}`);
   const j: any = await r.json().catch(() => ({}));
@@ -72,7 +78,6 @@ export async function metaPull(token: string, accountId: string, orgId: string) 
     // Meta reports video metrics as `[{ action_type, value }]` arrays; the "video_view"
     // entry carries the count. 3s plays = video_play_actions; thruplays = video_thruplay_watched_actions.
     const firstVal = (arr?: MetaAction[] | null) => num((arr || [])[0]?.value);
-    const lpv = num(d.landing_page_views);
     return {
       organisation_id: orgId, platform: "meta",
       campaign_id: d.campaign_id ?? null, campaign_name: d.campaign_name,
@@ -81,7 +86,7 @@ export async function metaPull(token: string, accountId: string, orgId: string) 
       date: d.date_start,
       spend: num(d.spend), impressions: num(d.impressions), reach: num(d.reach), frequency: num(d.frequency),
       clicks: num(d.clicks), ctr: num(d.ctr) / 100, cpc: num(d.cpc), cpm: num(d.cpm),
-      landing_page_views: lpv,
+      landing_page_views: conv.landing_page_views,
       leads: conv.leads, purchases: conv.purchases, revenue: conv.revenue,
       three_second_views: firstVal(d.video_play_actions),
       thruplays: firstVal(d.video_thruplay_watched_actions),

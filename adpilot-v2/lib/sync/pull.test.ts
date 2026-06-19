@@ -89,8 +89,11 @@ function metaRow(over: Record<string, any> = {}) {
     campaign_id: "c1", campaign_name: "Camp A", adset_id: "as1", adset_name: "AdSet A",
     ad_id: "ad1", ad_name: "Ad A", date_start: "2026-06-01", spend: "10.5", impressions: "1000",
     reach: "800", frequency: "1.25", clicks: "50", ctr: "5", cpc: "0.21", cpm: "10.5",
-    landing_page_views: "30",
-    actions: [{ action_type: "lead", value: "4" }, { action_type: "purchase", value: "3" }],
+    actions: [
+      { action_type: "lead", value: "4" },
+      { action_type: "purchase", value: "3" },
+      { action_type: "landing_page_view", value: "30" }, // LPV comes from actions[], not a field
+    ],
     action_values: [{ action_type: "purchase", value: "600" }],
     video_play_actions: [{ action_type: "video_view", value: "400" }],
     video_thruplay_watched_actions: [{ action_type: "video_view", value: "120" }],
@@ -266,6 +269,7 @@ describe("extractMetaConversions", () => {
       { action_type: "leadgen.other", value: "1" },
       { action_type: "purchase", value: "4" },
       { action_type: "omni_purchase", value: "1" },
+      { action_type: "landing_page_view", value: "7" }, // LPV is an action type, not a field
       { action_type: "link_click", value: "999" }, // ignored
     ];
     const actionValues = [
@@ -277,17 +281,18 @@ describe("extractMetaConversions", () => {
       leads: 6,        // 3 + 2 + 1 across the three lead action types
       purchases: 5,    // 4 + 1 (purchase + omni_purchase)
       revenue: 500,    // 480.50 + 19.50 from action_values purchase types only
+      landing_page_views: 7,
     });
   });
 
   it("returns zeroes for null / empty / unmatched payloads", () => {
-    expect(extractMetaConversions(null, null)).toEqual({ leads: 0, purchases: 0, revenue: 0 });
-    expect(extractMetaConversions([], [])).toEqual({ leads: 0, purchases: 0, revenue: 0 });
+    expect(extractMetaConversions(null, null)).toEqual({ leads: 0, purchases: 0, revenue: 0, landing_page_views: 0 });
+    expect(extractMetaConversions([], [])).toEqual({ leads: 0, purchases: 0, revenue: 0, landing_page_views: 0 });
     expect(extractMetaConversions([{ action_type: "video_view", value: "10" }], []))
-      .toEqual({ leads: 0, purchases: 0, revenue: 0 });
+      .toEqual({ leads: 0, purchases: 0, revenue: 0, landing_page_views: 0 });
     // non-numeric values coerce to 0 rather than NaN
     expect(extractMetaConversions([{ action_type: "lead", value: "n/a" }], []))
-      .toEqual({ leads: 0, purchases: 0, revenue: 0 });
+      .toEqual({ leads: 0, purchases: 0, revenue: 0, landing_page_views: 0 });
   });
 });
 
