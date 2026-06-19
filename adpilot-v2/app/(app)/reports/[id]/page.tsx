@@ -42,7 +42,10 @@ export default async function ReportDetail(props: { params: Promise<{ id: string
       )}
       <div className="mb-2 flex items-center justify-between print:hidden">
         <Link href="/reports" className="text-sm font-semibold text-brand">← All reports</Link>
-        <PrintButton label="🖨 Download branded PDF" />
+        <div className="flex items-center gap-2">
+          <a href={`/api/reports/${params.id}/pdf`} className="rounded-lg border border-brand px-3 py-1.5 text-sm font-semibold text-brand">⬇ Download PDF</a>
+          <PrintButton label="🖨 Branded print" />
+        </div>
       </div>
       <PageHeader
         eyebrow="Report"
