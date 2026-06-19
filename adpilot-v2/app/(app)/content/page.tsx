@@ -15,7 +15,10 @@ export default async function ContentPage() {
 
   return (
     <div className="max-w-3xl">
-      <h1 className="text-2xl font-extrabold tracking-tight">Content Studio</h1>
+      <div className="mb-1 flex flex-wrap items-center gap-3">
+        <h1 className="text-2xl font-extrabold tracking-tight">Content Studio</h1>
+        <a href="/content/calendar" className="rounded-lg border border-border-subtle px-3 py-1.5 text-xs font-bold text-ink transition hover:border-brand hover:text-brand">📅 Calendar →</a>
+      </div>
       <p className="mb-2 mt-1 text-muted">Upload your reels &amp; posts, approve them, and publish or schedule to Instagram / Facebook / TikTok.</p>
       <p className="mb-5 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">
         🔒 This publishes <b>organic content you approve</b> — it's separate from the read-only ad analysis. We still never edit, pause, or create ads.

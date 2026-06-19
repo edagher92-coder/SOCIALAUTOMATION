@@ -2,6 +2,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveOrgId, planForOrg } from "@/lib/org";
+import { can, type Feature } from "@/lib/entitlements";
 import { callClaude, NoKeyError, modelFor } from "@/lib/ai/claude";
 
 export const runtime = "nodejs";
@@ -10,6 +12,10 @@ const Body = z.object({
   task: z.enum(["canva", "bobby", "aria"]),
   inputs: z.record(z.string().max(2000)).default({}),
 });
+
+// Each task is a paid surface (gated in the nav too). Gate the API itself so the AI cost can't be
+// incurred by a free user calling the endpoint directly — matching agents/run + content/draft.
+const TASK_FEATURE: Record<string, Feature> = { canva: "creative_studio", bobby: "ai_team", aria: "ai_team" };
 
 const SYSTEM: Record<string, string> = {
   canva:
@@ -39,6 +45,12 @@ export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   const { task, inputs } = parsed.data;
+
+  // Tier gate (server-side truth — the nav hides these, but the API is the real boundary).
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const plan = await planForOrg(orgId);
+  if (!can(plan, TASK_FEATURE[task]))
+    return NextResponse.json({ error: "This AI tool is included in a paid plan. Upgrade to use it.", code: "UPGRADE" }, { status: 403 });
 
   try {
     // Light, templated creative → Haiku tier to keep token cost down.

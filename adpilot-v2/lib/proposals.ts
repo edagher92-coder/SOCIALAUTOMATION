@@ -11,6 +11,16 @@ export function verdictMeta(v: string) {
   return VERDICT_META[v] || { label: v, emoji: "•", cls: "text-muted", rank: 9 };
 }
 
+// Maps an engine verdict key (hyphenated/lowercase) to its plain-English entry in
+// METRIC_GLOSSARY (spaced Title Case), so the "?" help tips can explain each verdict.
+export const VERDICT_GLOSSARY_KEY: Record<string, string> = {
+  "fix-tracking": "Fix tracking",
+  kill: "Kill",
+  reduce: "Reduce",
+  refresh: "Refresh",
+  scale: "Scale",
+};
+
 export const BAND_META: Record<string, { label: string; chip: string; bar: string }> = {
   Green:  { label: "Healthy",        chip: "bg-band-green/10 text-band-green",  bar: "bg-band-green" },
   Yellow: { label: "Watch",          chip: "bg-band-yellow/10 text-band-yellow", bar: "bg-band-yellow" },

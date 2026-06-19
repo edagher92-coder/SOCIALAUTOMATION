@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
 import { can } from "@/lib/entitlements";
 import { publishPost, isNotConfigured } from "@/lib/publish/providers";
+import { checkPublishCap } from "@/lib/publish/rate-limits";
 
 export const runtime = "nodejs";
 
@@ -38,6 +39,11 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
     // Only an explicitly approved (or scheduled/failed-retry) post may be sent — never a raw draft.
     if (!["approved", "scheduled", "failed"].includes((post as any).status)) {
       return NextResponse.json({ error: "Approve the post before publishing." }, { status: 400 });
+    }
+    // Rate-limit guard: never publish past this account's safe trailing-24h cap for the platform.
+    const cap = await checkPublishCap(admin, orgId, (post as any).platform, (post as any).media_type);
+    if (!cap.allowed) {
+      return NextResponse.json({ error: `Daily publish limit reached for ${(post as any).platform} (${cap.used}/${cap.cap} in the last 24h). Schedule it instead — this protects the account from platform restrictions.`, rateLimited: true }, { status: 429 });
     }
     try {
       const res = await publishPost(post as any);

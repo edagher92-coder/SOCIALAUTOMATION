@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createHash, randomUUID } from "crypto";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
@@ -87,9 +88,19 @@ export async function POST(req: Request) {
   const code = confirmationCode(subjectHash);
   const base = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
 
-  // NOTE (scaffold): the actual persistence + actioning of the request is handled by a
-  // separate authenticated back-office job. Here we only acknowledge receipt with a code.
-  // We intentionally do not return any PII.
+  // Persist the request (hash only, never PII) so the back-office can prove receipt and
+  // action it. Best-effort: the Meta callback REQUIRES a 200 with the code, so a DB hiccup
+  // must not fail the response — we log and carry on.
+  try {
+    const admin = createAdminClient();
+    await admin.from("deletion_requests").insert({
+      subject_hash: subjectHash,
+      request_type: signedRequest ? "meta" : "email",
+      confirmation_code: code,
+    });
+  } catch (e) {
+    console.error("deletion_requests insert failed", e);
+  }
 
   // Meta's data deletion callback expects { url, confirmation_code }.
   return NextResponse.json(

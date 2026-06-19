@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
 import { can } from "@/lib/entitlements";
-import { callClaude, NoKeyError } from "@/lib/ai/claude";
+import { callClaude, NoKeyError, modelFor } from "@/lib/ai/claude";
 import { getAgent } from "@/lib/agents/registry";
 import { knowledgeForAgent } from "@/lib/agents/knowledge";
 import { contextPackGrounding } from "@/lib/agents/context-pack";
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
   const userMsg = `${grounding}\n\n${q ? `The user asks: ${q}` : "Give your top findings and safe, prioritised proposals for this account right now."}${reportInstruction}`;
 
   try {
-    const text = await callClaude({ system: systemPrompt, user: userMsg, maxTokens: 1200, cacheSystem: true });
+    const text = await callClaude({ system: systemPrompt, user: userMsg, model: modelFor(agent.model ?? "standard"), maxTokens: 1200, cacheSystem: true });
     if (!text || !text.trim())
       return NextResponse.json({ error: "The specialist returned an empty answer. Please try again.", code: "EMPTY" }, { status: 502 });
     return NextResponse.json({ text, agent: { id: agent.id, name: agent.name } });

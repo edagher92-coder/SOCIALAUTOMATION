@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cronAuthorized } from "@/lib/cron-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { publishPost } from "@/lib/publish/providers";
+import { checkPublishCap } from "@/lib/publish/rate-limits";
 import { can, normalisePlan } from "@/lib/entitlements";
 
 export const runtime = "nodejs";
@@ -27,9 +28,17 @@ export async function GET(req: Request) {
   const planFor = new Map<string, string>();
   for (const s of subs || []) if ((s as any).status === "active") planFor.set((s as any).organisation_id, (s as any).plan);
 
-  let published = 0, failed = 0, skipped = 0;
+  let published = 0, failed = 0, skipped = 0, deferred = 0;
   for (const p of due as any[]) {
     if (!can(normalisePlan(planFor.get(p.organisation_id)), "content_publish")) { skipped++; continue; }
+    // Rate-limit guard: if this account is at its trailing-24h cap for the platform, defer the
+    // post to the next window rather than publishing (which would risk a platform restriction).
+    const cap = await checkPublishCap(admin, p.organisation_id, p.platform, p.media_type);
+    if (!cap.allowed) {
+      await admin.from("content_posts").update({ scheduled_at: new Date(Date.now() + 3600_000).toISOString(), updated_at: new Date().toISOString() }).eq("id", p.id);
+      deferred++;
+      continue;
+    }
     try {
       const res = await publishPost(p);
       await admin.from("content_posts").update({ status: "published", published_at: new Date().toISOString(), external_id: res.externalId ?? null, error: null, updated_at: new Date().toISOString() }).eq("id", p.id);
@@ -39,5 +48,5 @@ export async function GET(req: Request) {
       failed++;
     }
   }
-  return NextResponse.json({ published, failed, skipped });
+  return NextResponse.json({ published, failed, skipped, deferred });
 }

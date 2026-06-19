@@ -9,12 +9,12 @@ export default function PlanMatrix() {
   const features = Object.keys(FEATURE_MIN_PLAN) as Feature[];
   return (
     <div className="overflow-x-auto rounded-2xl border border-border-subtle bg-white shadow-card">
-      <table className="w-full min-w-[640px] text-sm">
+      <table className="w-full min-w-[560px] text-sm">
         <thead>
           <tr className="border-b border-border-subtle">
-            <th className="p-3 text-left text-xs font-bold uppercase tracking-wide text-muted">Feature</th>
+            <th className="p-2 sm:p-3 text-left text-xs font-bold uppercase tracking-wide text-muted">Feature</th>
             {PLANS.map((p) => (
-              <th key={p.id} className={`p-3 text-center ${p.mostPopular ? "bg-brand-50" : ""}`}>
+              <th key={p.id} className={`p-2 sm:p-3 text-center ${p.mostPopular ? "bg-brand-50" : ""}`}>
                 <div className="font-extrabold">{p.label}</div>
                 <div className="text-xs font-semibold text-brand">{planPriceLabel(p)}</div>
                 {planAnnualLabel(p) && <div className="text-2xs text-muted">{planAnnualLabel(p)}</div>}
@@ -28,7 +28,7 @@ export default function PlanMatrix() {
             const need = requiredPlan(f);
             return (
               <tr key={f} className="border-b border-border-subtle/60">
-                <td className="p-3">
+                <td className="p-2 sm:p-3">
                   <div className="font-semibold text-ink">{FEATURE_LABEL[f]}</div>
                   <div className="text-2xs text-muted">{FEATURE_DESC[f]}</div>
                 </td>
@@ -36,7 +36,7 @@ export default function PlanMatrix() {
                   const has = can(p.id, f);
                   const isUnlockTier = p.id === need; // cheapest tier that adds this feature
                   return (
-                    <td key={p.id} className={`p-3 text-center ${p.mostPopular ? "bg-brand-50/50" : ""}`}>
+                    <td key={p.id} className={`p-2 sm:p-3 text-center ${p.mostPopular ? "bg-brand-50/50" : ""}`}>
                       {has
                         ? <span className={isUnlockTier ? "font-extrabold text-teal" : "text-teal"} title={isUnlockTier ? `New in ${PLAN_LABEL[need]}` : undefined}>✓</span>
                         : <span className="text-muted/40">—</span>}

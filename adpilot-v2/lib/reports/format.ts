@@ -14,6 +14,8 @@ export type ReportPayload = {
   health?: { total?: number; band?: string; guidance?: string; findings?: any[]; weakest?: any[]; breakdown?: Record<string, any> };
   campaigns?: any[];
   decisions?: any[];
+  // Optional live follower demographics (attached only when a real Page/IG/TikTok is connected).
+  audience?: { platform?: string; handle?: string; followerCount?: number; source?: string; summary?: string[] };
   safety?: string;
 };
 
@@ -61,6 +63,15 @@ export function buildReportMarkdown(payload: ReportPayload, opts: ReportOpts): s
     if (h.guidance) out.push(h.guidance);
     const lq = h.breakdown?.lead_quality?.score;
     if (lq != null) out.push(`Lead quality: ${num(lq)} / 100`);
+    out.push("");
+  }
+
+  // Audience — live follower demographics, only when a real profile is connected (never sample).
+  const aud = payload.audience;
+  if (aud && Array.isArray(aud.summary) && aud.summary.length) {
+    out.push("## Audience");
+    out.push(`**${aud.handle || "your profile"}** — ${num(aud.followerCount)} followers${aud.platform ? ` (${aud.platform})` : ""}`);
+    for (const line of aud.summary.slice(0, 6)) out.push(`- ${line}`);
     out.push("");
   }
 

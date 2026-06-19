@@ -6,7 +6,15 @@ import { callClaude, NoKeyError, MODELS } from "@/lib/ai/claude";
 // reply decisioning, and the Send APIs. Ported from the meta-messaging-bot skill's reply
 // brain. Messenger + Instagram DM share the Page token + Send API; WhatsApp uses the Cloud API.
 
-const V = "v21.0";
+const V = process.env.META_GRAPH_API_VERSION ?? "v21.0";
+
+// WhatsApp Cloud API only allows a free-form text reply inside the 24h customer-service window
+// (after the user's last inbound message). Outside it, Meta rejects with error 131026, so we
+// fail fast with a typed error instead of wasting an API call.
+export class WhatsAppWindowError extends Error {
+  constructor() { super("Outside the WhatsApp 24h customer-service window — a reply needs a template message."); this.name = "WhatsAppWindowError"; }
+}
+export const isWhatsAppWindowError = (e: any) => e?.name === "WhatsAppWindowError";
 
 export type Rule = {
   trigger_type: "keyword" | "payload" | "welcome" | "away" | "default";
@@ -79,7 +87,12 @@ export async function sendMessage(pageToken: string, recipientId: string, text: 
 }
 
 // WhatsApp Cloud API (free-form text only within the 24h customer-service window).
-export async function sendWhatsApp(token: string, phoneId: string, to: string, text: string): Promise<void> {
+// When the caller knows the last inbound time, pass it: if the window has closed we throw a
+// WhatsAppWindowError before the request rather than letting Meta reject it (error 131026).
+export async function sendWhatsApp(token: string, phoneId: string, to: string, text: string, lastCustomerMsgAt?: Date | null): Promise<void> {
+  if (lastCustomerMsgAt != null && Date.now() - lastCustomerMsgAt.getTime() > 23.5 * 3_600_000) {
+    throw new WhatsAppWindowError();
+  }
   const r = await fetch(`https://graph.facebook.com/${V}/${phoneId}/messages?access_token=${encodeURIComponent(token)}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -146,7 +159,9 @@ export async function aiReply(facts: string | null | undefined, voice: string | 
     const reply = (out || "").trim();
     return reply || null;
   } catch (e) {
-    if (e instanceof NoKeyError) return null;
-    return null; // best-effort: any API/parse error → fall back to canned replies
+    // Observability without leaking content/PII: tag the failure type so a bad key or a
+    // token/rate error is visible in logs for cost monitoring, then degrade to canned replies.
+    console.warn("[aiReply.error]", JSON.stringify({ error_type: e instanceof NoKeyError ? "NO_KEY" : "API_ERROR" }));
+    return null;
   }
 }

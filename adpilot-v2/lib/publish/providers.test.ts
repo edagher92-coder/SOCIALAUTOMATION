@@ -79,12 +79,24 @@ describe("platform dispatch (configured → calls the right endpoint)", () => {
     expect(fetchMock.mock.calls[0][0]).toContain("/feed");
   });
 
-  it("routes Instagram through container + media_publish (2 calls)", async () => {
-    fetchMock.mockResolvedValueOnce(ok({ id: "container_1" })).mockResolvedValueOnce(ok({ id: "media_1" }));
+  it("routes an Instagram reel through container -> poll status -> media_publish", async () => {
+    fetchMock
+      .mockResolvedValueOnce(ok({ id: "container_1" }))        // 1) create container
+      .mockResolvedValueOnce(ok({ status_code: "FINISHED" }))  // 1b) poll until processed
+      .mockResolvedValueOnce(ok({ id: "media_1" }));           // 2) publish
     const res = await publishPost({ platform: "instagram", caption: "c", media_url: "https://cdn/r.mp4", media_type: "reel" });
     expect(res.externalId).toBe("media_1");
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(fetchMock.mock.calls[0][0]).toContain("/media");
+    expect(fetchMock.mock.calls[1][0]).toContain("status_code");
+    expect(fetchMock.mock.calls[2][0]).toContain("/media_publish");
+  });
+
+  it("an Instagram photo skips container polling (2 calls)", async () => {
+    fetchMock.mockResolvedValueOnce(ok({ id: "container_img" })).mockResolvedValueOnce(ok({ id: "media_img" }));
+    const res = await publishPost({ platform: "instagram", caption: "c", media_url: "https://cdn/x.jpg", media_type: "image" });
+    expect(res.externalId).toBe("media_img");
+    expect(fetchMock).toHaveBeenCalledTimes(2); // no status poll for photos
     expect(fetchMock.mock.calls[1][0]).toContain("/media_publish");
   });
 

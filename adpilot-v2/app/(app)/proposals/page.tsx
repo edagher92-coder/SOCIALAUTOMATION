@@ -1,8 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgId } from "@/lib/org";
-import { verdictMeta } from "@/lib/proposals";
+import { verdictMeta, VERDICT_GLOSSARY_KEY } from "@/lib/proposals";
+import { metricDef } from "@/lib/metric-glossary";
 import PageHeader from "@/components/PageHeader";
 import RecActions from "@/components/RecActions";
+import Tip from "@/components/Tip";
+import ModeAware from "@/components/ModeAware";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +39,7 @@ export default async function Proposals() {
     .order("created_at", { ascending: false }).limit(200);
 
   const list = (recs || []).slice().sort((a: any, b: any) => verdictMeta(a.verdict).rank - verdictMeta(b.verdict).rank);
+  const grouped = list.reduce((acc: Record<string, any[]>, r: any) => { (acc[r.verdict] ||= []).push(r); return acc; }, {} as Record<string, any[]>);
 
   return (
     <div className="max-w-3xl animate-fade-in">
@@ -60,28 +64,46 @@ export default async function Proposals() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {list.map((r: any) => {
-            const m = verdictMeta(r.verdict);
-            return (
-              <div key={r.id} className="rounded-2xl border border-border-subtle bg-white p-4 shadow-card">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`text-sm font-extrabold ${m.cls}`}>{m.emoji} {m.label}</span>
-                      <span className="truncate text-sm font-semibold text-ink">· {r.entity_name}</span>
-                      {r.platform && r.platform !== "?" && (
-                        <span className="rounded-full bg-surface px-2 py-0.5 text-2xs font-bold uppercase text-muted">{r.platform}</span>
-                      )}
-                    </div>
-                    {r.reason && <p className="mt-1 text-sm text-muted">{r.reason}</p>}
-                    {r.proposal && <p className="mt-1.5 text-sm text-ink"><span className="font-semibold">Proposal:</span> {r.proposal}</p>}
+        <div className="space-y-6">
+          {Object.keys(grouped)
+            .sort((a, b) => verdictMeta(a).rank - verdictMeta(b).rank)
+            .map((v) => {
+              const m = verdictMeta(v);
+              const def = metricDef(VERDICT_GLOSSARY_KEY[v] || "");
+              const items = grouped[v];
+              return (
+                <section key={v}>
+                  {/* Verdict group header with a count — gives a long queue clear hierarchy. */}
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className={`text-sm font-extrabold ${m.cls}`}>{m.emoji} {m.label}</span>
+                    <span className="rounded-full bg-surface px-2 py-0.5 text-2xs font-bold text-muted">{items.length}</span>
+                    {def && <Tip label={m.label} term={def.term} align="left">{def.what}</Tip>}
                   </div>
-                  <RecActions id={r.id} />
-                </div>
-              </div>
-            );
-          })}
+                  <div className="space-y-3">
+                    {items.map((r: any) => (
+                      <div key={r.id} className="rounded-2xl border border-border-subtle bg-white p-4 shadow-card">
+                        <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="truncate text-sm font-semibold text-ink">{r.entity_name}</span>
+                              {r.platform && r.platform !== "?" && (
+                                <span className="rounded-full bg-surface px-2 py-0.5 text-2xs font-bold uppercase text-muted">{r.platform}</span>
+                              )}
+                            </div>
+                            {/* The "why" is detail — show it in Advanced; Simple keeps a calm entity + proposal view. */}
+                            <ModeAware only="advanced">
+                              {r.reason && <p className="mt-1 text-sm text-muted">{r.reason}</p>}
+                            </ModeAware>
+                            {r.proposal && <p className="mt-1.5 text-sm text-ink"><span className="font-semibold">Proposal:</span> {r.proposal}</p>}
+                          </div>
+                          <RecActions id={r.id} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
         </div>
       )}
     </div>

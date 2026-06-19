@@ -29,14 +29,19 @@ export const KNOWLEDGE: Record<KnowledgeDomain, KnowledgeDoc> = {
   },
   tiktok: {
     title: "TikTok ad optimization",
-    updated: "2026-06-15",
+    updated: "2026-06-18",
     body: [
-      "Benchmarks (ranges): CPM ~$5–9 (often cheaper reach than Meta); in-feed CTR ~0.6–0.85%; conversion rate ~0.5–1.9%.",
+      "Benchmarks (ranges): CPM ~$5–9 (often cheaper reach than Meta); in-feed CTR ~0.6–0.85%; conversion rate ~0.5–1.9%. TikTok's CTR norms run well below Meta's — judge an ad against the VERTICAL, not Meta's numbers, before calling it weak.",
       "Creative diagnostics: hook rate (2s views ÷ impressions) target ~35%; hold rate (6s focused-view ÷ 2s views) target ~45%. A 3s view-rate above ~40% signals a hook the algorithm will distribute. ~71% of whether viewers keep watching is decided in the first ~3 seconds.",
       "Note: 'ThruPlay' is a Meta metric (15s or completion); TikTok measures at 2s plus a 6s view — don't conflate them.",
+      "Sound is a primary discovery signal: most feed time is sound-ON, so design sound-first — sync the hook to a trending/native audio in the first ~0.5s. Silent, wrong-aspect, or obviously-repurposed Meta creative underperforms regardless of copy. Check trending sounds (Creative Center) before each creative batch; always add on-screen captions too.",
+      "Native format wins: 9:16 full-screen, creator-style UGC / talking-to-camera over polished brand films, fast cuts, captions, and a clear single CTA. Reframe and re-edit (don't just reupload) anything made for Meta or landscape.",
+      "Spark Ads (boost an organic creator or brand post — keeps its handle, likes & comments) typically beat in-feed non-Spark on CTR/CVR and add social trust; high leverage. Sourcing: pick creators by NICHE FIT + genuine engagement rate (not raw follower count); get a Spark/authorisation code; brief them on the hook + one CTA; keep every claim compliant (Paige has final say).",
+      "Targeting: TikTok's algorithm finds the buyer — start BROAD (age/geo only) and let creative do the targeting; broad often beats narrow interest stacks. Cold audiences convert better here than on Meta. When performance dips, refresh the CREATIVE, not the targeting.",
       "Length: ~15s favours top-of-funnel reach; ~21–34s tends to produce the best in-feed CTR/CVR.",
-      "Fatigue is faster than any other platform — produce fresh variants every 7–14 days; run 3–5 creatives per ad group. Spark Ads (boosting organic creator/brand posts) can roughly double in-feed performance and add trust — high leverage.",
-      "Failure→action: low CTR (<~0.8%) ⇒ almost always weak first ~1.7s hook, sound-off design, or non-native cues — fix the hook first. Engagement holding but intent dropping ⇒ early fatigue ⇒ refresh.",
+      "Fatigue is faster than any other platform — rotate 3–5 fresh hooks every 7–14 days; queue the next batch before CTR actually drops (an ad running flat for 2+ weeks is already losing algorithmic priority).",
+      "Read engagement signals: high saves = strong intent; high shares = reach/virality; comments = brand affinity. Falling CTR with steady watch-time ⇒ early creative fatigue (fix the hook). Steady CTR but falling CVR ⇒ offer / landing-page problem, not creative.",
+      "Failure→action: low CTR (<~0.8%) ⇒ almost always a weak first ~1.7s hook, sound-off design, or non-native cues — fix the hook first.",
     ].join("\n"),
     sources: [
       "https://lebesgue.io/tiktok-ads/tiktok-ads-benchmarks-for-ctr-cr-and-cpm",
@@ -44,6 +49,7 @@ export const KNOWLEDGE: Record<KnowledgeDomain, KnowledgeDoc> = {
       "https://www.adsights.ai/blog/topics/ad-performance/thruplay-tiktok-meta-youtube-comparison-2026",
       "https://www.hivehq.ai/blog/tik-tok-spark-ads-best-practices",
       "https://www.webfx.com/blog/social-media/tiktok-benchmarks/",
+      "https://ads.tiktok.com/business/creativecenter",
     ],
   },
   policy: {

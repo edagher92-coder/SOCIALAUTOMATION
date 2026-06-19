@@ -56,7 +56,7 @@ export default function Login() {
       <div className="mb-8 flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-ink">
         <span className="inline-block h-8 w-8 rounded-xl bg-gradient-to-br from-brand to-teal shadow-sm" aria-hidden />
         AdPilot OS
-        <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand">V4</span>
+        <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand">V6</span>
       </div>
 
       <div className="w-full max-w-sm">
