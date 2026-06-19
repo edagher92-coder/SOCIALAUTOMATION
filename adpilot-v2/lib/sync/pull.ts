@@ -70,10 +70,21 @@ export async function metaPull(token: string, accountId: string, orgId: string) 
     "actions", "action_values",
     "video_play_actions", "video_thruplay_watched_actions",
   ].join(",");
-  const r = await fetch(`https://graph.facebook.com/v21.0/${act}/insights?level=ad&date_preset=last_30d&time_increment=1&fields=${encodeURIComponent(fields)}&access_token=${encodeURIComponent(token)}`);
-  const j: any = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j?.error?.message || `Meta API error (HTTP ${r.status})`);
-  return (j.data || []).map((d: any) => {
+  // Meta paginates insights (default ~25/page). With time_increment=1 a 30-day window is
+  // dozens-to-hundreds of ad-day rows, and the FIRST page is the OLDEST dates — so a naive
+  // single-page read can return only stale rows that fall outside the 14-day scoring window
+  // (account looks "synced" but never scores). Request a big page AND follow `paging.next`
+  // until exhausted so every day in the window is captured. The guard caps runaway paging.
+  let url = `https://graph.facebook.com/v21.0/${act}/insights?level=ad&date_preset=last_30d&time_increment=1&limit=500&fields=${encodeURIComponent(fields)}&access_token=${encodeURIComponent(token)}`;
+  const data: any[] = [];
+  for (let page = 0; url && page < 25; page++) {
+    const r = await fetch(url);
+    const j: any = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j?.error?.message || `Meta API error (HTTP ${r.status})`);
+    if (Array.isArray(j.data)) data.push(...j.data);
+    url = j?.paging?.next || "";
+  }
+  return data.map((d: any) => {
     const conv = extractMetaConversions(d.actions, d.action_values);
     // Meta reports video metrics as `[{ action_type, value }]` arrays; the "video_view"
     // entry carries the count. 3s plays = video_play_actions; thruplays = video_thruplay_watched_actions.
