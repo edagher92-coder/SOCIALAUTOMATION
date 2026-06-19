@@ -42,6 +42,36 @@ live ad** without an explicit typed-YES (and the live-write path is Expert-only 
   `ADPILOT_CONTEXT_PACK_JSON` at runtime.
 - Don't touch production data; ask before deleting/overwriting.
 
+## Model & effort routing (auto-applied; quality-first)
+> Goal: **best possible output, always.** Subject to that — and only when it provably doesn't change the
+> result — minimise latency and weekly-limit (token) cost. Never trade quality for speed or cost.
+> Full algorithm, decision table + worked examples: `.claude/skills/model-router/SKILL.md` (portable).
+
+The main-loop model is harness-set (`/model`); a doc can't silently switch it. So this runs on three
+levers: (1) a one-line **routing tag** (`⟂ Router: …`) when a `/model` change is worth it; (2) **subagent
+model overrides** — fully automatic: set `model: haiku|sonnet|opus|fable` per delegated task; (3) **effort**
+(low→max) + opt-in **`/fast`**.
+
+Score each task on: complexity · blast-radius/reversibility · ambiguity · breadth/fan-out · output type ·
+latency need · prior-attempt failures · cost-of-error. Then:
+- **Stakes gate first (overrides cost):** irreversible / prod-write / security / money / legal / "ship it"
+  → **Opus 4.8**, effort ≥ high, and verify. Never downshift these.
+- **Trivial + clear + cheap-to-verify** (mechanical edits, lookups, file/path search, classification,
+  formatting) → **Haiku 4.5** or **Sonnet-low**. Fast + cheap, no quality loss.
+- **Everyday, well-specified work** (most coding, edits, reviews, Q&A, prose) → **Sonnet 4.6**, medium
+  effort — the default daily driver.
+- **Hard / ambiguous-but-important / long-horizon agentic / gnarly debugging / architecture / design**
+  → **Opus 4.8**, high–xhigh.
+- **Fable 5** only on explicit request or frontier reasoning Opus can't carry (premium).
+
+Rules: **default up when unsure**; **escalate one tier (or raise effort) on any prior-attempt failure** —
+never silently retry the same losing config; **fan-out → parallel subagents**, each at the tier its subtask
+needs (search=Haiku, synthesis=Sonnet/Opus), main loop stays cheap; **verify hard outputs** (tsc/tests/
+re-read) regardless of tier; **produce high, then downshift** once a pattern is proven safe. Latency: light +
+waiting → Sonnet/Haiku + lower effort (faster *and* cheaper); hard + waiting → accept Opus or suggest `/fast`
+(same Opus 4.8, ~2.5× faster, **premium cost** — speed, not savings); async/background → optimise cost over
+speed; keep stable context prompt-cached and tool calls parallel.
+
 ## Current state (v6.0.0 — shipped & merged)
 V6 shipped and merged to `main` via PR #22 (merge `c8617eb`): dual-mode UX, tier differentiation
 + wired AUD pricing, the engine upgrades above, AI cost routing (prompt caching + Haiku tiers),
