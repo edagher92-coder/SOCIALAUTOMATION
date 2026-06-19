@@ -64,6 +64,24 @@ saving; speed is task-dependent** — on small, well-specified tasks Opus can be
 calls, fewer tokens), so don't promise Sonnet is "faster" in general. Don't bias model choice on latency
 alone; choose on the quality/cost axes and treat speed as a tie-breaker for light, interactive turns.
 
+## Keeping the tiers current (new model releases)
+
+Model names, IDs, prices, and capabilities change — the tier table above is a snapshot, not a constant.
+When a newer model ships (e.g. a future top-tier **"5"-generation** Opus/Sonnet, an "Opus 5" / "Claude 5.x",
+or anything that supersedes Opus 4.8), do **not** guess its model ID, price, or capabilities:
+
+1. **Read the `claude-api` skill** (the live source of truth for model IDs/pricing) — or query the Models
+   API directly (`client.models.list()` / `client.models.retrieve(id)`) — for the exact string and rates.
+2. **Slot it into the tier table by capability and price**: a new flagship that beats Opus 4.8 takes the
+   top "hard reasoning / stakes-gate" slot; re-baseline the Sonnet↔top-tier cost ratio against the new
+   prices (today's 0.6× is specific to Sonnet 4.6 vs Opus 4.8).
+3. Today's most-capable "5"-tier model is **Fable 5** (already listed, premium / explicit-request only);
+   **Mythos 5** is the same thing behind Project Glasswing. A genuinely new "5.0" flagship is added the
+   same way — verify, then slot.
+
+The algorithm itself (stakes gate → score → fan-out → verify → downshift) is **model-agnostic** and does
+not change when the roster does — only the tier table and the cost ratio need refreshing.
+
 ## Effort
 
 `output_config.effort`: `low` → `medium` → `high` → `xhigh` (Opus 4.7/4.8) → `max`.
