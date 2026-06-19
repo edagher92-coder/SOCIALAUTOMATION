@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
 import { syncOrgPlatform } from "@/lib/sync/pull";
+import { scoreAndAlertOrg } from "@/lib/cron/score";
 import { can } from "@/lib/entitlements";
 
 export const runtime = "nodejs";
@@ -23,7 +24,20 @@ export async function POST(req: Request, props: { params: Promise<{ platform: st
     }
     const admin = createAdminClient();
     const inserted = await syncOrgPlatform(admin, orgId, platform);
-    return NextResponse.json({ inserted });
+
+    // Re-score after a manual pull, exactly like the auto-sync cron — so "Sync now" produces a
+    // fresh Campaign Health Score (previously only the cron re-scored). Advance the cadence clock
+    // too, so the dashboard's "last pull" and the next auto-sync due-time reflect this manual sync.
+    await admin.from("organisations").update({ last_synced_at: new Date().toISOString() }).eq("id", orgId);
+    let scored = false;
+    const { data: org } = await admin.from("organisations")
+      .select("id,name,average_sale_value,gross_margin,monthly_budget,lead_close_rate")
+      .eq("id", orgId).maybeSingle();
+    if (org) {
+      // Isolation: scoring failures (e.g. no snapshots yet) must never fail the sync itself.
+      try { scored = (await scoreAndAlertOrg(admin, org as any)).scored; } catch { /* best-effort */ }
+    }
+    return NextResponse.json({ inserted, scored });
   } catch (e: any) {
     return NextResponse.json({ error: e.message || "Sync failed" }, { status: 502 });
   }

@@ -17,7 +17,7 @@ export default function SyncButton({ platform }: { platform: "meta" | "tiktok" }
       if (r.ok) {
         setOk(true);
         const n = j.inserted ?? 0;
-        setMsg(`Synced ${n} row${n === 1 ? "" : "s"} ✅`);
+        setMsg(`Synced ${n} row${n === 1 ? "" : "s"}${j.scored ? " · score updated" : ""} ✅`);
       } else {
         setOk(false);
         setMsg(j.error || `Sync failed (HTTP ${r.status})`);

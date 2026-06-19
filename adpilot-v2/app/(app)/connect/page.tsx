@@ -8,6 +8,7 @@ import ReadOnlyBadge from "@/components/ReadOnlyBadge";
 import AutoSyncStatus from "@/components/AutoSyncStatus";
 import RunFirstAudit from "@/components/RunFirstAudit";
 import LeadAdsSync from "@/components/LeadAdsSync";
+import RemoveAccountButton from "@/components/RemoveAccountButton";
 
 export const dynamic = "force-dynamic";
 
@@ -142,9 +143,12 @@ export default async function Connect(props: { searchParams: Promise<{ connected
                     ? <div className="mt-0.5 text-xs font-semibold text-band-red">● Reconnect needed — token expired</div>
                     : <div className="text-xs text-muted">{a.external_account_id} · {a.status}</div>}
                 </div>
-                {needsReconnect
-                  ? <a href={`/api/oauth/${p}/start`} className="rounded-lg bg-brand px-3 py-1.5 text-sm font-bold text-white">Reconnect</a>
-                  : <SyncButton platform={p} />}
+                <div className="flex items-center gap-2">
+                  {needsReconnect
+                    ? <a href={`/api/oauth/${p}/start`} className="rounded-lg bg-brand px-3 py-1.5 text-sm font-bold text-white">Reconnect</a>
+                    : <SyncButton platform={p} />}
+                  <RemoveAccountButton platform={p} externalAccountId={a.external_account_id} label={a.display_name} />
+                </div>
               </div>
             );
           })}
