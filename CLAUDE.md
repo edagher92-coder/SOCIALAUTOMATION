@@ -44,8 +44,8 @@ live ad** without an explicit typed-YES (and the live-write path is Expert-only 
 - **Before opening a PR:** run the verify discipline (`tsc --noEmit` + `vitest run` + `next build`); for
   non-trivial diffs run `/code-review`, and `/security-review` for anything touching auth / crypto / PII /
   money / RLS. A `.claude/` **SessionStart hook** installs `adpilot-v2` deps on web sessions so these run
-  immediately (and seeds the model-router). Note: `npm run lint` is currently broken (Next 16 removed
-  `next lint`) — migrate it to the ESLint CLI before relying on it.
+  immediately (and seeds the model-router). `npm run lint` runs the ESLint CLI via flat config
+  (`eslint.config.mjs`; Next 16 removed `next lint`) — green with one advisory warning.
 
 ## Model & effort routing (auto-applied; quality-first)
 > Goal: **best possible output, always.** Subject to that — and only when it provably doesn't change the

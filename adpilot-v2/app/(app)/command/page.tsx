@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
 import { can, PLAN_LABEL } from "@/lib/entitlements";
@@ -278,7 +279,7 @@ export default async function CommandCenter() {
           <div className="rounded-2xl border border-border-subtle bg-white p-4 shadow-card">
             <div className="mb-2 flex items-center justify-between">
               <h3 className="font-bold">Recent reports</h3>
-              <a href="/reports" className="text-xs font-semibold text-brand">All →</a>
+              <Link href="/reports" className="text-xs font-semibold text-brand">All →</Link>
             </div>
             {(reports || []).length === 0 ? (
               <p className="text-sm text-muted">No reports yet.</p>

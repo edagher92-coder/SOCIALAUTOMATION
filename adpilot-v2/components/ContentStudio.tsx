@@ -202,7 +202,6 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
                   <div className="mt-2 grid grid-cols-2 gap-2">
                     {images.map((im, i) => (
                       <div key={i} className="rounded-lg border border-border-subtle p-1.5">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={im.url} alt="Generated ad creative" className="w-full rounded" />
                         <div className="mt-1.5 flex gap-1.5">
                           <button onClick={() => { setMediaUrl(im.url); setMediaType("image"); setMsg("Image set as media — save your draft."); }} className="flex-1 rounded-md bg-brand px-2 py-1 text-xs font-bold text-white">Use</button>
