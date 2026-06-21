@@ -136,6 +136,24 @@ export async function buildReportPdf(payload: unknown, opts: ReportPdfOptions = 
     gap(10);
   }
 
+  // Projected impact (optional, modelled). Only renders when the payload supplies it, so
+  // existing reports are unaffected. Numbers come straight from the payload — nothing invented.
+  const proj = (p.projection ?? null) as Record<string, any> | null;
+  const projRows = Array.isArray(proj?.rows) ? (proj!.rows as any[]) : [];
+  if (proj && projRows.length) {
+    line("Projected impact (modelled, not a guarantee)", 13, bold);
+    gap(2);
+    if (proj.basis) { line(String(proj.basis), 9, font, muted); gap(2); }
+    for (const r of projRows) {
+      ensure(15);
+      page.drawText(String(r?.label ?? ""), { x: MARGIN, y: y - 11, size: 10, font, color: muted });
+      page.drawText(String(r?.value ?? ""), { x: MARGIN + 150, y: y - 11, size: 10, font: bold, color: ink });
+      y -= 15;
+    }
+    if (proj.caveat) { gap(2); line(String(proj.caveat), 8, font, muted); }
+    gap(10);
+  }
+
   gap(6);
   line("Read-only — AdPilot proposes; the human approves. Nothing in your ad account was changed.", 8, font, muted);
 

@@ -30,4 +30,26 @@ describe("buildReportPdf", () => {
   it("tolerates a non-object payload without throwing", async () => {
     expect(head(await buildReportPdf(null, {}))).toBe("%PDF-");
   });
+
+  it("renders an optional Projected impact section when supplied", async () => {
+    const withProj = await buildReportPdf(
+      {
+        summary: { spend: 12.8, leads: 1, cpa: 11.01 },
+        projection: {
+          basis: "Modelled at flat spend; ranges, not guarantees.",
+          rows: [
+            { label: "Baseline (now)", value: "1.0 conv/day, ~$12.80" },
+            { label: "Mid", value: "~1.9 conv/day (+85% / -48%)" },
+          ],
+          caveat: "Validate over a 3-day test (decision floor 15 conversions).",
+        },
+      },
+      { title: "Projection" },
+    );
+    expect(head(withProj)).toBe("%PDF-");
+    // A projection with rows should produce a longer doc than the same payload without it.
+    const withoutProj = await buildReportPdf({ summary: { spend: 12.8, leads: 1, cpa: 11.01 } }, { title: "Projection" });
+    expect(withProj.length).toBeGreaterThan(withoutProj.length);
+  });
 });
+
