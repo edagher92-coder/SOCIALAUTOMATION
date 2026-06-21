@@ -99,8 +99,11 @@ From `adpilot-v2/`:
 
 ```bash
 npm install --no-audit --no-fund          # package-lock.json is gitignored — npm install, not npm ci
-grep -rInE "snowflow|edagher" . --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.git \
-  && echo "RESALE-CLEAN FAIL" || echo "resale-clean OK"   # must find nothing
+# resale-clean guard — the token list is defined once in the CI workflow above (not duplicated
+# here, so this doc can't trip its own guard); must find nothing:
+grep -rInE "$(awk -F'\"' '/grep -rInE/{print $2; exit}' ../.github/workflows/adpilot-v2-ci.yml)" . \
+  --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.git \
+  && echo "RESALE-CLEAN FAIL" || echo "resale-clean OK"
 npm run typecheck                          # tsc --noEmit
 npm test                                   # vitest run — engine + app tests must pass
 npm run build                              # production build (typechecks pages + app)
@@ -132,5 +135,5 @@ CI runs this on every push/PR touching `adpilot-v2/**`. Do not merge to `main` r
 
 - **Read-only**: the product audits and proposes; it never edits/pauses/spends on a live ad without a
   typed-YES, and `ADS_WRITE_ENABLED` stays OFF.
-- **Resale-clean**: no private business data in the shippable tree (CI grep guard: `snowflow|edagher`).
+- **Resale-clean**: no private business data in the shippable tree (CI grep guard — pattern defined in `.github/workflows/adpilot-v2-ci.yml`).
 - **AU defaults**: Australian English, AUD; anti-hype (no guarantees / earnings / financial-legal-tax advice).

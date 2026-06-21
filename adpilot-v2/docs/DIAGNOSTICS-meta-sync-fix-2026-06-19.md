@@ -25,15 +25,15 @@ The Command Centre stayed on seed/demo figures (`$4,000.00 spend · CPA $200.00 
 
 ## 2. What was NOT the problem (ruled out)
 
-The Meta side was fully correct. Verified live against `act_179081790` (Snow Flow) with the connected token:
+The Meta side was fully correct. Verified live against `act_REDACTED` (the client ad account) with the connected token:
 
 | Check | Result |
 |---|---|
 | Token type | **SYSTEM_USER**, `expires_at: 0` (never) |
 | Scopes | `ads_read`, `ads_management`, `read_insights`, … (granted) |
 | App `ads_read` access level | **Standard access, Active** |
-| `GET act_179081790/insights` (campaign, last_30d) | **OK — 14 rows** |
-| `GET act_179081790/insights` (ad, last_30d, time_increment=1) | **OK — 97 rows, $256 spend (14d)** |
+| `GET act_REDACTED/insights` (campaign, last_30d) | **OK — 14 rows** |
+| `GET act_REDACTED/insights` (ad, last_30d, time_increment=1) | **OK — 97 rows, $256 spend (14d)** |
 | Account fields, funding_source, users, adsets, ads | **All OK** |
 
 i.e. the exact calls AdPilot makes returned real data when run directly. The failure was **client-side**, in AdPilot's sync code.
@@ -41,7 +41,7 @@ i.e. the exact calls AdPilot makes returned real data when run directly. The fai
 ## 3. Root cause — two bugs in `lib/sync/pull.ts`
 
 ### Bug 1 — one unreadable account aborts the entire sync
-`syncOrgPlatform()` looped every `connected` account and `await metaPull(...)` **threw** on the first account that returned Meta error `#200`. Two stale accounts left over from earlier user-token connect attempts — `act_1527706362380358` ("Claude") and `act_4498053263813910` ("Elie Dagher") — are **not** assigned to the current System User token, so they `#200`. Because the loop threw on the first one, the whole pull aborted with 0 rows and the app fell back to demo data.
+`syncOrgPlatform()` looped every `connected` account and `await metaPull(...)` **threw** on the first account that returned Meta error `#200`. Two stale accounts left over from earlier user-token connect attempts — `act_REDACTED` (stale #1) and `act_REDACTED` (stale #2) — are **not** assigned to the current System User token, so they `#200`. Because the loop threw on the first one, the whole pull aborted with 0 rows and the app fell back to demo data.
 
 Compounding factors (by design, but they made it sticky):
 - The connect route **inserts** accounts and never clears them, so leaving the Account ID blank ("connect all") re-adds every account the token can see, and duplicates accumulate.
@@ -97,10 +97,10 @@ Read-only and idempotent — no change to scopes or write behaviour.
 ## 5. Meta-side prerequisite (one-time, completed)
 
 The durable token the app should use is a **Business System User** token:
-- Account `act_179081790` ("networking" / Snow Flow) added to the **snowflowsydney** business portfolio (`1049680525649904`).
-- Assigned to System User **"Claude API"** (`61590489518373`) with **Manage ad accounts** (full) access.
-- Generated a **never-expiring** token (app: *Comments* `614890192017160`) with `ads_read` + `read_insights` (+ management). `expires_at: 0`.
-- In AdPilot's connect form: paste that token and set **Account ID = `act_179081790`** (leaving it blank re-adds the empty/unreadable portfolio accounts).
+- Account `act_REDACTED` (the client ad account) added to the business portfolio (`REDACTED`).
+- Assigned to System User **"Claude API"** (`REDACTED`) with **Manage ad accounts** (full) access.
+- Generated a **never-expiring** token (app id `REDACTED`) with `ads_read` + `read_insights` (+ management). `expires_at: 0`.
+- In AdPilot's connect form: paste that token and set **Account ID = `act_REDACTED`** (leaving it blank re-adds the empty/unreadable portfolio accounts).
 
 ## 6. Verification (post-deploy)
 
