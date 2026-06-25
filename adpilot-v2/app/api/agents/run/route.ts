@@ -11,6 +11,7 @@ import { contextPackGrounding } from "@/lib/agents/context-pack";
 import { buildGrounding } from "@/lib/agents/grounding";
 import { buildRileyReportInstruction } from "@/lib/reports/format";
 import { isReportKind } from "@/lib/reports/templates";
+import { recordAiUsage, type TokenUsage } from "@/lib/telemetry/ai-usage";
 
 export const runtime = "nodejs";
 
@@ -67,9 +68,16 @@ export async function POST(req: Request) {
   const userMsg = `${grounding}\n\n${q ? `The user asks: ${q}` : "Give your top findings and safe, prioritised proposals for this account right now."}${reportInstruction}`;
 
   try {
-    const text = await callClaude({ system: systemPrompt, user: userMsg, model: modelFor(agent.model ?? "standard"), maxTokens: 1200, cacheSystem: true });
+    // Capture token usage from the call for best-effort cost telemetry (P1.4). Recorded after the
+    // call resolves, before responding, so the insert isn't cut off by serverless teardown.
+    let usage: TokenUsage | null = null;
+    const text = await callClaude({
+      system: systemPrompt, user: userMsg, model: modelFor(agent.model ?? "standard"),
+      maxTokens: 1200, cacheSystem: true, onUsage: (u) => { usage = u; },
+    });
     if (!text || !text.trim())
       return NextResponse.json({ error: "The specialist returned an empty answer. Please try again.", code: "EMPTY" }, { status: 502 });
+    if (usage) await recordAiUsage(admin, orgId, usage, `agent:${agent.id}`);
     return NextResponse.json({ text, agent: { id: agent.id, name: agent.name } });
   } catch (e: any) {
     if (e instanceof NoKeyError)

@@ -1,5 +1,7 @@
 import "server-only";
 import { decrypt } from "@/lib/crypto";
+import { META_GRAPH_VERSION, META_GRAPH_BASE } from "@/lib/meta/graph-version";
+import { TIKTOK_API_BASE } from "@/lib/tiktok/api-version";
 
 // Reusable read-only data pull for Meta & TikTok, shared by the manual Sync button,
 // the dev-token connect flow, the OAuth callback, and the scheduled auto-sync cron.
@@ -20,6 +22,103 @@ const num = (v: any): number => {
   const n = Number(v);
   return isNaN(n) ? 0 : n;
 };
+
+// ---------------------------------------------------------------------------
+// Rate-limit handling (Gap A) + ingestion status (Gap C/D) — PURE helpers, no I/O.
+// Meta signals throttling via HTTP 429, a few error codes, and utilisation headers
+// (X-Business-Use-Case-Usage / X-App-Usage). We back off a BOUNDED number of times then
+// FAIL CLOSED with a typed error so the caller records `rate_limited` and the next
+// scheduled sync retries — we never hammer the API (a retry-storm risks the whole app's
+// platform access) and never let a throttle masquerade as "0 rows = healthy".
+// ---------------------------------------------------------------------------
+export class RateLimitError extends Error {
+  accountId: string;
+  platform: string;
+  constructor(accountId: string, detail?: string, platform = "Meta") {
+    super(`${platform} rate limit reached for account ${accountId}; deferring to the next sync${detail ? ` (${detail})` : ""}.`);
+    this.name = "RateLimitError";
+    this.accountId = accountId;
+    this.platform = platform;
+  }
+}
+
+type HeaderLike = Headers | Record<string, string> | undefined;
+const headerGet = (h: HeaderLike, key: string): string | null => {
+  if (!h) return null;
+  if (typeof (h as Headers).get === "function") return (h as Headers).get(key);
+  const rec = h as Record<string, string>;
+  return rec[key] ?? rec[key.toLowerCase()] ?? null;
+};
+
+// Does this response indicate we're being throttled / at the usage ceiling? Headers are the
+// primary signal; the small code set is a SECONDARY, [VERIFY]-able hint (not an exhaustive list).
+export function isMetaRateLimited(status: number, body: any, headers?: HeaderLike): boolean {
+  if (status === 429) return true;
+  const code = Number(body?.error?.code);
+  if (code === 4 || code === 17 || code === 32 || code === 613 || (code >= 80000 && code <= 80004)) return true;
+  for (const name of ["x-business-use-case-usage", "x-app-usage", "x-ad-account-usage"]) {
+    const raw = headerGet(headers, name);
+    if (!raw) continue;
+    try {
+      const parsed = JSON.parse(raw);
+      // Shapes differ: X-App-Usage is a flat object {call_count,total_cputime,total_time};
+      // X-Business-Use-Case-Usage is {id:[buckets]}; some responses send a bare array.
+      let buckets: any[];
+      if (Array.isArray(parsed)) buckets = parsed;
+      else {
+        const vals = Object.values(parsed as Record<string, any>);
+        buckets = vals.some((v) => Array.isArray(v))
+          ? ([] as any[]).concat(...vals.map((v) => (Array.isArray(v) ? v : [])))
+          : [parsed];
+      }
+      for (const b of buckets) {
+        if (!b) continue;
+        if (Number(b.estimated_time_to_regain_access) > 0) return true;
+        if (Number(b.call_count) >= 95 || Number(b.total_cputime) >= 95 || Number(b.total_time) >= 95) return true;
+      }
+    } catch { /* unparseable usage header — ignore */ }
+  }
+  return false;
+}
+
+// Is this TikTok response a throttle? HTTP 429 is the PRIMARY signal; TikTok also surfaces a small
+// set of "too many requests / service busy" codes in the 200-body `code`. Those codes are a
+// SECONDARY, [VERIFY]-able hint (TikTok's throttle list is less documented than Meta's), so the
+// caller backs off on them but they never override a genuine HTTP error.
+export function isTiktokRateLimited(status: number, body: any): boolean {
+  if (status === 429) return true;
+  const code = Number(body?.code);
+  return code === 40100 || code === 40016 || code === 50002;
+}
+
+// Bounded exponential backoff with jitter (ms). The ceiling is intentionally low (a few
+// seconds): the function has a ~60s budget, so if the throttle persists past our retries we
+// defer to the next sync rather than wait out a minutes-long regain window.
+export function metaBackoffMs(attempt: number): number {
+  const base = Math.min(4000, 500 * 2 ** attempt); // 500, 1000, 2000, 4000 (capped)
+  return Math.round(base + Math.random() * base * 0.25); // +0–25% jitter
+}
+
+const defaultSleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+export type MetaPullOpts = {
+  meta?: { partial: boolean };           // out-param: set true when the page cap truncated the pull
+  sleep?: (ms: number) => Promise<void>; // injectable so tests don't actually wait
+  maxRetries?: number;                   // per-page rate-limit retries before failing closed
+  maxPages?: number;                     // pagination guard
+};
+
+// The honest status recorded for every ingestion run (mirrors migration 0027's CHECK constraint).
+export type IngestionStatus = "ok" | "partial" | "rate_limited" | "auth_failed" | "empty" | "error";
+
+// Classify a thrown sync error into an ingestion status. RateLimitError is authoritative; otherwise
+// token / scope / permission signals → auth_failed, and everything else → a generic error.
+export function classifyIngestionError(e: unknown, message: string): IngestionStatus {
+  if (e instanceof RateLimitError) return "rate_limited";
+  const m = message.toLowerCase();
+  if (/\b(401|403)\b|code\W*190|\btoken\b|scope|expired|revoked|invalid oauth|not\s+grant|permission|ads_read/.test(m)) return "auth_failed";
+  return "error";
+}
 
 // ---------------------------------------------------------------------------
 // Conversion extraction — PURE helpers (no I/O), exported for unit testing.
@@ -61,13 +160,30 @@ export function extractMetaConversions(
   return { leads, purchases, revenue, landing_page_views };
 }
 
-export async function metaPull(token: string, accountId: string, orgId: string) {
+// Meta's OWN reported purchase ROAS (`purchase_roas`, an array of {action_type,value}). It uses
+// Meta's attribution window / view-through, so it routinely differs from our derived revenue/spend.
+// Captured for a READ-ONLY reconciliation only — never a scoring input, never overwrites revenue.
+// Returns null when the account doesn't report it.
+export function extractMetaRoas(purchaseRoas?: MetaAction[] | null): number | null {
+  for (const a of purchaseRoas || []) {
+    const t = String(a?.action_type || "");
+    if (META_PURCHASE_TYPES.has(t)) { const v = num(a?.value); if (v > 0) return v; }
+  }
+  const first = (purchaseRoas || [])[0];
+  const v = first ? num(first.value) : 0;
+  return v > 0 ? v : null;
+}
+
+export async function metaPull(token: string, accountId: string, orgId: string, opts: MetaPullOpts = {}) {
   const act = accountId.startsWith("act_") ? accountId : `act_${accountId}`;
+  const sleep = opts.sleep ?? defaultSleep;
+  const maxRetries = opts.maxRetries ?? 3;
+  const maxPages = opts.maxPages ?? 25;
   // AD level so conversions land on the ad row the engine groups/scores by.
   const fields = [
     "campaign_id", "campaign_name", "adset_id", "adset_name", "ad_id", "ad_name",
     "spend", "impressions", "reach", "clicks", "frequency", "ctr", "cpc", "cpm",
-    "actions", "action_values",
+    "actions", "action_values", "purchase_roas",
     "video_play_actions", "video_thruplay_watched_actions",
   ].join(",");
   // Meta paginates insights (default ~25/page). With time_increment=1 a 30-day window is
@@ -75,15 +191,28 @@ export async function metaPull(token: string, accountId: string, orgId: string) 
   // single-page read can return only stale rows that fall outside the 14-day scoring window
   // (account looks "synced" but never scores). Request a big page AND follow `paging.next`
   // until exhausted so every day in the window is captured. The guard caps runaway paging.
-  let url = `https://graph.facebook.com/v21.0/${act}/insights?level=ad&date_preset=last_30d&time_increment=1&limit=500&fields=${encodeURIComponent(fields)}&access_token=${encodeURIComponent(token)}`;
+  let url = `${META_GRAPH_BASE}/${act}/insights?level=ad&date_preset=last_30d&time_increment=1&limit=500&fields=${encodeURIComponent(fields)}&access_token=${encodeURIComponent(token)}`;
   const data: any[] = [];
-  for (let page = 0; url && page < 25; page++) {
-    const r = await fetch(url);
-    const j: any = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(j?.error?.message || `Meta API error (HTTP ${r.status})`);
+  for (let page = 0; url && page < maxPages; page++) {
+    let j: any;
+    // Per-page rate-limit retry loop (Gap A): back off on 429 / usage-ceiling, fail closed on exhaustion.
+    for (let attempt = 0; ; attempt++) {
+      const r = await fetch(url);
+      j = await r.json().catch(() => ({}));
+      if (isMetaRateLimited(r.status, j, (r as any).headers)) {
+        if (attempt >= maxRetries) throw new RateLimitError(accountId);
+        await sleep(metaBackoffMs(attempt));
+        continue;
+      }
+      if (!r.ok) throw new Error(j?.error?.message || `Meta API error (HTTP ${r.status})`);
+      break;
+    }
     if (Array.isArray(j.data)) data.push(...j.data);
     url = j?.paging?.next || "";
   }
+  // If pagination was cut short by the page guard (more pages remained), the pull is PARTIAL —
+  // signal it so the caller records `partial` rather than treating an incomplete read as complete (Gap D).
+  if (url && opts.meta) opts.meta.partial = true;
   return data.map((d: any) => {
     const conv = extractMetaConversions(d.actions, d.action_values);
     // Meta reports video metrics as `[{ action_type, value }]` arrays; the "video_view"
@@ -99,6 +228,7 @@ export async function metaPull(token: string, accountId: string, orgId: string) 
       clicks: num(d.clicks), ctr: num(d.ctr) / 100, cpc: num(d.cpc), cpm: num(d.cpm),
       landing_page_views: conv.landing_page_views,
       leads: conv.leads, purchases: conv.purchases, revenue: conv.revenue,
+      roas_meta: extractMetaRoas(d.purchase_roas),
       three_second_views: firstVal(d.video_play_actions),
       thruplays: firstVal(d.video_thruplay_watched_actions),
       tracking_status: "ok", source: "meta_api",
@@ -106,7 +236,14 @@ export async function metaPull(token: string, accountId: string, orgId: string) 
   });
 }
 
-export async function tiktokPull(token: string, advertiserId: string, orgId: string) {
+// Same options shape as the Meta pull so the two adapters are at parity (rate-limit retries,
+// pagination guard, an injectable sleep for tests, and a `partial` out-param).
+export type TiktokPullOpts = MetaPullOpts;
+
+export async function tiktokPull(token: string, advertiserId: string, orgId: string, opts: TiktokPullOpts = {}) {
+  const sleep = opts.sleep ?? defaultSleep;
+  const maxRetries = opts.maxRetries ?? 3;
+  const maxPages = opts.maxPages ?? 25;
   // AD level so conversions land on the ad row the engine groups/scores by.
   const metrics = [
     "campaign_id", "campaign_name", "adgroup_id", "ad_id", "ad_name",
@@ -114,17 +251,40 @@ export async function tiktokPull(token: string, advertiserId: string, orgId: str
     "conversion", "total_complete_payment_rate",
     "video_play_actions", "video_watched_2s", "video_watched_6s", "video_views_p100",
   ];
-  const qp = new URLSearchParams({
-    advertiser_id: advertiserId, report_type: "BASIC", data_level: "AUCTION_AD",
-    dimensions: JSON.stringify(["ad_id", "stat_time_day"]), metrics: JSON.stringify(metrics),
-    start_date: daysAgo(SYNC_WINDOW_DAYS), end_date: daysAgo(0), page_size: "1000",
-  });
-  const r = await fetch(`https://business-api.tiktok.com/open_api/v1.3/report/integrated/get/?${qp.toString()}`, { headers: { "Access-Token": token } });
-  const j: any = await r.json().catch(() => ({}));
-  // TikTok signals errors via a non-zero `code` in a 200 body; also fail on HTTP errors.
-  if (!r.ok) throw new Error(j?.message || `TikTok API error (HTTP ${r.status})`);
-  if (typeof j.code === "number" && j.code !== 0) throw new Error(j.message || `TikTok API error (code ${j.code})`);
-  return (j.data?.list || []).map((it: any) => {
+  const data: any[] = [];
+  // TikTok paginates its report via `page` / `page_info.total_page` (parity with Meta's cursor
+  // follow). Fail CLOSED on a persistent throttle, and signal `partial` if the page guard cuts the
+  // pull short while more pages remained — never let an incomplete read masquerade as complete.
+  let truncated = false;
+  for (let page = 1; ; page++) {
+    if (page > maxPages) { truncated = true; break; }
+    const qp = new URLSearchParams({
+      advertiser_id: advertiserId, report_type: "BASIC", data_level: "AUCTION_AD",
+      dimensions: JSON.stringify(["ad_id", "stat_time_day"]), metrics: JSON.stringify(metrics),
+      start_date: daysAgo(SYNC_WINDOW_DAYS), end_date: daysAgo(0), page: String(page), page_size: "1000",
+    });
+    let j: any;
+    // Per-page rate-limit retry loop (parity with metaPull): back off on 429 / throttle code, fail closed on exhaustion.
+    for (let attempt = 0; ; attempt++) {
+      const r = await fetch(`${TIKTOK_API_BASE}/report/integrated/get/?${qp.toString()}`, { headers: { "Access-Token": token } });
+      j = await r.json().catch(() => ({}));
+      if (isTiktokRateLimited(r.status, j)) {
+        if (attempt >= maxRetries) throw new RateLimitError(advertiserId, undefined, "TikTok");
+        await sleep(metaBackoffMs(attempt));
+        continue;
+      }
+      // TikTok signals errors via a non-zero `code` in a 200 body; also fail on HTTP errors.
+      if (!r.ok) throw new Error(j?.message || `TikTok API error (HTTP ${r.status})`);
+      if (typeof j.code === "number" && j.code !== 0) throw new Error(j.message || `TikTok API error (code ${j.code})`);
+      break;
+    }
+    const list = j.data?.list || [];
+    data.push(...list);
+    const totalPage = Number(j.data?.page_info?.total_page) || 1;
+    if (list.length === 0 || page >= totalPage) break; // exhausted naturally
+  }
+  if (truncated && opts.meta) opts.meta.partial = true;
+  return data.map((it: any) => {
     const m = it.metrics || {}, dim = it.dimensions || {};
     // TikTok reports conversions in `conversion`; monetary value (when the advertiser
     // tracks payment value) in `total_complete_payment` / `total_purchase_value`.
@@ -155,57 +315,97 @@ export async function tiktokPull(token: string, advertiserId: string, orgId: str
  * Throws on hard errors (no token / account / API failure); callers decide whether to swallow.
  */
 export async function syncOrgPlatform(admin: any, orgId: string, platform: Platform): Promise<number> {
-  const { data: tok } = await admin.from("platform_tokens")
-    .select("ciphertext,iv,auth_tag").eq("organisation_id", orgId).eq("platform", platform)
-    .order("created_at", { ascending: false }).limit(1).maybeSingle();
-  if (!tok?.ciphertext) throw new Error(`No connected ${platform} account. Connect it first.`);
+  const startedAt = new Date().toISOString();
+  let status: IngestionStatus = "ok";
+  let rowsWritten = 0;
+  let partialPull = false;
+  let accountIdsForLog: string | null = null;
+  let errorMessage: string | null = null;
+  try {
+    const { data: tok } = await admin.from("platform_tokens")
+      .select("ciphertext,iv,auth_tag").eq("organisation_id", orgId).eq("platform", platform)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (!tok?.ciphertext) throw new Error(`No connected ${platform} account. Connect it first.`);
 
-  const { data: accts } = await admin.from("connected_ad_accounts")
-    .select("external_account_id").eq("organisation_id", orgId).eq("platform", platform).eq("status", "connected");
-  // De-duplicate account ids so the same account isn't pulled twice (would inflate row counts).
-  const ids: string[] = Array.from(new Set(
-    (accts || []).map((a: any) => String(a.external_account_id ?? "").trim()).filter(Boolean),
-  ));
-  if (ids.length === 0) throw new Error(`No ${platform} ad account on file.`);
+    const { data: accts } = await admin.from("connected_ad_accounts")
+      .select("external_account_id").eq("organisation_id", orgId).eq("platform", platform).eq("status", "connected");
+    // De-duplicate account ids so the same account isn't pulled twice (would inflate row counts).
+    const ids: string[] = Array.from(new Set(
+      (accts || []).map((a: any) => String(a.external_account_id ?? "").trim()).filter(Boolean),
+    ));
+    if (ids.length === 0) throw new Error(`No ${platform} ad account on file.`);
+    accountIdsForLog = ids.join(",").slice(0, 200);
 
-  const token = decrypt({ ciphertext: tok.ciphertext, iv: tok.iv, authTag: tok.auth_tag });
-  // Accumulate across every connected account for this platform. Pull each account
-  // INDEPENDENTLY: one unreadable account (e.g. Meta (#200) "owner has not granted ads_read"
-  // for an account that isn't assigned to this token) must NOT abort the whole sync. Such an
-  // account is auto-marked `disconnected` so it stops blocking every future pull, and we keep
-  // the rows from the accounts that did succeed. We only hard-fail when EVERY account failed
-  // (e.g. a dead/invalid token), so callers still surface a real connection problem.
-  let rows: any[] = [];
-  const failures: { id: string; message: string }[] = [];
-  for (const id of ids) {
-    try {
-      rows = rows.concat(platform === "meta" ? await metaPull(token, id, orgId) : await tiktokPull(token, id, orgId));
-    } catch (e: any) {
-      const message = String(e?.message || "pull failed");
-      failures.push({ id, message });
-      // Permission / not-assigned errors mean this token can't read this account — drop it so it
-      // stops poisoning the batch. (Meta #200 / "ads_read" / "ads_management" / "permission".)
-      if (/\(?#?\s*200\)?|ads_read|ads_management|not\s+grant|permission/i.test(message)) {
-        await admin.from("connected_ad_accounts").update({ status: "disconnected" })
-          .eq("organisation_id", orgId).eq("platform", platform).eq("external_account_id", id);
+    const token = decrypt({ ciphertext: tok.ciphertext, iv: tok.iv, authTag: tok.auth_tag });
+    // Accumulate across every connected account for this platform. Pull each account
+    // INDEPENDENTLY: one unreadable account (e.g. Meta (#200) "owner has not granted ads_read"
+    // for an account that isn't assigned to this token) must NOT abort the whole sync. Such an
+    // account is auto-marked `disconnected` so it stops blocking every future pull, and we keep
+    // the rows from the accounts that did succeed. We only hard-fail when EVERY account failed
+    // (e.g. a dead/invalid token), so callers still surface a real connection problem.
+    let rows: any[] = [];
+    const failures: { id: string; message: string }[] = [];
+    for (const id of ids) {
+      try {
+        if (platform === "meta") {
+          const pm = { partial: false };
+          rows = rows.concat(await metaPull(token, id, orgId, { meta: pm }));
+          if (pm.partial) partialPull = true;
+        } else {
+          const pt = { partial: false };
+          rows = rows.concat(await tiktokPull(token, id, orgId, { meta: pt }));
+          if (pt.partial) partialPull = true;
+        }
+      } catch (e: any) {
+        // Fail CLOSED on a throttle: don't keep hammering the remaining accounts — propagate and
+        // defer to the next sync (recorded as `rate_limited`), never a retry-storm.
+        if (e instanceof RateLimitError) throw e;
+        const message = String(e?.message || "pull failed");
+        failures.push({ id, message });
+        // Permission / not-assigned errors mean this token can't read this account — drop it so it
+        // stops poisoning the batch. (Meta #200 / "ads_read" / "ads_management" / "permission".)
+        if (/\(?#?\s*200\)?|ads_read|ads_management|not\s+grant|permission/i.test(message)) {
+          await admin.from("connected_ad_accounts").update({ status: "disconnected" })
+            .eq("organisation_id", orgId).eq("platform", platform).eq("external_account_id", id);
+        }
       }
     }
-  }
-  // Every account failed → surface the first error so a genuinely broken token isn't silent.
-  if (rows.length === 0 && failures.length === ids.length && failures.length > 0) {
-    throw new Error(failures[0].message);
-  }
+    // Every account failed → surface the first error so a genuinely broken token isn't silent.
+    if (rows.length === 0 && failures.length === ids.length && failures.length > 0) {
+      throw new Error(failures[0].message);
+    }
 
-  // Idempotent refresh: clear the API-sourced rows in the rolling window, then insert.
-  // CSV-imported rows (source = 'csv') are never touched. Surface DB errors so a silently
-  // failed delete/insert doesn't report a bogus success.
-  const { error: delErr } = await admin.from("campaign_snapshots").delete()
-    .eq("organisation_id", orgId).eq("platform", platform).eq("source", `${platform}_api`)
-    .gte("date", daysAgo(SYNC_WINDOW_DAYS));
-  if (delErr) throw new Error(delErr.message || "Failed to clear stale snapshots");
-  if (rows.length) {
-    const { error: insErr } = await admin.from("campaign_snapshots").insert(rows);
-    if (insErr) throw new Error(insErr.message || "Failed to write snapshots");
+    // Idempotent refresh: clear the API-sourced rows in the rolling window, then insert.
+    // CSV-imported rows (source = 'csv') are never touched. Surface DB errors so a silently
+    // failed delete/insert doesn't report a bogus success.
+    const { error: delErr } = await admin.from("campaign_snapshots").delete()
+      .eq("organisation_id", orgId).eq("platform", platform).eq("source", `${platform}_api`)
+      .gte("date", daysAgo(SYNC_WINDOW_DAYS));
+    if (delErr) throw new Error(delErr.message || "Failed to clear stale snapshots");
+    if (rows.length) {
+      const { error: insErr } = await admin.from("campaign_snapshots").insert(rows);
+      if (insErr) throw new Error(insErr.message || "Failed to write snapshots");
+    }
+    rowsWritten = rows.length;
+    // Honest status (Gap D): a successful-but-empty pull is `empty` (no delivery — NOT a failure),
+    // a page-capped pull is `partial`, otherwise `ok`. The scorer already declines to fabricate a
+    // Red/CRITICAL on zero spend, so this record is the durable signal for the trust surface (1b).
+    status = rows.length === 0 ? "empty" : partialPull ? "partial" : "ok";
+    return rows.length;
+  } catch (e: any) {
+    errorMessage = String(e?.message || "sync failed").slice(0, 500);
+    status = classifyIngestionError(e, errorMessage);
+    throw e;
+  } finally {
+    // Best-effort audit record of EVERY pull (Gap C/D). Read-only signal — it deliberately never
+    // stores a token, never throws, and never blocks or rolls back the sync result.
+    try {
+      await admin.from("ingestion_runs").insert({
+        organisation_id: orgId, platform, account_id: accountIdsForLog,
+        started_at: startedAt, finished_at: new Date().toISOString(),
+        window_days: SYNC_WINDOW_DAYS, rows_written: rowsWritten, status,
+        error_message: errorMessage, graph_version: platform === "meta" ? META_GRAPH_VERSION : null,
+      });
+    } catch { /* ingestion audit log is best-effort */ }
   }
-  return rows.length;
 }

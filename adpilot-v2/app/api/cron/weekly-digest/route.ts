@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { cronAuthorized } from "@/lib/cron-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmail } from "@/lib/email/resend";
+import { sendEmail, type EmailAttachment } from "@/lib/email/resend";
+import { buildReportPdf } from "@/lib/reports/pdf";
 
 export const runtime = "nodejs";
 
@@ -29,8 +30,15 @@ export async function GET(req: Request) {
     const html = `<h2 style="font-family:sans-serif">Your weekly AdPilot OS digest</h2>
       <p style="font-family:sans-serif">Latest health score: <b>${h ? Math.round(h.total) : "—"}/100 (${h?.band || "n/a"})</b></p>
       <p style="font-family:sans-serif">${rep.title}</p>
-      <p style="font-family:sans-serif">Open your dashboard for the full findings and safe proposals. (Read-only — nothing is changed on your ad accounts.)</p>`;
-    try { await sendEmail(rule.email, "Your weekly ads health digest", html); sent++; }
+      <p style="font-family:sans-serif">Your full report is attached as a PDF. (Read-only — nothing is changed on your ad accounts.)</p>`;
+    // Scheduled PDF delivery: render the live report PDF from the saved payload and attach it.
+    // Best-effort — if generation fails, still send the HTML digest rather than dropping it entirely.
+    let attachments: EmailAttachment[] | undefined;
+    try {
+      const pdf = await buildReportPdf(rep.payload, { title: rep.title || "Ads Health Report", brandName: "AdPilot OS" });
+      attachments = [{ filename: "adpilot-report.pdf", content: Buffer.from(pdf).toString("base64") }];
+    } catch { /* PDF generation failed — fall back to the HTML-only digest */ }
+    try { await sendEmail(rule.email, "Your weekly ads health digest", html, { attachments }); sent++; }
     catch { skipped++; }
   }
   return NextResponse.json({ sent, skipped });

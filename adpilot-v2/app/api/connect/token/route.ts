@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
 import { encrypt } from "@/lib/crypto";
 import { syncOrgPlatform } from "@/lib/sync/pull";
+import { META_GRAPH_BASE } from "@/lib/meta/graph-version";
 import { can } from "@/lib/entitlements";
 
 export const runtime = "nodejs";
@@ -82,7 +83,7 @@ export async function POST(req: Request) {
       // Verify the token has the READ-ONLY scopes we need before doing anything else, so a
       // missing-scope token gets a precise "tick ads_read/read_insights" message rather than a
       // confusing empty-accounts result. /me/permissions also doubles as a cheap validity probe.
-      const pr = await fetch(`https://graph.facebook.com/v21.0/me/permissions?access_token=${encodeURIComponent(token)}`);
+      const pr = await fetch(`${META_GRAPH_BASE}/me/permissions?access_token=${encodeURIComponent(token)}`);
       const pj: any = await pr.json().catch(() => ({}));
       if (!pr.ok) throw new Error(metaTokenError(pj, pr.status));
       const granted = new Set(
@@ -104,7 +105,7 @@ export async function POST(req: Request) {
         );
       }
 
-      const r = await fetch(`https://graph.facebook.com/v21.0/me/adaccounts?fields=name,account_id&access_token=${encodeURIComponent(token)}`);
+      const r = await fetch(`${META_GRAPH_BASE}/me/adaccounts?fields=name,account_id&access_token=${encodeURIComponent(token)}`);
       const j: any = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(metaTokenError(j, r.status));
       // Meta returns account_id (numeric, no prefix). Normalise away any act_ prefix.

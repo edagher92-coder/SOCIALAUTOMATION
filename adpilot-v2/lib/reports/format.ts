@@ -14,6 +14,10 @@ export type ReportPayload = {
   health?: { total?: number; band?: string; guidance?: string; findings?: any[]; weakest?: any[]; breakdown?: Record<string, any> };
   campaigns?: any[];
   decisions?: any[];
+  // Per-ad creative-fatigue diagnostic (change-point onset). Only flagged ads; read-only.
+  fatigue?: any[];
+  // Account-level "sudden change" anomaly scan (latest day vs robust baseline). Read-only.
+  anomalies?: any[];
   // Optional live follower demographics (attached only when a real Page/IG/TikTok is connected).
   audience?: { platform?: string; handle?: string; followerCount?: number; source?: string; summary?: string[] };
   safety?: string;
@@ -87,7 +91,9 @@ export function buildReportMarkdown(payload: ReportPayload, opts: ReportOpts): s
   out.push(`| CPA | ${money(s.cpa, ccy)} |`);
   out.push(`| Break-even CPA | ${money(s.break_even_cpa, ccy)} |`);
   if (s.break_even_cpl != null) out.push(`| Break-even CPL | ${money(s.break_even_cpl, ccy)} |`);
-  out.push(`| ROAS | ${x(s.roas)} |`);
+  out.push(`| ROAS (derived: revenue/spend) | ${x(s.roas)} |`);
+  // Meta's own reported ROAS, side-by-side for the human to judge — never replaces the derived value.
+  if (s.roas_meta != null) out.push(`| ROAS (Meta-reported, attribution-window difference) | ${x(s.roas_meta)} |`);
   out.push(`| Break-even ROAS | ${x(s.break_even_roas)} |`);
   out.push(`| MER | ${x(s.mer)} |`);
   out.push(`| CTR | ${pct(s.ctr)} |`);
@@ -105,6 +111,38 @@ export function buildReportMarkdown(payload: ReportPayload, opts: ReportOpts): s
     for (const c of payload.campaigns.slice(0, 15)) {
       out.push(`| ${c.campaign ?? "(campaign)"} | ${(c.platforms || []).join("/") || NA} | ${money(c.spend, ccy)} | ${money(c.cpa, ccy)} | ${x(c.roas)} | ${num(c.health)} (${c.band || ""}) |`);
     }
+    out.push("");
+  }
+
+  // Creative fatigue — change-point onset diagnostic (only flagged ads; read-only).
+  const fatigue = Array.isArray(payload.fatigue) ? payload.fatigue : [];
+  if (fatigue.length) {
+    out.push("## Creative fatigue (change-point onset)");
+    out.push("| Ad | Status | Onset | Confidence |");
+    out.push("|---|---|---|---|");
+    for (const f of fatigue.slice(0, 15)) {
+      const onset = f.onsetDaysAgo != null
+        ? `~${num(f.onsetDaysAgo)} day(s) ago${f.dropPct != null ? ` (${num(f.dropPct * 100)}% drop)` : ""}`
+        : NA;
+      out.push(`| ${f.ad ?? "(ad)"} | ${String(f.status || "").toUpperCase()} | ${onset} | ${f.confidence ?? NA} |`);
+    }
+    out.push("_Onset = the day the engagement series stepped down (change-point detection). Read-only diagnostic — refresh is a proposal, not an automatic change._");
+    out.push("");
+  }
+
+  // Sudden changes — latest-day account anomaly scan (robust median/MAD). Only harmful moves; read-only.
+  const anomalies = Array.isArray(payload.anomalies) ? payload.anomalies : [];
+  if (anomalies.length) {
+    out.push("## Sudden changes (anomaly scan)");
+    out.push("| Metric | Latest | Baseline | Change |");
+    out.push("|---|---|---|---|");
+    for (const a of anomalies.slice(0, 10)) {
+      const chg = a.deviationPct != null
+        ? `${a.deviationPct >= 0 ? "+" : ""}${num(a.deviationPct * 100)}% (${a.direction})`
+        : a.direction;
+      out.push(`| ${String(a.metric || "").toUpperCase()} | ${num(a.value, 2)} | ${num(a.baseline, 2)} | ${chg} · ${String(a.severity || "").toUpperCase()} |`);
+    }
+    out.push("_Flags the latest day when a metric moved past ~3× its typical daily variation (median/MAD) in the harmful direction. Read-only diagnostic — investigate before acting._");
     out.push("");
   }
 
