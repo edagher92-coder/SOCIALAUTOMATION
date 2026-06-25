@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>AdPilot OS — Product Summary</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --coral:#f9603f;--amber:#ffb224;--ink:#211b18;--ink2:#5d544e;--ink3:#8a7e76;
+  --line:#ece1d8;--soft:#fbf5f0;--soft2:#fdf8f4;
+  --green:#1f9d6b;--yellow:#c98a06;--orange:#df6f1c;--red:#d8443c;--blue:#2f6df0;
+  --sans:'Inter','Helvetica Neue',Arial,'DejaVu Sans',sans-serif;
+  --grot:'Space Grotesk','Inter',Arial,sans-serif;
+  --mono:'DejaVu Sans Mono',ui-monospace,monospace;
+}
+@page{ size:A4; margin:0; }
+html,body{background:#cfc7c0;font-family:var(--sans);color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.page{position:relative;width:210mm;height:297mm;background:#fff;overflow:hidden;page-break-after:always;}
+.page:last-child{page-break-after:auto;}
+.pad{padding:11mm 12mm 9mm;}
+
+/* header band */
+.band{background:linear-gradient(115deg,#ff7a4f 0%,var(--coral) 48%,#ef5232 100%);color:#fff;padding:8mm 12mm 7mm;position:relative;}
+.band .logo{width:13mm;height:13mm;border-radius:3.4mm;background:linear-gradient(135deg,#fff,#ffe7d8);position:absolute;right:12mm;top:8mm;opacity:.96;
+  box-shadow:inset 0 0 0 1.4mm rgba(255,255,255,.45);}
+.band .logo:after{content:'';position:absolute;inset:3mm;border-radius:2mm;background:linear-gradient(135deg,var(--amber),var(--coral));}
+.kick{font:800 9px/1 var(--sans);letter-spacing:.22em;text-transform:uppercase;opacity:.9;margin-bottom:3mm;}
+.band h1{font:700 31px/1 var(--grot);letter-spacing:-.8px;}
+.band .sub{font-size:11.5px;font-weight:500;margin-top:2.5mm;max-width:150mm;opacity:.96;line-height:1.45;}
+.band .meta{font-size:9px;font-weight:600;margin-top:3mm;letter-spacing:.02em;opacity:.92;}
+
+/* section */
+h2{font:700 13.5px/1 var(--grot);letter-spacing:-.2px;margin:0 0 2.4mm;display:flex;align-items:center;gap:2.2mm;}
+h2 .n{display:inline-flex;align-items:center;justify-content:center;width:5.4mm;height:5.4mm;border-radius:1.6mm;
+  background:var(--coral);color:#fff;font:800 9px var(--sans);}
+h2 .new{font:800 7.5px/1 var(--sans);letter-spacing:.1em;background:rgba(249,96,63,.13);color:var(--coral);padding:1mm 1.8mm;border-radius:6px;}
+.sec{margin-bottom:4mm;}
+p.lead{font-size:10.5px;line-height:1.5;color:var(--ink2);}
+p.lead b{color:var(--ink);font-weight:700;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:4mm 7mm;}
+.cols{column-count:2;column-gap:7mm;}
+
+/* lists */
+ul.tight{list-style:none;font-size:9.5px;line-height:1.42;color:var(--ink2);}
+ul.tight li{padding-left:4mm;position:relative;margin-bottom:1.1mm;break-inside:avoid;}
+ul.tight li:before{content:'';position:absolute;left:0;top:1.5mm;width:1.7mm;height:1.7mm;border-radius:50%;background:var(--coral);}
+ul.tight li b{color:var(--ink);font-weight:700;}
+
+/* factor table */
+.ftab{width:100%;border-collapse:collapse;font-size:9px;}
+.ftab td{padding:1.15mm 0;border-bottom:.3mm solid #f3ebe3;vertical-align:middle;}
+.ftab tr:last-child td{border-bottom:0;}
+.ftab .nm{font-weight:600;color:var(--ink);}
+.ftab .barc{width:26mm;}
+.ftab .bar{height:1.8mm;border-radius:1mm;background:#eee0d4;overflow:hidden;}
+.ftab .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--coral),var(--amber));}
+.ftab .w{font-family:var(--mono);font-size:8.5px;color:var(--ink2);text-align:right;width:8mm;}
+
+/* verdict chips */
+.vrow{display:flex;gap:2mm;align-items:baseline;font-size:9.3px;line-height:1.38;margin-bottom:1.4mm;}
+.vtag{flex:none;font:800 8px var(--sans);letter-spacing:.02em;padding:.8mm 1.8mm;border-radius:5px;width:24mm;text-align:center;}
+.v-scale{background:rgba(31,157,107,.14);color:var(--green);}
+.v-kill{background:rgba(216,68,60,.14);color:var(--red);}
+.v-reduce{background:rgba(223,111,28,.15);color:var(--orange);}
+.v-refresh{background:rgba(201,138,6,.16);color:var(--yellow);}
+.v-fix{background:rgba(47,109,240,.13);color:var(--blue);}
+.v-keep{background:#eee7e1;color:var(--ink2);}
+.vrow .vt{color:var(--ink2);}
+.vrow .vt b{color:var(--ink);font-weight:700;}
+
+/* callout */
+.callout{background:var(--soft);border:.4mm solid var(--line);border-left:1.6mm solid var(--coral);border-radius:2.5mm;padding:4mm 4.5mm;}
+.callout .ct{font:800 10.5px var(--grot);color:var(--ink);margin-bottom:1.8mm;}
+.callout p{font-size:9.3px;line-height:1.46;color:var(--ink2);}
+.callout p b{color:var(--coral);}
+.callout code{font-family:var(--mono);font-size:8.6px;background:#f1e4da;padding:.3mm 1.2mm;border-radius:3px;color:#7a4a32;}
+
+/* bands row */
+.bands{display:flex;gap:2mm;margin-top:2.2mm;}
+.bd{flex:1;border-radius:1.8mm;padding:1.8mm 2mm;text-align:center;font-size:8px;font-weight:700;color:#fff;}
+.bd small{display:block;font-size:11px;font-weight:800;margin-top:.4mm;}
+
+/* persona grid */
+.pg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.7mm 3mm;}
+.pp{font-size:9px;line-height:1.25;}
+.pp b{color:var(--ink);font-weight:700;}
+.pp span{color:var(--ink3);}
+.wslist{font-size:8.7px;line-height:1.62;color:var(--ink2);}
+.wslist b{color:var(--ink);font-weight:700;}
+.wslist span{color:var(--ink3);}
+
+/* pricing */
+.price{display:grid;grid-template-columns:repeat(4,1fr);gap:2.4mm;}
+.tier{border:.4mm solid var(--line);border-radius:2.4mm;padding:2.6mm 2.8mm;}
+.tier.hl{border-color:var(--coral);background:var(--soft2);}
+.tier .tn{font:700 10px var(--grot);}
+.tier .tc{font-size:15px;font-weight:800;margin:.4mm 0 1.4mm;}
+.tier .tc small{font-size:8px;color:var(--ink3);font-weight:600;}
+.tier .tf{font-size:8px;line-height:1.35;color:var(--ink2);}
+
+/* mini cards row */
+.mcards{display:grid;grid-template-columns:1fr 1fr;gap:2.6mm 6mm;}
+.mc .mt{font-size:9.6px;font-weight:700;color:var(--ink);margin-bottom:.6mm;}
+.mc .md{font-size:8.8px;line-height:1.4;color:var(--ink2);}
+.mc .md b{color:var(--ink);font-weight:600;}
+
+/* footer */
+.foot{position:absolute;left:12mm;right:12mm;bottom:7mm;border-top:.4mm solid var(--line);padding-top:3mm;
+  display:flex;justify-content:space-between;align-items:flex-start;gap:6mm;}
+.foot .stack{font-size:8px;color:var(--ink2);line-height:1.5;}
+.foot .stack b{color:var(--ink);font-weight:700;}
+.foot .rule{font:800 8.5px var(--sans);color:var(--coral);text-align:right;flex:none;}
+.foot .rule span{display:block;color:var(--ink3);font-weight:600;font-size:7.5px;margin-top:.8mm;}
+.pnum{position:absolute;right:12mm;bottom:3.5mm;font-size:8px;color:var(--ink3);font-weight:600;}
+.divider{height:.4mm;background:var(--line);margin:0 0 3.6mm;}
+.hint{font-size:8px;color:var(--ink3);margin-top:1.4mm;}
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE 1 ============ -->
+<div class="page">
+  <div class="band">
+    <div class="logo"></div>
+    <div class="kick">Product summary · Meta &amp; TikTok paid ads</div>
+    <h1>AdPilot&nbsp;OS</h1>
+    <div class="sub">A <b style="color:#fff">read-only operating system for paid ads</b>. It audits your Meta &amp; TikTok ad accounts, scores a 0–100 Campaign Health Score, and proposes safe, numbers-first fixes — it never edits, pauses, creates, or spends on a live ad without your explicit approval. <b style="color:#fff">It proposes; the human approves.</b></div>
+    <div class="meta">v6.0.0 · Australian English &amp; AUD · 713 automated tests green · Next.js 16 · React 19 · Supabase (RLS) · Stripe</div>
+  </div>
+
+  <div class="pad">
+    <!-- Health score -->
+    <div class="sec">
+      <h2><span class="n">1</span> Campaign Health Score</h2>
+      <div class="grid2">
+        <div>
+          <p class="lead"><b>0–100</b>, computed from <b>13 weighted factors</b>. Factors with no data redistribute their weight to the rest, so the score stays fair. Four bands set the next action:</p>
+          <div class="bands">
+            <div class="bd" style="background:var(--green)">GREEN<small>≥ 80</small></div>
+            <div class="bd" style="background:var(--yellow)">YELLOW<small>≥ 60</small></div>
+            <div class="bd" style="background:var(--orange)">ORANGE<small>≥ 40</small></div>
+            <div class="bd" style="background:var(--red)">RED<small>&lt; 40</small></div>
+          </div>
+          <p class="hint">Green = scale-eligible (if tracking is clean) · Yellow = fix weak factors first · Orange = act this week · Red = stop &amp; fix before spending more.</p>
+        </div>
+        <table class="ftab">
+          <tr><td class="nm">Tracking quality</td><td class="barc"><div class="bar"><i style="width:100%"></i></div></td><td class="w">15</td></tr>
+          <tr><td class="nm">CPA vs break-even</td><td class="barc"><div class="bar"><i style="width:100%"></i></div></td><td class="w">15</td></tr>
+          <tr><td class="nm">Spend efficiency</td><td class="barc"><div class="bar"><i style="width:80%"></i></div></td><td class="w">12</td></tr>
+          <tr><td class="nm">Conversion rate</td><td class="barc"><div class="bar"><i style="width:67%"></i></div></td><td class="w">10</td></tr>
+          <tr><td class="nm">CTR</td><td class="barc"><div class="bar"><i style="width:53%"></i></div></td><td class="w">8</td></tr>
+          <tr><td class="nm">Lead quality</td><td class="barc"><div class="bar"><i style="width:53%"></i></div></td><td class="w">8</td></tr>
+          <tr><td class="nm">Creative freshness</td><td class="barc"><div class="bar"><i style="width:53%"></i></div></td><td class="w">8</td></tr>
+          <tr><td class="nm">CPC</td><td class="barc"><div class="bar"><i style="width:47%"></i></div></td><td class="w">7</td></tr>
+          <tr><td class="nm">Naming quality</td><td class="barc"><div class="bar"><i style="width:33%"></i></div></td><td class="w">5</td></tr>
+          <tr><td class="nm">Offer strength</td><td class="barc"><div class="bar"><i style="width:33%"></i></div></td><td class="w">5</td></tr>
+          <tr><td class="nm">Landing-page alignment</td><td class="barc"><div class="bar"><i style="width:27%"></i></div></td><td class="w">4</td></tr>
+          <tr><td class="nm">Budget pacing</td><td class="barc"><div class="bar"><i style="width:13%"></i></div></td><td class="w">2</td></tr>
+          <tr><td class="nm">Data confidence</td><td class="barc"><div class="bar"><i style="width:7%"></i></div></td><td class="w">1</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Verdicts -->
+    <div class="sec">
+      <h2><span class="n">2</span> Per-ad decisions — seven verdicts</h2>
+      <p class="lead" style="margin-bottom:2.4mm">Every ad gets exactly one verdict. <b>Scale</b> and <b>kill</b> only fire when a <b>Wilson significance test</b> confirms the result — never on a noisy sample. Each verdict carries a safe, reversible proposal.</p>
+      <div class="grid2">
+        <div>
+          <div class="vrow"><span class="vtag v-scale">SCALE</span><span class="vt">CPA ≤ break-even, health ≥ 70, tracking clean, win significant → <b>+≤20% budget &amp; duplicate</b></span></div>
+          <div class="vrow"><span class="vtag v-kill">KILL</span><span class="vt">CPA &gt; 1.5× break-even, loss significant → <b>pause &amp; reallocate</b></span></div>
+          <div class="vrow"><span class="vtag v-reduce">REDUCE</span><span class="vt">CPA moderately high → <b>cut budget, test a fresh angle</b></span></div>
+          <div class="vrow"><span class="vtag v-refresh">REFRESH</span><span class="vt">Frequency ≥ 4 with falling or low CTR → <b>3–5 fresh variants</b></span></div>
+        </div>
+        <div>
+          <div class="vrow"><span class="vtag v-fix">FIX-TRACKING</span><span class="vt">Spend with zero/implausible results → <b>audit pixel / events / CAPI first</b></span></div>
+          <div class="vrow"><span class="vtag v-keep">KEEP</span><span class="vt">Within range → <b>monitor, no change</b></span></div>
+          <div class="vrow"><span class="vtag v-keep">INSUFFICIENT</span><span class="vt">&lt; 50 clicks &amp; &lt; 15 conversions → <b>let spend accumulate</b></span></div>
+          <p class="hint" style="margin-top:1.5mm">Lead-gen uses a break-even-CPL split (optional <code style="font-family:var(--mono)">lead_close_rate</code>); never auto-kills on leads.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Read-only invariant -->
+    <div class="sec">
+      <div class="callout">
+        <div class="ct">🔒 The read-only invariant — proposes, never acts on its own</div>
+        <p>AdPilot is <b>read-only by default</b>: it never edits, pauses, creates, or spends on a live ad. Acting on a live ad requires an <b>explicit typed “YES”</b>, is <b>Expert-tier only</b>, and is double-gated by the environment flag <code>ADS_WRITE_ENABLED</code> — which ships <b>OFF</b>. Every engine decision is marked <code>safe</code>; all connections use read-only API scopes; numbers-first, anti-hype — no guarantees and no financial, legal, medical or tax advice.</p>
+      </div>
+    </div>
+  </div>
+  <div class="pnum">AdPilot OS — Product Summary · 1 / 2</div>
+</div>
+
+<!-- ============ PAGE 2 ============ -->
+<div class="page">
+  <div class="pad" style="padding-top:9mm;">
+
+    <!-- AI specialists -->
+    <div class="sec">
+      <h2><span class="n">3</span> Twelve AI specialists</h2>
+      <p class="lead" style="margin-bottom:2.4mm">A <b>Command</b> router sends each question to the right expert. All are grounded in product knowledge, share hardened guardrails, and are read-only &amp; numbers-first (no invented figures). Light creative work is cost-routed to a smaller model; the system prompt is cached.</p>
+      <div class="pg">
+        <div class="pp"><b>🧭 Command</b> <span>— routes &amp; prioritises</span></div>
+        <div class="pp"><b>🔵 Mira</b> <span>— Meta ads</span></div>
+        <div class="pp"><b>⚫ Travis</b> <span>— TikTok ads</span></div>
+        <div class="pp"><b>📈 Dana</b> <span>— data &amp; unit economics</span></div>
+        <div class="pp"><b>🎨 Stella</b> <span>— creative</span></div>
+        <div class="pp"><b>🎯 Titan</b> <span>— offer &amp; funnel</span></div>
+        <div class="pp"><b>⚙️ Milo</b> <span>— automation (no-code)</span></div>
+        <div class="pp"><b>🛰️ Atlas</b> <span>— tracking &amp; pixels</span></div>
+        <div class="pp"><b>📝 Riley</b> <span>— reporting (prose)</span></div>
+        <div class="pp"><b>🛡️ Paige</b> <span>— policy &amp; safety</span></div>
+        <div class="pp"><b>📦 Piper</b> <span>— productisation</span></div>
+        <div class="pp"><b>✅ Quinn</b> <span>— QA &amp; sanity checks</span></div>
+      </div>
+    </div>
+
+    <div class="sec" style="margin-bottom:3.6mm">
+      <h2><span class="n">+</span> Inside the workspace</h2>
+      <p class="wslist"><b>Command Centre</b> <span>(hub: score, proposals, trends, Data Sync)</span> · <b>Connect</b> · <b>Dashboard / Manual</b> <span>(CSV)</span> · <b>Proposals</b> queue · <b>Reports</b> · <b>Creative Studio</b> <span>(asset library)</span> · <b>Content + Calendar</b> <span>(organic publishing)</span> · <b>AI Specialists</b> · <b>Policy Check</b> <span>(Meta/TikTok/ACCC copy compliance)</span> · <b>Audience</b> <span>(follower intelligence)</span> · <b>Boost &amp; Reach</b> <span>(organic)</span> · <b>Ad Actions</b> <span>(Expert guarded writes)</span> · <b>Messenger</b> <span>(Expert)</span> · <b>UTM Builder</b> · multi-client <b>Portfolio</b> · <b>Settings · Billing · Notifications</b></p>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="grid2" style="gap:5mm 7mm;">
+      <!-- Diagnostics -->
+      <div class="sec">
+        <h2><span class="n">4</span> Statistical diagnostics <span class="new">NEW · V6</span></h2>
+        <ul class="tight">
+          <li><b>Change-point creative-fatigue onset</b> — pinpoints the day engagement stepped down (falling hold-rate as a leading signal) with a confidence label, before performance craters.</li>
+          <li><b>Account-level anomaly scan</b> — robust median/MAD z-score flags harmful spikes &amp; drops with watch/alert severity.</li>
+          <li><b>purchase_roas reconciliation</b> — Meta’s attribution-window ROAS shown beside derived ROAS as an honest cross-check.</li>
+          <li><b>Live ingestion + Data Sync panel</b> — append-only audit of every pull (ok / partial / rate-limited), rows, API version, time.</li>
+        </ul>
+      </div>
+
+      <!-- Automation & safety -->
+      <div class="sec">
+        <h2><span class="n">5</span> Automation &amp; safety <span class="new">NEW · V6</span></h2>
+        <ul class="tight">
+          <li><b>Configurable rules engine</b> — absolute + rolling-baseline (z-score / WoW) rules emit alerts &amp; proposals; a min-volume gate kills false alarms. Never executes.</li>
+          <li><b>“What to test next” recommender</b> — ICE-ranked, propose-only test backlog: one-variable hypothesis, primary metric, budget, 7–14d read-out, paused-duplicate setup.</li>
+          <li><b>AI usage &amp; cost telemetry</b> — per-call tokens &amp; AUD cost, best-effort.</li>
+          <li><b>AI eval harness</b> — deterministic safety guards + adversarial fixtures gate the read-only invariant in CI.</li>
+        </ul>
+      </div>
+
+      <!-- Reports -->
+      <div class="sec">
+        <h2><span class="n">6</span> Reports &amp; delivery</h2>
+        <ul class="tight">
+          <li><b>Five report kinds</b> — daily, weekly, monthly briefs + first-look Meta &amp; TikTok audits.</li>
+          <li><b>Deterministic tables</b> for every number; <b>Riley</b> writes the plain-English prose only.</li>
+          <li>Optional <b>projected-impact</b> section forecasting a proposed change.</li>
+          <li><b>Scheduled PDF delivery</b> — the weekly digest emails the report PDF (via Resend); Drive/Gmail delivery owner-gated.</li>
+        </ul>
+      </div>
+
+      <!-- Connect & data -->
+      <div class="sec">
+        <h2><span class="n">7</span> Connect &amp; data</h2>
+        <ul class="tight">
+          <li><b>Read-only connect</b> — Meta (<code style="font-family:var(--mono);font-size:8px">ads_read, read_insights</code>) &amp; TikTok (<code style="font-family:var(--mono);font-size:8px">ads.read</code>) OAuth, a pasted System User token, or CSV import (free).</li>
+          <li><b>30-day sync window</b>; rate-limit backoff &amp; per-account resilience (fail-closed).</li>
+          <li>Tokens encrypted at rest (AES-256-GCM); every table is <b>RLS</b>-scoped to org members.</li>
+          <li>One-click <b>“Run my first audit”</b> after connecting.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Modes + pricing -->
+    <div class="sec">
+      <h2><span class="n">8</span> Two modes · four plans (AUD)</h2>
+      <p class="lead" style="margin-bottom:2.6mm"><b>Simple</b> mode = a 10-second snapshot; <b>Advanced</b> = full diagnostics, charts &amp; every finding (toggle anytime). Plans gate features; annual ≈ two months free.</p>
+      <div class="price">
+        <div class="tier"><div class="tn">Free</div><div class="tc">$0</div><div class="tf">CSV import + Campaign Health Score. No card required.</div></div>
+        <div class="tier"><div class="tn">Starter</div><div class="tc">$49<small> /mo</small></div><div class="tf">Saved reports, content upload &amp; publishing, threshold alerts.</div></div>
+        <div class="tier hl"><div class="tn" style="color:var(--coral)">Pro</div><div class="tc">$149<small> /mo</small></div><div class="tf">API auto-sync, the 12 AI specialists, Creative Studio, multi-client, lead-quality loop.</div></div>
+        <div class="tier"><div class="tn">Expert</div><div class="tc">$399<small> /mo</small></div><div class="tf">White-label reports, Messenger automation, guarded ad changes, expert plugins.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="stack"><b>Architecture</b> — pure-TS analysis engine (parity-tested vs a Python oracle) · 12 grounded AI specialists · deterministic reports · Stripe billing · Supabase migrations 0001–0030, every table RLS-scoped · constant-time cron auth.</div>
+    <div class="rule">It proposes. You approve.<span>Read-only · AUD · numbers-first, no hype</span></div>
+  </div>
+  <div class="pnum">AdPilot OS — Product Summary · 2 / 2</div>
+</div>
+
+</body>
+</html>
