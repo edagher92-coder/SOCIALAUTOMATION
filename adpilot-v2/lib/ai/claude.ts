@@ -25,7 +25,7 @@ export function modelFor(tier: keyof typeof MODELS): string {
   return process.env.ANTHROPIC_MODEL || MODELS[tier];
 }
 
-export async function callClaude(opts: { system?: string; user: string; model?: string; maxTokens?: number; cacheSystem?: boolean }): Promise<string> {
+export async function callClaude(opts: { system?: string; user: string; model?: string; maxTokens?: number; cacheSystem?: boolean; onUsage?: (u: { model: string; input: number; output: number; cacheRead: number; cacheWrite: number }) => void }): Promise<string> {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) throw new NoKeyError();
   // Prompt caching: when the system prefix is large + static (persona + reference knowledge), mark
@@ -54,10 +54,22 @@ export async function callClaude(opts: { system?: string; user: string; model?: 
   // Observability: log token usage incl. prompt-cache hits/writes so the caching saving is
   // measured, not estimated. Counts only — no prompt content or client data is logged.
   const u = j.usage;
-  if (u) console.info("[claude.usage]", JSON.stringify({
-    model, in: u.input_tokens, out: u.output_tokens,
-    cache_read: u.cache_read_input_tokens ?? 0, cache_write: u.cache_creation_input_tokens ?? 0,
-  }));
+  if (u) {
+    console.info("[claude.usage]", JSON.stringify({
+      model, in: u.input_tokens, out: u.output_tokens,
+      cache_read: u.cache_read_input_tokens ?? 0, cache_write: u.cache_creation_input_tokens ?? 0,
+    }));
+    // Optional structured hook so callers can persist usage/cost (P1.4 telemetry) without this
+    // module taking a DB dependency. Best-effort: a throwing callback must never break the call.
+    if (opts.onUsage) {
+      try {
+        opts.onUsage({
+          model, input: u.input_tokens ?? 0, output: u.output_tokens ?? 0,
+          cacheRead: u.cache_read_input_tokens ?? 0, cacheWrite: u.cache_creation_input_tokens ?? 0,
+        });
+      } catch { /* telemetry callback is best-effort */ }
+    }
+  }
   return (j.content || []).map((b: any) => (b.type === "text" ? b.text : "")).join("").trim();
 }
 
