@@ -14,6 +14,8 @@ export type ReportPayload = {
   health?: { total?: number; band?: string; guidance?: string; findings?: any[]; weakest?: any[]; breakdown?: Record<string, any> };
   campaigns?: any[];
   decisions?: any[];
+  // Per-ad creative-fatigue diagnostic (change-point onset). Only flagged ads; read-only.
+  fatigue?: any[];
   // Optional live follower demographics (attached only when a real Page/IG/TikTok is connected).
   audience?: { platform?: string; handle?: string; followerCount?: number; source?: string; summary?: string[] };
   safety?: string;
@@ -107,6 +109,22 @@ export function buildReportMarkdown(payload: ReportPayload, opts: ReportOpts): s
     for (const c of payload.campaigns.slice(0, 15)) {
       out.push(`| ${c.campaign ?? "(campaign)"} | ${(c.platforms || []).join("/") || NA} | ${money(c.spend, ccy)} | ${money(c.cpa, ccy)} | ${x(c.roas)} | ${num(c.health)} (${c.band || ""}) |`);
     }
+    out.push("");
+  }
+
+  // Creative fatigue — change-point onset diagnostic (only flagged ads; read-only).
+  const fatigue = Array.isArray(payload.fatigue) ? payload.fatigue : [];
+  if (fatigue.length) {
+    out.push("## Creative fatigue (change-point onset)");
+    out.push("| Ad | Status | Onset | Confidence |");
+    out.push("|---|---|---|---|");
+    for (const f of fatigue.slice(0, 15)) {
+      const onset = f.onsetDaysAgo != null
+        ? `~${num(f.onsetDaysAgo)} day(s) ago${f.dropPct != null ? ` (${num(f.dropPct * 100)}% drop)` : ""}`
+        : NA;
+      out.push(`| ${f.ad ?? "(ad)"} | ${String(f.status || "").toUpperCase()} | ${onset} | ${f.confidence ?? NA} |`);
+    }
+    out.push("_Onset = the day the engagement series stepped down (change-point detection). Read-only diagnostic — refresh is a proposal, not an automatic change._");
     out.push("");
   }
 

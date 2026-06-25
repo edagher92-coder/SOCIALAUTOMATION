@@ -10,7 +10,52 @@ export { detectPlatform } from "./schema";
 import type { Row, Cfg } from "./types";
 import { scoreAccount, scoreByCampaign } from "./audit";
 import { decide } from "./decisions";
+import { predictFatigue, type FatiguePoint } from "./fatigue";
 import * as M from "./metrics";
+
+export interface AdFatigue {
+  ad: string;
+  status: "watch" | "fatigued";
+  onsetDaysAgo: number | null;
+  dropPct: number | null;
+  confidence: "low" | "moderate" | "high" | null;
+  reason: string;
+}
+
+// Per-ad creative-fatigue diagnostic (read-only, additive). Group the daily rows by ad, build the
+// engagement series oldest→newest, and run the change-point fatigue detector. Surfaces ONLY the ads
+// on WATCH or FATIGUED with the pinned onset — never a health-score or verdict input.
+function fatigueByAd(rows: Row[]): AdFatigue[] {
+  const groups: Record<string, Row[]> = {};
+  for (const r of rows) {
+    const k = (r.ad_id || r.ad_name || r.campaign_name || "(ad)") as string;
+    (groups[k] = groups[k] || []).push(r);
+  }
+  const out: AdFatigue[] = [];
+  for (const [ad, grp] of Object.entries(groups)) {
+    if (grp.length < 3) continue; // need daily history to detect a change point
+    const series: FatiguePoint[] = [...grp]
+      .sort((a, b) => String(a.date ?? "").localeCompare(String(b.date ?? "")))
+      .map((r) => ({
+        ctr: Number(r.ctr),
+        holdRate: r.hold_rate != null ? Number(r.hold_rate) : null,
+        frequency: r.frequency != null ? Number(r.frequency) : null,
+      }));
+    const f = predictFatigue(series);
+    if (f.status === "healthy") continue;
+    out.push({
+      ad: (grp[0].ad_name || grp[0].campaign_name || ad) as string,
+      status: f.status,
+      onsetDaysAgo: f.onset?.daysAgo ?? null,
+      dropPct: f.onset?.dropPct ?? null,
+      confidence: f.onset?.confidenceLabel ?? null,
+      reason: f.reason,
+    });
+  }
+  // Worst first: fatigued before watch.
+  out.sort((a, b) => (a.status === "fatigued" ? 0 : 1) - (b.status === "fatigued" ? 0 : 1));
+  return out;
+}
 
 /** One-call analysis used by the API route. */
 export function analyse(rows: Row[], cfg: Cfg) {
@@ -65,6 +110,7 @@ export function analyse(rows: Row[], cfg: Cfg) {
     health: { total: res.total, band: res.band, guidance: res.guidance, findings: res.findings, weakest: res.weakest, breakdown: res.breakdown },
     campaigns,
     decisions,
+    fatigue: fatigueByAd(rows),
     safety: "Read-only analysis. No live ad was changed. Budget moves need a typed YES.",
   };
 }
