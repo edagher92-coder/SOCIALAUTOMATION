@@ -35,4 +35,25 @@ describe("predictFatigue", () => {
     expect(["watch", "fatigued"]).toContain(r.status);
     expect(r.daysToFatigue == null || r.daysToFatigue >= 0).toBe(true);
   });
+
+  it("pins a change-point onset when hold-rate steps down mid-flight (leading signal)", () => {
+    // hold-rate flat-high for 5 days, then a clear sustained step down for 4 days; CTR flat.
+    const series: FatiguePoint[] = [
+      ...Array.from({ length: 5 }, () => ({ ctr: 0.02, holdRate: 0.5, frequency: 2.5 })),
+      ...Array.from({ length: 4 }, () => ({ ctr: 0.02, holdRate: 0.32, frequency: 2.8 })),
+    ];
+    const r = predictFatigue(series);
+    expect(r.onset).not.toBeNull();
+    expect(r.onset!.metric).toBe("holdRate");
+    expect(r.onset!.dropPct).toBeGreaterThan(0.2);
+    expect(r.onset!.daysAgo).toBeGreaterThanOrEqual(1);
+    expect(r.status).toBe("watch");
+    expect(r.reason).toMatch(/change-point/i);
+  });
+
+  it("reports no onset for a stable creative", () => {
+    const r = predictFatigue(flat(0.02, 10, { holdRate: 0.45, frequency: 2 }));
+    expect(r.onset).toBeNull();
+    expect(r.status).toBe("healthy");
+  });
 });
