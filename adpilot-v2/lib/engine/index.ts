@@ -11,6 +11,7 @@ import type { Row, Cfg } from "./types";
 import { scoreAccount, scoreByCampaign } from "./audit";
 import { decide } from "./decisions";
 import { predictFatigue, type FatiguePoint } from "./fatigue";
+import { detectLatestAnomaly, type MetricAnomaly } from "./anomaly";
 import * as M from "./metrics";
 
 export interface AdFatigue {
@@ -54,6 +55,45 @@ function fatigueByAd(rows: Row[]): AdFatigue[] {
   }
   // Worst first: fatigued before watch.
   out.sort((a, b) => (a.status === "fatigued" ? 0 : 1) - (b.status === "fatigued" ? 0 : 1));
+  return out;
+}
+
+// Account-level "sudden change" scan (read-only, additive). Aggregate the per-ad rows into ONE daily
+// account series, then check whether the latest day is a robust anomaly (median/MAD) on each headline
+// metric. Surfaces only the HARMFUL moves (cost spiking up / efficiency dropping). Distinct from the
+// per-ad fatigue scan: this catches an account-wide jolt (a CPL/spend spike today), not creative decay.
+function anomaliesByDay(rows: Row[]): MetricAnomaly[] {
+  const byDate: Record<string, { spend: number; impressions: number; clicks: number; leads: number; purchases: number; revenue: number }> = {};
+  for (const r of rows) {
+    const d = String(r.date ?? "");
+    if (!d) continue;
+    const a = (byDate[d] = byDate[d] || { spend: 0, impressions: 0, clicks: 0, leads: 0, purchases: 0, revenue: 0 });
+    a.spend += Number(r.spend) || 0;
+    a.impressions += Number(r.impressions) || 0;
+    a.clicks += Number(r.clicks) || 0;
+    a.leads += Number(r.leads) || 0;
+    a.purchases += Number(r.purchases) || 0;
+    a.revenue += Number(r.revenue) || 0;
+  }
+  const dates = Object.keys(byDate).sort();
+  if (dates.length < 6) return []; // need a baseline window before a "latest day" means anything
+  const day = dates.map((d) => byDate[d]);
+  // Ratio metrics only count days with a non-zero denominator (a 0-lead day has no defined CPL).
+  const series: Record<string, number[]> = {
+    spend: day.map((x) => x.spend),
+    cpl: day.filter((x) => x.leads > 0).map((x) => x.spend / x.leads),
+    cpa: day.filter((x) => x.purchases > 0).map((x) => x.spend / x.purchases),
+    cpc: day.filter((x) => x.clicks > 0).map((x) => x.spend / x.clicks),
+    cpm: day.filter((x) => x.impressions > 0).map((x) => (x.spend / x.impressions) * 1000),
+    ctr: day.filter((x) => x.impressions > 0).map((x) => x.clicks / x.impressions),
+    roas: day.filter((x) => x.spend > 0).map((x) => x.revenue / x.spend),
+  };
+  const out: MetricAnomaly[] = [];
+  for (const [metric, xs] of Object.entries(series)) {
+    const a = detectLatestAnomaly(metric, xs);
+    if (a && a.bad) out.push(a);
+  }
+  out.sort((a, b) => b.zMad - a.zMad); // most severe first
   return out;
 }
 
@@ -111,6 +151,7 @@ export function analyse(rows: Row[], cfg: Cfg) {
     campaigns,
     decisions,
     fatigue: fatigueByAd(rows),
+    anomalies: anomaliesByDay(rows),
     safety: "Read-only analysis. No live ad was changed. Budget moves need a typed YES.",
   };
 }

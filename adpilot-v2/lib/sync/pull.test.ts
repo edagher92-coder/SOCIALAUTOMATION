@@ -17,8 +17,8 @@ process.env.TOKEN_ENCRYPTION_KEY = KEY_B64;
 
 import { encrypt } from "@/lib/crypto";
 import {
-  syncOrgPlatform, extractMetaConversions, extractMetaRoas, metaPull,
-  isMetaRateLimited, metaBackoffMs, classifyIngestionError, RateLimitError,
+  syncOrgPlatform, extractMetaConversions, extractMetaRoas, metaPull, tiktokPull,
+  isMetaRateLimited, isTiktokRateLimited, metaBackoffMs, classifyIngestionError, RateLimitError,
 } from "@/lib/sync/pull";
 
 // Insert helpers: every sync now also writes a best-effort `ingestion_runs` audit row in a
@@ -277,6 +277,79 @@ describe("syncOrgPlatform — TikTok", () => {
     const runs = ingestionRuns(admin);
     expect(runs).toHaveLength(1);
     expect(runs[0].rows).toMatchObject({ platform: "tiktok", status: "auth_failed", graph_version: null });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TikTok parity — the read path now gets the same Phase-1a hardening as Meta:
+// rate-limit detection + bounded backoff/fail-closed, pagination + partial signal,
+// and a version-pinned API base.
+// ---------------------------------------------------------------------------
+function ttItem(over: Record<string, any> = {}) {
+  return {
+    metrics: {
+      campaign_id: "c1", campaign_name: "TT Camp", adgroup_id: "ag1", ad_id: "ad9", ad_name: "TT Ad",
+      spend: "5", impressions: "200", clicks: "10", ctr: "2", cpc: "0.5", cpm: "25", reach: "150",
+      frequency: "1.3", conversion: "7", total_complete_payment: "350",
+      video_play_actions: "180", video_watched_2s: "120", video_watched_6s: "60", video_views_p100: "40",
+    },
+    dimensions: { ad_id: "ad9", stat_time_day: "2026-06-02 00:00:00" },
+    ...over,
+  };
+}
+
+describe("isTiktokRateLimited", () => {
+  it("flags HTTP 429", () => expect(isTiktokRateLimited(429, {})).toBe(true));
+  it("flags throttle codes (40100 / 40016 / 50002)", () => {
+    for (const code of [40100, 40016, 50002]) expect(isTiktokRateLimited(200, { code })).toBe(true);
+  });
+  it("does NOT flag a healthy 200 (code 0)", () => expect(isTiktokRateLimited(200, { code: 0, data: { list: [] } })).toBe(false));
+  it("does NOT flag a generic auth-error code (not a throttle)", () => expect(isTiktokRateLimited(200, { code: 40105 })).toBe(false));
+});
+
+describe("tiktokPull — rate-limit / partial (parity with metaPull)", () => {
+  it("backs off then FAILS CLOSED with RateLimitError when the throttle persists", async () => {
+    const fetchLocal = vi.fn().mockReturnValue(Promise.resolve({ ok: false, status: 429, json: () => Promise.resolve({}) }));
+    vi.stubGlobal("fetch", fetchLocal);
+    await expect(tiktokPull("TOK", "adv-1", "org-1", { sleep: () => Promise.resolve(), maxRetries: 2 }))
+      .rejects.toBeInstanceOf(RateLimitError);
+    expect(fetchLocal).toHaveBeenCalledTimes(3); // attempts 0,1 retried; attempt 2 throws
+  });
+
+  it("retries a transient throttle code (50002) then succeeds", async () => {
+    const fetchLocal = vi.fn()
+      .mockReturnValueOnce(okJson({ code: 50002, message: "service busy" }))
+      .mockReturnValueOnce(okJson({ code: 0, data: { list: [ttItem()] } }));
+    vi.stubGlobal("fetch", fetchLocal);
+    const rows = await tiktokPull("TOK", "adv-1", "org-1", { sleep: () => Promise.resolve() });
+    expect(rows).toHaveLength(1);
+    expect(fetchLocal).toHaveBeenCalledTimes(2);
+  });
+
+  it("signals partial when the page guard cuts pagination short (more pages remained)", async () => {
+    const fetchLocal = vi.fn().mockReturnValue(okJson({ code: 0, data: { list: [ttItem()], page_info: { page: 1, total_page: 5 } } }));
+    vi.stubGlobal("fetch", fetchLocal);
+    const meta = { partial: false };
+    const rows = await tiktokPull("TOK", "adv-1", "org-1", { meta, maxPages: 2 });
+    expect(meta.partial).toBe(true);
+    expect(rows).toHaveLength(2); // capped at maxPages pages (1 row each)
+    expect(fetchLocal).toHaveBeenCalledTimes(2);
+  });
+
+  it("does NOT signal partial when pagination exhausts naturally", async () => {
+    const fetchLocal = vi.fn().mockReturnValue(okJson({ code: 0, data: { list: [ttItem()], page_info: { page: 1, total_page: 1 } } }));
+    vi.stubGlobal("fetch", fetchLocal);
+    const meta = { partial: false };
+    await tiktokPull("TOK", "adv-1", "org-1", { meta, maxPages: 5 });
+    expect(meta.partial).toBe(false);
+    expect(fetchLocal).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls the centralised, version-pinned TikTok API base", async () => {
+    const fetchLocal = vi.fn().mockReturnValue(okJson({ code: 0, data: { list: [ttItem()] } }));
+    vi.stubGlobal("fetch", fetchLocal);
+    await tiktokPull("TOK", "adv-1", "org-1");
+    expect(String(fetchLocal.mock.calls[0][0])).toContain("/open_api/v1.3/report/integrated/get");
   });
 });
 

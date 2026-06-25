@@ -1,6 +1,7 @@
 import "server-only";
 import { decrypt } from "@/lib/crypto";
 import { META_GRAPH_VERSION, META_GRAPH_BASE } from "@/lib/meta/graph-version";
+import { TIKTOK_API_BASE } from "@/lib/tiktok/api-version";
 
 // Reusable read-only data pull for Meta & TikTok, shared by the manual Sync button,
 // the dev-token connect flow, the OAuth callback, and the scheduled auto-sync cron.
@@ -32,10 +33,12 @@ const num = (v: any): number => {
 // ---------------------------------------------------------------------------
 export class RateLimitError extends Error {
   accountId: string;
-  constructor(accountId: string, detail?: string) {
-    super(`Meta rate limit reached for account ${accountId}; deferring to the next sync${detail ? ` (${detail})` : ""}.`);
+  platform: string;
+  constructor(accountId: string, detail?: string, platform = "Meta") {
+    super(`${platform} rate limit reached for account ${accountId}; deferring to the next sync${detail ? ` (${detail})` : ""}.`);
     this.name = "RateLimitError";
     this.accountId = accountId;
+    this.platform = platform;
   }
 }
 
@@ -76,6 +79,16 @@ export function isMetaRateLimited(status: number, body: any, headers?: HeaderLik
     } catch { /* unparseable usage header — ignore */ }
   }
   return false;
+}
+
+// Is this TikTok response a throttle? HTTP 429 is the PRIMARY signal; TikTok also surfaces a small
+// set of "too many requests / service busy" codes in the 200-body `code`. Those codes are a
+// SECONDARY, [VERIFY]-able hint (TikTok's throttle list is less documented than Meta's), so the
+// caller backs off on them but they never override a genuine HTTP error.
+export function isTiktokRateLimited(status: number, body: any): boolean {
+  if (status === 429) return true;
+  const code = Number(body?.code);
+  return code === 40100 || code === 40016 || code === 50002;
 }
 
 // Bounded exponential backoff with jitter (ms). The ceiling is intentionally low (a few
@@ -223,7 +236,14 @@ export async function metaPull(token: string, accountId: string, orgId: string, 
   });
 }
 
-export async function tiktokPull(token: string, advertiserId: string, orgId: string) {
+// Same options shape as the Meta pull so the two adapters are at parity (rate-limit retries,
+// pagination guard, an injectable sleep for tests, and a `partial` out-param).
+export type TiktokPullOpts = MetaPullOpts;
+
+export async function tiktokPull(token: string, advertiserId: string, orgId: string, opts: TiktokPullOpts = {}) {
+  const sleep = opts.sleep ?? defaultSleep;
+  const maxRetries = opts.maxRetries ?? 3;
+  const maxPages = opts.maxPages ?? 25;
   // AD level so conversions land on the ad row the engine groups/scores by.
   const metrics = [
     "campaign_id", "campaign_name", "adgroup_id", "ad_id", "ad_name",
@@ -231,17 +251,40 @@ export async function tiktokPull(token: string, advertiserId: string, orgId: str
     "conversion", "total_complete_payment_rate",
     "video_play_actions", "video_watched_2s", "video_watched_6s", "video_views_p100",
   ];
-  const qp = new URLSearchParams({
-    advertiser_id: advertiserId, report_type: "BASIC", data_level: "AUCTION_AD",
-    dimensions: JSON.stringify(["ad_id", "stat_time_day"]), metrics: JSON.stringify(metrics),
-    start_date: daysAgo(SYNC_WINDOW_DAYS), end_date: daysAgo(0), page_size: "1000",
-  });
-  const r = await fetch(`https://business-api.tiktok.com/open_api/v1.3/report/integrated/get/?${qp.toString()}`, { headers: { "Access-Token": token } });
-  const j: any = await r.json().catch(() => ({}));
-  // TikTok signals errors via a non-zero `code` in a 200 body; also fail on HTTP errors.
-  if (!r.ok) throw new Error(j?.message || `TikTok API error (HTTP ${r.status})`);
-  if (typeof j.code === "number" && j.code !== 0) throw new Error(j.message || `TikTok API error (code ${j.code})`);
-  return (j.data?.list || []).map((it: any) => {
+  const data: any[] = [];
+  // TikTok paginates its report via `page` / `page_info.total_page` (parity with Meta's cursor
+  // follow). Fail CLOSED on a persistent throttle, and signal `partial` if the page guard cuts the
+  // pull short while more pages remained — never let an incomplete read masquerade as complete.
+  let truncated = false;
+  for (let page = 1; ; page++) {
+    if (page > maxPages) { truncated = true; break; }
+    const qp = new URLSearchParams({
+      advertiser_id: advertiserId, report_type: "BASIC", data_level: "AUCTION_AD",
+      dimensions: JSON.stringify(["ad_id", "stat_time_day"]), metrics: JSON.stringify(metrics),
+      start_date: daysAgo(SYNC_WINDOW_DAYS), end_date: daysAgo(0), page: String(page), page_size: "1000",
+    });
+    let j: any;
+    // Per-page rate-limit retry loop (parity with metaPull): back off on 429 / throttle code, fail closed on exhaustion.
+    for (let attempt = 0; ; attempt++) {
+      const r = await fetch(`${TIKTOK_API_BASE}/report/integrated/get/?${qp.toString()}`, { headers: { "Access-Token": token } });
+      j = await r.json().catch(() => ({}));
+      if (isTiktokRateLimited(r.status, j)) {
+        if (attempt >= maxRetries) throw new RateLimitError(advertiserId, undefined, "TikTok");
+        await sleep(metaBackoffMs(attempt));
+        continue;
+      }
+      // TikTok signals errors via a non-zero `code` in a 200 body; also fail on HTTP errors.
+      if (!r.ok) throw new Error(j?.message || `TikTok API error (HTTP ${r.status})`);
+      if (typeof j.code === "number" && j.code !== 0) throw new Error(j.message || `TikTok API error (code ${j.code})`);
+      break;
+    }
+    const list = j.data?.list || [];
+    data.push(...list);
+    const totalPage = Number(j.data?.page_info?.total_page) || 1;
+    if (list.length === 0 || page >= totalPage) break; // exhausted naturally
+  }
+  if (truncated && opts.meta) opts.meta.partial = true;
+  return data.map((it: any) => {
     const m = it.metrics || {}, dim = it.dimensions || {};
     // TikTok reports conversions in `conversion`; monetary value (when the advertiser
     // tracks payment value) in `total_complete_payment` / `total_purchase_value`.
@@ -309,7 +352,9 @@ export async function syncOrgPlatform(admin: any, orgId: string, platform: Platf
           rows = rows.concat(await metaPull(token, id, orgId, { meta: pm }));
           if (pm.partial) partialPull = true;
         } else {
-          rows = rows.concat(await tiktokPull(token, id, orgId));
+          const pt = { partial: false };
+          rows = rows.concat(await tiktokPull(token, id, orgId, { meta: pt }));
+          if (pt.partial) partialPull = true;
         }
       } catch (e: any) {
         // Fail CLOSED on a throttle: don't keep hammering the remaining accounts — propagate and

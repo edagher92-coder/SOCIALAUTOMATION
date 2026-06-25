@@ -16,6 +16,8 @@ export type ReportPayload = {
   decisions?: any[];
   // Per-ad creative-fatigue diagnostic (change-point onset). Only flagged ads; read-only.
   fatigue?: any[];
+  // Account-level "sudden change" anomaly scan (latest day vs robust baseline). Read-only.
+  anomalies?: any[];
   // Optional live follower demographics (attached only when a real Page/IG/TikTok is connected).
   audience?: { platform?: string; handle?: string; followerCount?: number; source?: string; summary?: string[] };
   safety?: string;
@@ -125,6 +127,22 @@ export function buildReportMarkdown(payload: ReportPayload, opts: ReportOpts): s
       out.push(`| ${f.ad ?? "(ad)"} | ${String(f.status || "").toUpperCase()} | ${onset} | ${f.confidence ?? NA} |`);
     }
     out.push("_Onset = the day the engagement series stepped down (change-point detection). Read-only diagnostic — refresh is a proposal, not an automatic change._");
+    out.push("");
+  }
+
+  // Sudden changes — latest-day account anomaly scan (robust median/MAD). Only harmful moves; read-only.
+  const anomalies = Array.isArray(payload.anomalies) ? payload.anomalies : [];
+  if (anomalies.length) {
+    out.push("## Sudden changes (anomaly scan)");
+    out.push("| Metric | Latest | Baseline | Change |");
+    out.push("|---|---|---|---|");
+    for (const a of anomalies.slice(0, 10)) {
+      const chg = a.deviationPct != null
+        ? `${a.deviationPct >= 0 ? "+" : ""}${num(a.deviationPct * 100)}% (${a.direction})`
+        : a.direction;
+      out.push(`| ${String(a.metric || "").toUpperCase()} | ${num(a.value, 2)} | ${num(a.baseline, 2)} | ${chg} · ${String(a.severity || "").toUpperCase()} |`);
+    }
+    out.push("_Flags the latest day when a metric moved past ~3× its typical daily variation (median/MAD) in the harmful direction. Read-only diagnostic — investigate before acting._");
     out.push("");
   }
 
