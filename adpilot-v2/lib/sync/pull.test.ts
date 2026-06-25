@@ -16,7 +16,15 @@ const KEY_B64 = Buffer.alloc(32, 7).toString("base64");
 process.env.TOKEN_ENCRYPTION_KEY = KEY_B64;
 
 import { encrypt } from "@/lib/crypto";
-import { syncOrgPlatform, extractMetaConversions } from "@/lib/sync/pull";
+import {
+  syncOrgPlatform, extractMetaConversions, metaPull,
+  isMetaRateLimited, metaBackoffMs, classifyIngestionError, RateLimitError,
+} from "@/lib/sync/pull";
+
+// Insert helpers: every sync now also writes a best-effort `ingestion_runs` audit row in a
+// finally block, so assertions that care about the data write must scope to campaign_snapshots.
+const snapshotInserts = (admin: any) => admin.__calls.inserts.filter((i: any) => i.table === "campaign_snapshots");
+const ingestionRuns = (admin: any) => admin.__calls.inserts.filter((i: any) => i.table === "ingestion_runs");
 
 // ---- Inline mock Supabase -------------------------------------------------
 // Each table is a small builder that records the filters applied and resolves
@@ -136,7 +144,7 @@ describe("syncOrgPlatform — Meta", () => {
     expect(del[0].filters.source).toBe("meta_api");
     expect(del[0].filters["date>="]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
 
-    const ins = (admin as any).__calls.inserts;
+    const ins = snapshotInserts(admin);
     expect(ins).toHaveLength(1);
     expect(ins[0].rows).toHaveLength(2);
     // ctr is normalised from percent → fraction; spend coerced to number; ad-grain
@@ -147,6 +155,14 @@ describe("syncOrgPlatform — Meta", () => {
       leads: 4, purchases: 3, revenue: 600, landing_page_views: 30,
       three_second_views: 400, thruplays: 120,
     });
+
+    // A successful pull records exactly one `ingestion_runs` audit row — status ok, the right row
+    // count and Graph version — and NEVER a token (read-only audit trail).
+    const runs = ingestionRuns(admin);
+    expect(runs).toHaveLength(1);
+    expect(runs[0].rows).toMatchObject({ organisation_id: "org-1", platform: "meta", status: "ok", rows_written: 2 });
+    expect(runs[0].rows.graph_version).toMatch(/^v\d+\.\d+$/);
+    expect(JSON.stringify(runs[0].rows)).not.toMatch(/access_token|ciphertext|META_TOKEN/);
 
     // the act_ prefix is added to the account id; pull is at AD level.
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -169,7 +185,7 @@ describe("syncOrgPlatform — Meta", () => {
     const n = await syncOrgPlatform(admin as any, "org-1", "meta");
     expect(n).toBe(3); // 1 + 2 accumulated
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect((admin as any).__calls.inserts[0].rows).toHaveLength(3);
+    expect(snapshotInserts(admin)[0].rows).toHaveLength(3);
   });
 
   it("de-duplicates repeated account ids so they are pulled only once", async () => {
@@ -211,9 +227,13 @@ describe("syncOrgPlatform — Meta", () => {
     });
     fetchMock.mockReturnValueOnce(okJson({ error: { message: "Invalid OAuth access token" } }, false, 400));
     await expect(syncOrgPlatform(admin as any, "org-1", "meta")).rejects.toThrow(/Invalid OAuth access token/i);
-    // no DB writes attempted when the pull fails
+    // no snapshot writes attempted when the pull fails (delete/insert of campaign data)
     expect((admin as any).__calls.deletes).toHaveLength(0);
-    expect((admin as any).__calls.inserts).toHaveLength(0);
+    expect(snapshotInserts(admin)).toHaveLength(0);
+    // …but the failure is still recorded honestly as an audit row (auth_failed).
+    const runs = ingestionRuns(admin);
+    expect(runs).toHaveLength(1);
+    expect(runs[0].rows).toMatchObject({ platform: "meta", status: "auth_failed", rows_written: 0 });
   });
 });
 
@@ -231,7 +251,7 @@ describe("syncOrgPlatform — TikTok", () => {
 
     const n = await syncOrgPlatform(admin as any, "org-1", "tiktok");
     expect(n).toBe(1);
-    const ins = (admin as any).__calls.inserts[0].rows;
+    const ins = snapshotInserts(admin)[0].rows;
     expect(ins[0]).toMatchObject({
       organisation_id: "org-1", platform: "tiktok", campaign_name: "TT Camp", spend: 5, ctr: 0.02, source: "tiktok_api",
       campaign_id: "c1", adset_id: "ag1", ad_id: "ad9", ad_name: "TT Ad",
@@ -252,7 +272,11 @@ describe("syncOrgPlatform — TikTok", () => {
     });
     fetchMock.mockReturnValueOnce(okJson({ code: 40105, message: "Access token is invalid" }));
     await expect(syncOrgPlatform(admin as any, "org-1", "tiktok")).rejects.toThrow(/Access token is invalid/i);
-    expect((admin as any).__calls.inserts).toHaveLength(0);
+    expect(snapshotInserts(admin)).toHaveLength(0);
+    // TikTok failures are audited too, with no Graph version attached (Meta-only field).
+    const runs = ingestionRuns(admin);
+    expect(runs).toHaveLength(1);
+    expect(runs[0].rows).toMatchObject({ platform: "tiktok", status: "auth_failed", graph_version: null });
   });
 });
 
@@ -302,8 +326,118 @@ describe("metaPull — CTR normalisation", () => {
       okJson({ data: [metaRow({ ctr: "2.5" })] }),
     );
     vi.stubGlobal("fetch", fetchLocal);
-    const { metaPull } = await import("@/lib/sync/pull");
     const rows = await metaPull("TOK", "555", "org-1");
     expect(rows[0].ctr).toBeCloseTo(0.025, 6); // 2.5% → 0.025
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Gap A — rate-limit handling. Pure helpers + the bounded retry / fail-closed loop.
+// ---------------------------------------------------------------------------
+describe("isMetaRateLimited", () => {
+  it("flags HTTP 429", () => {
+    expect(isMetaRateLimited(429, {})).toBe(true);
+  });
+  it("flags documented throttling error codes (4/17/32/613/80000-series)", () => {
+    for (const code of [4, 17, 32, 613, 80001]) expect(isMetaRateLimited(200, { error: { code } })).toBe(true);
+  });
+  it("flags an at-ceiling X-App-Usage header (flat object form)", () => {
+    expect(isMetaRateLimited(200, {}, { "x-app-usage": JSON.stringify({ call_count: 99, total_cputime: 20, total_time: 15 }) })).toBe(true);
+  });
+  it("flags an X-Business-Use-Case-Usage header with a regain-time set ({id:[buckets]} form)", () => {
+    const h = { "x-business-use-case-usage": JSON.stringify({ "123": [{ type: "ads_insights", call_count: 10, estimated_time_to_regain_access: 12 }] }) };
+    expect(isMetaRateLimited(200, {}, h)).toBe(true);
+  });
+  it("does NOT flag a healthy response (200, low usage, no throttle code)", () => {
+    expect(isMetaRateLimited(200, { data: [] }, { "x-app-usage": JSON.stringify({ call_count: 12 }) })).toBe(false);
+  });
+  it("does NOT flag a generic 400 error (not a throttle)", () => {
+    expect(isMetaRateLimited(400, { error: { code: 190, message: "Invalid OAuth access token" } })).toBe(false);
+  });
+});
+
+describe("metaBackoffMs", () => {
+  it("is bounded and grows with attempt", () => {
+    for (let a = 0; a < 6; a++) {
+      const ms = metaBackoffMs(a);
+      expect(ms).toBeGreaterThan(0);
+      expect(ms).toBeLessThanOrEqual(5000); // 4s cap + ≤25% jitter
+    }
+  });
+});
+
+describe("metaPull — rate-limit / partial", () => {
+  it("backs off then FAILS CLOSED with RateLimitError when the throttle persists", async () => {
+    const fetchLocal = vi.fn().mockReturnValue(Promise.resolve({ ok: false, status: 429, json: () => Promise.resolve({ error: { message: "rate limited" } }) }));
+    vi.stubGlobal("fetch", fetchLocal);
+    // Inject an instant sleep so the test doesn't actually wait out the backoff.
+    await expect(metaPull("TOK", "999", "org-1", { sleep: () => Promise.resolve(), maxRetries: 2 }))
+      .rejects.toBeInstanceOf(RateLimitError);
+    // attempt 0,1 retried; attempt 2 throws → 3 fetches.
+    expect(fetchLocal).toHaveBeenCalledTimes(3);
+  });
+
+  it("retries a transient 429 then succeeds when the next page is clean", async () => {
+    const fetchLocal = vi.fn()
+      .mockReturnValueOnce(Promise.resolve({ ok: false, status: 429, json: () => Promise.resolve({}) }))
+      .mockReturnValueOnce(okJson({ data: [metaRow()] }));
+    vi.stubGlobal("fetch", fetchLocal);
+    const rows = await metaPull("TOK", "1", "org-1", { sleep: () => Promise.resolve() });
+    expect(rows).toHaveLength(1);
+    expect(fetchLocal).toHaveBeenCalledTimes(2);
+  });
+
+  it("signals partial when the page guard cuts pagination short (more pages remained)", async () => {
+    // Every page reports a `next` cursor, so the pull can never naturally exhaust.
+    const fetchLocal = vi.fn().mockReturnValue(okJson({ data: [metaRow()], paging: { next: "https://graph.facebook.com/next" } }));
+    vi.stubGlobal("fetch", fetchLocal);
+    const meta = { partial: false };
+    const rows = await metaPull("TOK", "1", "org-1", { meta, maxPages: 2 });
+    expect(meta.partial).toBe(true);
+    expect(rows).toHaveLength(2); // capped at maxPages
+  });
+
+  it("does NOT signal partial when pagination exhausts naturally", async () => {
+    const fetchLocal = vi.fn().mockReturnValue(okJson({ data: [metaRow()] })); // no paging.next
+    vi.stubGlobal("fetch", fetchLocal);
+    const meta = { partial: false };
+    await metaPull("TOK", "1", "org-1", { meta, maxPages: 5 });
+    expect(meta.partial).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Gap D — honest empty state + ingestion-run status classification.
+// ---------------------------------------------------------------------------
+describe("classifyIngestionError", () => {
+  it("maps a RateLimitError to rate_limited", () => {
+    expect(classifyIngestionError(new RateLimitError("123"), "whatever")).toBe("rate_limited");
+  });
+  it("maps token / scope / permission signals to auth_failed", () => {
+    for (const m of ["Invalid OAuth access token", "missing the read-only ads_read scope", "HTTP 401", "code 190", "owner has not granted permission"]) {
+      expect(classifyIngestionError(new Error(m), m)).toBe("auth_failed");
+    }
+  });
+  it("maps anything else to a generic error", () => {
+    expect(classifyIngestionError(new Error("Failed to write snapshots"), "Failed to write snapshots")).toBe("error");
+  });
+});
+
+describe("syncOrgPlatform — honest empty state", () => {
+  it("records status `empty` (not a failure, no snapshot insert) when a clean pull returns zero rows", async () => {
+    const admin = makeAdmin({
+      platform_tokens: { singleData: encToken("META_TOKEN") },
+      connected_ad_accounts: { selectData: [{ external_account_id: "123" }] },
+      campaign_snapshots: {},
+    });
+    fetchMock.mockReturnValueOnce(okJson({ data: [] })); // no delivery in the window
+
+    const n = await syncOrgPlatform(admin as any, "org-1", "meta");
+    expect(n).toBe(0);
+    // No snapshot rows written, but the run is audited honestly as `empty`.
+    expect(snapshotInserts(admin)).toHaveLength(0);
+    const runs = ingestionRuns(admin);
+    expect(runs).toHaveLength(1);
+    expect(runs[0].rows).toMatchObject({ platform: "meta", status: "empty", rows_written: 0 });
   });
 });

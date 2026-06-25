@@ -6,6 +6,7 @@ import { getActiveOrgId } from "@/lib/org";
 import { oauthConfig, type Platform } from "@/lib/oauth/config";
 import { encrypt } from "@/lib/crypto";
 import { syncOrgPlatform } from "@/lib/sync/pull";
+import { META_GRAPH_BASE } from "@/lib/meta/graph-version";
 
 export const runtime = "nodejs";
 
@@ -45,7 +46,7 @@ export async function GET(req: Request, props: { params: Promise<{ platform: str
       const tj: any = await tr.json();
       if (!tr.ok || !tj.access_token) throw new Error(tj.error?.message || "token exchange failed");
       accessToken = tj.access_token;
-      const ar = await fetch(`https://graph.facebook.com/v21.0/me/adaccounts?fields=name,account_id&access_token=${encodeURIComponent(accessToken)}`);
+      const ar = await fetch(`${META_GRAPH_BASE}/me/adaccounts?fields=name,account_id&access_token=${encodeURIComponent(accessToken)}`);
       const aj: any = await ar.json();
       accounts = (aj.data || []).map((a: any) => ({ id: a.account_id || a.id, name: a.name || a.id }));
     } else {
