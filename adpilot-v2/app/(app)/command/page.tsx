@@ -25,6 +25,18 @@ const fmtAgo = (iso?: string | null) => {
   return `${Math.round(h / 24)}d ago`;
 };
 
+// Honest per-status display for an ingestion run (mirrors the ingestion_runs.status enum).
+// `empty` is NOT a failure — it means the account had no delivery in the window, so there is
+// nothing to score; we say so plainly rather than implying a problem.
+const RUN_STATUS: Record<string, { label: string; cls: string; dot: string }> = {
+  ok:           { label: "Synced",                    cls: "text-teal",        dot: "bg-teal" },
+  empty:        { label: "No delivery in the window", cls: "text-muted",       dot: "bg-muted" },
+  partial:      { label: "Partial — more to pull",    cls: "text-band-yellow", dot: "bg-band-yellow" },
+  rate_limited: { label: "Rate-limited — will retry", cls: "text-band-yellow", dot: "bg-band-yellow" },
+  auth_failed:  { label: "Reconnect needed",          cls: "text-band-red",    dot: "bg-band-red" },
+  error:        { label: "Sync error",                cls: "text-band-red",    dot: "bg-band-red" },
+};
+
 export default async function CommandCenter() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -50,7 +62,7 @@ export default async function CommandCenter() {
   const aiEnabled = can(plan, "ai_team");
   const apiEnabled = can(plan, "api_connect");
 
-  const [orgRes, scoreRes, openRecsRes, accountsRes, reportsRes, trendRes, latestReportRes, organicRes, organicCpm] = await Promise.all([
+  const [orgRes, scoreRes, openRecsRes, accountsRes, reportsRes, trendRes, latestReportRes, organicRes, organicCpm, ingestionRes] = await Promise.all([
     supabase.from("organisations").select("name,last_synced_at,sync_interval_hours").eq("id", orgId).maybeSingle(),
     supabase.from("health_scores").select("total,band,created_at").eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("recommendations").select("id,verdict,entity_name,platform,proposal").eq("organisation_id", orgId).eq("status", "open").order("created_at", { ascending: false }).limit(100),
@@ -61,6 +73,10 @@ export default async function CommandCenter() {
     // Organic boost tile (Starter+): the org's saved organic posts + its real CPM (RLS-scoped reads).
     supabase.from("organic_posts").select("id,platform,name,posted_at,reach,impressions,engagements").eq("organisation_id", orgId),
     getAccountCpmByPlatform(supabase, orgId).catch(() => ({ meta: null, tiktok: null })),
+    // Ingestion audit log (Pro/Expert API path) — RLS-scoped. Read-only; surfaced as the trust panel.
+    apiEnabled
+      ? supabase.from("ingestion_runs").select("platform,status,rows_written,window_days,started_at,graph_version").eq("organisation_id", orgId).order("started_at", { ascending: false }).limit(6)
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   // Surface a clear banner if the data layer is unreachable, but still render the shell.
@@ -90,6 +106,10 @@ export default async function CommandCenter() {
   const moneyBe = summ?.break_even_cpa ?? null;
   const cpaOverBe = moneyCpa != null && moneyBe != null && moneyBe > 0 ? moneyCpa > moneyBe : null;
   const accts = (accounts || []) as any[];
+  // Ingestion audit (intentionally NOT folded into loadError: a not-yet-migrated table during
+  // rollout should degrade to "no sync yet", never the red data-layer banner).
+  const runs = (((ingestionRes as any)?.data) || []) as any[];
+  const lastRun = runs[0] || null;
   const cadence = cadenceText((org as any)?.sync_interval_hours);
   const name = (org as any)?.name || "your workspace";
 
@@ -233,6 +253,47 @@ export default async function CommandCenter() {
             )}
             <p className="mt-2 text-2xs text-muted">Auto-sync: <b>{cadence}</b> · <a className="text-brand" href="/settings">change</a></p>
           </div>
+
+          {/* Data sync — honest ingestion audit (read-only). Proves the numbers are live, when they
+              last refreshed, and surfaces an empty/rate-limited/reconnect state plainly. */}
+          {apiEnabled && (
+            <div className="rounded-2xl border border-border-subtle bg-white p-4 shadow-card">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="font-bold">Data sync</h3>
+                <a href="/connect" className="text-xs font-semibold text-brand">Manage →</a>
+              </div>
+              {!lastRun ? (
+                <p className="text-sm text-muted">No sync has run yet. Connect an account and run your first audit to pull live data.</p>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className={`inline-flex items-center gap-1.5 text-sm font-bold ${(RUN_STATUS[lastRun.status] || RUN_STATUS.error).cls}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${(RUN_STATUS[lastRun.status] || RUN_STATUS.error).dot}`} />
+                      {(RUN_STATUS[lastRun.status] || RUN_STATUS.error).label}
+                    </span>
+                    <span className="text-2xs text-muted">{fmtAgo(lastRun.started_at)}</span>
+                  </div>
+                  <p className="mt-1 text-2xs text-muted">
+                    {lastRun.platform} · {Number(lastRun.rows_written) || 0} row{Number(lastRun.rows_written) === 1 ? "" : "s"} · {lastRun.window_days ?? 30}-day window{lastRun.graph_version ? ` · ${lastRun.graph_version}` : ""}
+                  </p>
+                  {runs.length > 1 && (
+                    <ul className="mt-2 space-y-1 border-t border-border-subtle pt-2">
+                      {runs.slice(1, 5).map((r, i) => {
+                        const s = RUN_STATUS[r.status] || RUN_STATUS.error;
+                        return (
+                          <li key={i} className="flex items-center justify-between text-2xs">
+                            <span className={`inline-flex items-center gap-1 ${s.cls}`}><span className={`h-1 w-1 rounded-full ${s.dot}`} />{s.label}</span>
+                            <span className="text-muted">{fmtAgo(r.started_at)}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                  <p className="mt-2 text-2xs text-muted">Read-only audit log — nothing in your ad account was changed.</p>
+                </>
+              )}
+            </div>
+          )}
 
           {/* AI team */}
           <div className="rounded-2xl border border-border-subtle bg-white p-4 shadow-card">

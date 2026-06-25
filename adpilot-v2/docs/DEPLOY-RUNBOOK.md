@@ -15,18 +15,25 @@ These are human/business steps — no code change unblocks them:
 - [ ] **Meta System User token** (non-expiring) to run the real-account audit, plus Meta **App Review**
       for any live read/publish scopes (organic insights need `pages_read_engagement` +
       `instagram_manage_insights`).
+      - Role must be **Analyst** (read-only); scopes required: `ads_read` + `read_insights`.
+      - In Business Manager, **assign each target ad account explicitly** to the System User.
+        Documented trap: leaving the Account ID field blank can silently re-add unreadable
+        portfolio accounts — always set the numeric `act_<account_id>` value.
 
 ## 1. Supabase (database + RLS)
 
 Run migrations **in order** against the production project:
 
 ```
-adpilot-v2/supabase/migrations/0001 … 0026
+adpilot-v2/supabase/migrations/0001 … 0027
 ```
 
 - Intentional gaps **0012–0015** — these numbers do not exist; **never backfill**.
 - Every table is RLS-scoped via `is_org_member`. Do not disable RLS.
 - `0026_organic_posts.sql` is idempotent (`CREATE TABLE IF NOT EXISTS`, policy guard) — safe to re-run.
+- `0027_ingestion_runs.sql` adds the RLS-scoped `ingestion_runs` audit table (records every pull:
+  status, rows written, window, graph version — **no token column**) and a unique constraint on
+  `connected_ad_accounts (organisation_id, platform, external_account_id)`.
 - Apply via the Supabase SQL editor (paste each file) or the Supabase CLI (`supabase db push`).
 
 ## 2. Vercel environment variables
@@ -60,7 +67,7 @@ adpilot-v2/supabase/migrations/0001 … 0026
 
 | Feature | Vars |
 |---|---|
-| Meta/TikTok ad connect (OAuth) | `META_APP_ID`, `META_APP_SECRET`, `TIKTOK_APP_ID`, `TIKTOK_APP_SECRET`, `OAUTH_REDIRECT_BASE`, `META_GRAPH_API_VERSION` |
+| Meta/TikTok ad connect (OAuth) | `META_APP_ID`, `META_APP_SECRET`, `TIKTOK_APP_ID`, `TIKTOK_APP_SECRET`, `OAUTH_REDIRECT_BASE`, `META_GRAPH_API_VERSION` (see note below) |
 | Content publishing (organic posts/reels) | `META_PAGE_ACCESS_TOKEN`, `META_PAGE_ID`, `IG_USER_ID`, `TIKTOK_PUBLISH_TOKEN`, `MESSENGER_VERIFY_TOKEN` |
 | Live organic-insights sync | `ORGANIC_SYNC_ORG_ID` (+ the Page token + Page/IG ids above; needs App Review read scopes) |
 | Email digests/alerts (Resend) | `RESEND_API_KEY`, `EMAIL_FROM` |
@@ -69,6 +76,11 @@ adpilot-v2/supabase/migrations/0001 … 0026
 | Private context pack | `ADPILOT_CONTEXT_PACK_JSON` — **leave UNSET** for the resale-clean build |
 | Automation ingest | `INGEST_API_KEY` — optional |
 | Support / privacy contact | `SUPPORT_EMAIL` — shown in the manual **and used as the data-deletion contact**; set a real address |
+
+> **`META_GRAPH_API_VERSION`** — defaults to `v23.0` (centralised in `lib/meta/graph-version.ts`).
+> Setting this env var moves **all** Meta API callers (insights pull, token probe, account discovery)
+> together. After changing the version, run the real-account smoke test (§5 below) — v21→v23 is a
+> behaviour change worth verifying end-to-end.
 
 > **`SUPPORT_EMAIL`** is the documented name and is now honoured by `/api/data-deletion`
 > (with `NEXT_PUBLIC_SUPPORT_EMAIL` accepted as a fallback). If neither is set, the endpoint
@@ -130,6 +142,17 @@ CI runs this on every push/PR touching `adpilot-v2/**`. Do not merge to `main` r
 
 3. Confirm a cron fires (Vercel → Deployments → Cron logs) and that `/api/cron/organic-sync`
    returns `{configured:false}` until the organic vars are set (expected, inert).
+
+4. **After any `META_GRAPH_API_VERSION` change** (e.g. v21→v23), run the real-account smoke test:
+
+   ```bash
+   # trigger a Meta data pull, then score the result
+   curl -X POST https://<your-domain>/api/sync/meta  -H "x-api-key: $INGEST_API_KEY"
+   curl -X POST https://<your-domain>/api/audit/run  -H "x-api-key: $INGEST_API_KEY"
+   ```
+
+   Confirm both return HTTP 200 and that a fresh row appears in `ingestion_runs` with
+   `status = 'ok'` and the expected `graph_version` value.
 
 ## 6. Launch posture
 
