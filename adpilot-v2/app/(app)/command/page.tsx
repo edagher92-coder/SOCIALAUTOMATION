@@ -105,6 +105,10 @@ export default async function CommandCenter() {
   const moneyCpa = summ?.cpa ?? null;
   const moneyBe = summ?.break_even_cpa ?? null;
   const cpaOverBe = moneyCpa != null && moneyBe != null && moneyBe > 0 ? moneyCpa > moneyBe : null;
+  // ROAS reconciliation: our derived revenue/spend vs Meta's own reported ROAS (different
+  // attribution window). Shown side-by-side for the human to judge — no pass/fail threshold.
+  const roasDerived = (summ?.roas ?? null) as number | null;
+  const roasMeta = ((summ as any)?.roas_meta ?? null) as number | null;
   const accts = (accounts || []) as any[];
   // Ingestion audit (intentionally NOT folded into loadError: a not-yet-migrated table during
   // rollout should degrade to "no sync yet", never the red data-layer banner).
@@ -180,6 +184,12 @@ export default async function CommandCenter() {
             {cpaOverBe != null && (
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${cpaOverBe ? "bg-band-red/25 text-white" : "bg-teal/25 text-white"}`}>
                 {cpaOverBe ? "CPA above break-even" : "CPA at / below break-even"}
+              </span>
+            )}
+            {roasDerived != null && roasMeta != null && (
+              <span className="font-bold">
+                ROAS {fmt(roasDerived)}x
+                <span className="ml-1 font-normal text-white/60">vs Meta-reported {fmt(roasMeta)}x · attribution-window difference</span>
               </span>
             )}
           </div>

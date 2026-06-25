@@ -87,7 +87,9 @@ export function buildReportMarkdown(payload: ReportPayload, opts: ReportOpts): s
   out.push(`| CPA | ${money(s.cpa, ccy)} |`);
   out.push(`| Break-even CPA | ${money(s.break_even_cpa, ccy)} |`);
   if (s.break_even_cpl != null) out.push(`| Break-even CPL | ${money(s.break_even_cpl, ccy)} |`);
-  out.push(`| ROAS | ${x(s.roas)} |`);
+  out.push(`| ROAS (derived: revenue/spend) | ${x(s.roas)} |`);
+  // Meta's own reported ROAS, side-by-side for the human to judge — never replaces the derived value.
+  if (s.roas_meta != null) out.push(`| ROAS (Meta-reported, attribution-window difference) | ${x(s.roas_meta)} |`);
   out.push(`| Break-even ROAS | ${x(s.break_even_roas)} |`);
   out.push(`| MER | ${x(s.mer)} |`);
   out.push(`| CTR | ${pct(s.ctr)} |`);

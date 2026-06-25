@@ -39,6 +39,17 @@ export function analyse(rows: Row[], cfg: Cfg) {
       platform: r.platform || "?",
     };
   });
+
+  // Meta-reported ROAS (`purchase_roas`), spend-weighted across the rows that report it. Surfaced
+  // ONLY as an attribution-window cross-check beside the derived revenue/spend ROAS — it is NEVER a
+  // health factor, verdict input, or a replacement for the derived value. Null unless ≥1 row reports it.
+  let mrNum = 0, mrSpend = 0;
+  for (const r of rows) {
+    const rm = Number(r.roas_meta), sp = Number(r.spend) || 0;
+    if (Number.isFinite(rm) && rm > 0 && sp > 0) { mrNum += rm * sp; mrSpend += sp; }
+  }
+  const roas_meta = mrSpend > 0 ? mrNum / mrSpend : null;
+
   return {
     config: cfg,
     summary: {
@@ -48,7 +59,7 @@ export function analyse(rows: Row[], cfg: Cfg) {
       ctr: res.agg.ctr, cpc: M.cpc(res.agg.spend, res.agg.clicks), cpm: M.cpm(res.agg.spend, res.agg.impressions),
       frequency: M.frequency(res.agg.impressions, res.agg.reach), conv_rate: res.agg.conv_rate,
       cpl: M.cpl(res.agg.spend, res.agg.leads),
-      cpa: res.agg.cpa, roas: res.agg.roas, mer: M.mer(res.agg.revenue, res.agg.spend),
+      cpa: res.agg.cpa, roas: res.agg.roas, roas_meta, mer: M.mer(res.agg.revenue, res.agg.spend),
       break_even_cpa: res.break_even_cpa, break_even_cpl: res.break_even_cpl ?? null, break_even_roas: M.breakEvenRoas(cfg.gross_margin),
     },
     health: { total: res.total, band: res.band, guidance: res.guidance, findings: res.findings, weakest: res.weakest, breakdown: res.breakdown },

@@ -110,6 +110,11 @@ export async function buildReportPdf(payload: unknown, opts: ReportPdfOptions = 
     ["Break-even CPA", num(s.break_even_cpa)], ["ROAS", num(s.roas)],
     ["Leads", num(s.leads)], ["Revenue", num(s.revenue)],
   ];
+  // Meta-reported ROAS (its attribution window) beside the derived ROAS for reconciliation — only
+  // when the payload carries it; never replaces the derived value. ASCII label (WinAnsi font).
+  if (s.roas_meta != null && Number.isFinite(Number(s.roas_meta))) {
+    stats.splice(4, 0, ["ROAS (Meta-reported)", num(s.roas_meta)]);
+  }
   for (const [k, v] of stats) {
     ensure(15);
     page.drawText(k, { x: MARGIN, y: y - 11, size: 10, font, color: muted });

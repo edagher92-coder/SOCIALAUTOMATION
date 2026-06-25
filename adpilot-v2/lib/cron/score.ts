@@ -22,7 +22,7 @@ export async function scoreAndAlertOrg(
 ): Promise<{ scored: boolean; alerted: boolean }> {
   const since = new Date(Date.now() - 14 * 864e5).toISOString().slice(0, 10);
   const { data: snaps } = await admin.from("campaign_snapshots")
-    .select("campaign_name,platform,spend,impressions,reach,frequency,clicks,ctr,cpc,cpm,leads,purchases,revenue,lead_quality_score,tracking_status")
+    .select("campaign_name,platform,spend,impressions,reach,frequency,clicks,ctr,cpc,cpm,leads,purchases,revenue,roas_meta,lead_quality_score,tracking_status")
     .eq("organisation_id", org.id).gte("date", since).limit(5000);
   if (!snaps || snaps.length === 0) return { scored: false, alerted: false };
 

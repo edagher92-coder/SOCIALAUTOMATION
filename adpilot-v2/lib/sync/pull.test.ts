@@ -17,7 +17,7 @@ process.env.TOKEN_ENCRYPTION_KEY = KEY_B64;
 
 import { encrypt } from "@/lib/crypto";
 import {
-  syncOrgPlatform, extractMetaConversions, metaPull,
+  syncOrgPlatform, extractMetaConversions, extractMetaRoas, metaPull,
   isMetaRateLimited, metaBackoffMs, classifyIngestionError, RateLimitError,
 } from "@/lib/sync/pull";
 
@@ -328,6 +328,39 @@ describe("metaPull — CTR normalisation", () => {
     vi.stubGlobal("fetch", fetchLocal);
     const rows = await metaPull("TOK", "555", "org-1");
     expect(rows[0].ctr).toBeCloseTo(0.025, 6); // 2.5% → 0.025
+  });
+});
+
+// ---------------------------------------------------------------------------
+// purchase_roas reconciliation (Meta's reported ROAS) — capture only, never scored.
+// ---------------------------------------------------------------------------
+describe("extractMetaRoas", () => {
+  it("returns the purchase-type ROAS value", () => {
+    expect(extractMetaRoas([{ action_type: "omni_purchase", value: "2.5" }])).toBeCloseTo(2.5, 6);
+    expect(extractMetaRoas([{ action_type: "purchase", value: "4" }])).toBe(4);
+  });
+  it("falls back to the first entry when no purchase type matches", () => {
+    expect(extractMetaRoas([{ action_type: "offsite_conversion", value: "1.8" }])).toBeCloseTo(1.8, 6);
+  });
+  it("returns null for empty / null / non-positive", () => {
+    expect(extractMetaRoas(null)).toBeNull();
+    expect(extractMetaRoas([])).toBeNull();
+    expect(extractMetaRoas([{ action_type: "purchase", value: "0" }])).toBeNull();
+  });
+});
+
+describe("metaPull — roas_meta capture", () => {
+  it("captures Meta's purchase_roas as roas_meta on the row", async () => {
+    const fetchLocal = vi.fn().mockReturnValue(okJson({ data: [metaRow({ purchase_roas: [{ action_type: "omni_purchase", value: "3.45" }] })] }));
+    vi.stubGlobal("fetch", fetchLocal);
+    const rows = await metaPull("TOK", "1", "org-1");
+    expect(rows[0].roas_meta).toBeCloseTo(3.45, 6);
+  });
+  it("sets roas_meta null when purchase_roas is absent (e.g. lead-gen)", async () => {
+    const fetchLocal = vi.fn().mockReturnValue(okJson({ data: [metaRow()] }));
+    vi.stubGlobal("fetch", fetchLocal);
+    const rows = await metaPull("TOK", "1", "org-1");
+    expect(rows[0].roas_meta).toBeNull();
   });
 });
 

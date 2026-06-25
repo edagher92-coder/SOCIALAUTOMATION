@@ -147,6 +147,20 @@ export function extractMetaConversions(
   return { leads, purchases, revenue, landing_page_views };
 }
 
+// Meta's OWN reported purchase ROAS (`purchase_roas`, an array of {action_type,value}). It uses
+// Meta's attribution window / view-through, so it routinely differs from our derived revenue/spend.
+// Captured for a READ-ONLY reconciliation only — never a scoring input, never overwrites revenue.
+// Returns null when the account doesn't report it.
+export function extractMetaRoas(purchaseRoas?: MetaAction[] | null): number | null {
+  for (const a of purchaseRoas || []) {
+    const t = String(a?.action_type || "");
+    if (META_PURCHASE_TYPES.has(t)) { const v = num(a?.value); if (v > 0) return v; }
+  }
+  const first = (purchaseRoas || [])[0];
+  const v = first ? num(first.value) : 0;
+  return v > 0 ? v : null;
+}
+
 export async function metaPull(token: string, accountId: string, orgId: string, opts: MetaPullOpts = {}) {
   const act = accountId.startsWith("act_") ? accountId : `act_${accountId}`;
   const sleep = opts.sleep ?? defaultSleep;
@@ -156,7 +170,7 @@ export async function metaPull(token: string, accountId: string, orgId: string, 
   const fields = [
     "campaign_id", "campaign_name", "adset_id", "adset_name", "ad_id", "ad_name",
     "spend", "impressions", "reach", "clicks", "frequency", "ctr", "cpc", "cpm",
-    "actions", "action_values",
+    "actions", "action_values", "purchase_roas",
     "video_play_actions", "video_thruplay_watched_actions",
   ].join(",");
   // Meta paginates insights (default ~25/page). With time_increment=1 a 30-day window is
@@ -201,6 +215,7 @@ export async function metaPull(token: string, accountId: string, orgId: string, 
       clicks: num(d.clicks), ctr: num(d.ctr) / 100, cpc: num(d.cpc), cpm: num(d.cpm),
       landing_page_views: conv.landing_page_views,
       leads: conv.leads, purchases: conv.purchases, revenue: conv.revenue,
+      roas_meta: extractMetaRoas(d.purchase_roas),
       three_second_views: firstVal(d.video_play_actions),
       thruplays: firstVal(d.video_thruplay_watched_actions),
       tracking_status: "ok", source: "meta_api",
