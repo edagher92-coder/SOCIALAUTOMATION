@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ModeProvider, useMode, useHelpTips } from "./mode";
 import OrgSwitcher from "./OrgSwitcher";
+import ChatPanel from "./ChatPanel";
 import { can, requiredPlan, PLAN_LABEL, FEATURE_LABEL, type Feature, type Plan } from "@/lib/entitlements";
 
 // V6 P2 dual-mode nav. `advanced` items show only in Advanced mode; `feature` items show only
@@ -201,6 +202,7 @@ export default function AppShell({ children, email, plan = "free" }: { children:
   return (
     <ModeProvider>
       <div className="min-h-screen bg-surface md:grid md:grid-cols-[260px_1fr]">
+        <ChatPanel plan={plan} />
         {/* Mobile top bar (sticky so the menu is always reachable) */}
         <div className="sticky top-0 z-30 flex items-center justify-between border-b border-border-subtle bg-white px-4 py-3 md:hidden print:hidden">
           <span className="flex items-center gap-2 font-extrabold text-ink">
