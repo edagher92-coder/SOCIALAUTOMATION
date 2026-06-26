@@ -1,0 +1,33 @@
+name: Prune claude/* branches on PR close
+
+# Deletes a `claude/*` head branch when its PR is closed (merged OR closed-without-merge).
+# The native repo setting "Automatically delete head branches" already covers the MERGED
+# case for all branches — this adds the closed-without-merge case, scoped to claude/* only.
+# Place at: .github/workflows/prune-claude-branches.yml
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  prune:
+    # Only act on claude/* head branches (never touches main or anything else).
+    if: startsWith(github.event.pull_request.head.ref, 'claude/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete head branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          MERGED: ${{ github.event.pull_request.merged }}
+        run: |
+          echo "PR #${{ github.event.pull_request.number }} closed (merged=$MERGED); head=$BRANCH"
+          if gh api -X DELETE "repos/$REPO/git/refs/heads/$BRANCH"; then
+            echo "Deleted $BRANCH"
+          else
+            echo "Could not delete $BRANCH (already gone, or protected) — skipping."
+          fi
