@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import type { Plan } from "@/lib/entitlements";
+import { ChatGroundingNudge, isGroundingQuestion } from "./ChatGroundingNudge";
 
 type ChatAgent = { id: string; name: string; emoji: string; desc: string };
 type Message = { role: "user" | "assistant"; content: string; agentName?: string };
@@ -51,6 +52,8 @@ export default function ChatPanel({ plan }: { plan: Plan }) {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [groundingNudgeDismissed, setGroundingNudgeDismissed] = useState(false);
+  const [groundingTriggerMsg, setGroundingTriggerMsg] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isExpert = plan === "expert";
@@ -71,6 +74,9 @@ export default function ChatPanel({ plan }: { plan: Plan }) {
     const userMsg: Message = { role: "user", content };
     const next = [...messages, userMsg];
     setMessages(next);
+    if (!hasGrounding && !groundingNudgeDismissed && isGroundingQuestion(content)) {
+      setGroundingTriggerMsg(content);
+    }
     setDraft("");
     setErr("");
     setBusy(true);
@@ -91,7 +97,7 @@ export default function ChatPanel({ plan }: { plan: Plan }) {
     } finally {
       setBusy(false);
     }
-  }, [draft, busy, messages, agentId, activeAgent.name]);
+  }, [draft, busy, messages, agentId, activeAgent.name, hasGrounding, groundingNudgeDismissed]);
 
   function escalate() {
     const summary = messages.map(m => `${m.role === "user" ? "You" : m.agentName ?? "AdPilot"}: ${m.content}`).join("\n\n");
@@ -166,6 +172,13 @@ export default function ChatPanel({ plan }: { plan: Plan }) {
               </div>
             )}
             {messages.map((m, i) => <Bubble key={i} msg={m} />)}
+            {!hasGrounding && groundingTriggerMsg && (
+              <ChatGroundingNudge
+                userMessage={groundingTriggerMsg}
+                dismissed={groundingNudgeDismissed}
+                onDismiss={() => setGroundingNudgeDismissed(true)}
+              />
+            )}
             {busy && (
               <div className="flex gap-2">
                 <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-surface border border-border-subtle text-base">
