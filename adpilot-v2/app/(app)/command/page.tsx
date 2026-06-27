@@ -8,6 +8,7 @@ import { summariseSeries } from "@/lib/engine/timeseries";
 import { fmt } from "@/lib/engine/metrics";
 import ModeAware from "@/components/ModeAware";
 import ReadOnlyBadge from "@/components/ReadOnlyBadge";
+import WastedSpendWidget from "@/components/WastedSpendWidget";
 import Tip from "@/components/Tip";
 import Sparkline from "@/components/Sparkline";
 import { analyseAccount } from "@/lib/organic/account";
@@ -263,6 +264,9 @@ export default async function CommandCenter() {
             )}
             <p className="mt-2 text-2xs text-muted">Auto-sync: <b>{cadence}</b> · <a className="text-brand" href="/settings">change</a></p>
           </div>
+
+          {/* Wasted spend counter — live account data (Pro+). Best-effort client fetch. */}
+          {apiEnabled && <WastedSpendWidget />}
 
           {/* Data sync — honest ingestion audit (read-only). Proves the numbers are live, when they
               last refreshed, and surfaces an empty/rate-limited/reconnect state plainly. */}

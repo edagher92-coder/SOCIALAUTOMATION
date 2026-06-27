@@ -27,6 +27,7 @@ const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
     { href: "/boost", label: "Boost & Reach", icon: "🚀", desc: "Project a post's reach if you boost it", feature: "content_publish" },
     { href: "/content/calendar", label: "Content Calendar", icon: "📅", desc: "Scheduled posts at a glance", advanced: true, feature: "content_publish" },
     { href: "/creative", label: "Creative Library", icon: "🖼️", desc: "Link or upload audio/video/photo", advanced: true, feature: "creative_studio" },
+    { href: "/creative-scorecard", label: "Creative Scorecard", icon: "📉", desc: "Hook rate, CTR decay & fatigue per ad", advanced: true, feature: "creative_studio" },
     { href: "/canva-creator", label: "Canva Creator", icon: "🎨", desc: "On-brand creative briefs & prompts", advanced: true, feature: "creative_studio" },
     { href: "/messenger", label: "Messenger", icon: "💬", desc: "Auto-replies, greeting & menu", advanced: true, feature: "messenger_automation" },
     { href: "/portfolio", label: "Clients", icon: "👥", desc: "All your clients at a glance", advanced: true, feature: "multi_client" },
