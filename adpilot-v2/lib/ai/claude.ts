@@ -73,6 +73,57 @@ export async function callClaude(opts: { system?: string; user: string; model?: 
   return (j.content || []).map((b: any) => (b.type === "text" ? b.text : "")).join("").trim();
 }
 
+// Multi-turn chat — passes the full conversation history to Claude.
+// Used by /api/chat to support back-and-forth conversation in the panel.
+export async function callClaudeMultiTurn(opts: {
+  system?: string;
+  messages: Array<{ role: "user" | "assistant"; content: string }>;
+  model?: string;
+  maxTokens?: number;
+  cacheSystem?: boolean;
+  onUsage?: (u: { model: string; input: number; output: number; cacheRead: number; cacheWrite: number }) => void;
+}): Promise<string> {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) throw new NoKeyError();
+  const model = opts.model || process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
+  const system = opts.system
+    ? (opts.cacheSystem
+        ? [{ type: "text", text: opts.system, cache_control: { type: "ephemeral" } }]
+        : opts.system)
+    : undefined;
+  const res = await fetch(API, {
+    method: "POST",
+    headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+    body: JSON.stringify({
+      model,
+      max_tokens: opts.maxTokens ?? 1000,
+      ...(system ? { system } : {}),
+      messages: opts.messages,
+    }),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`Claude API error ${res.status}: ${t.slice(0, 300)}`);
+  }
+  const j: any = await res.json();
+  const u = j.usage;
+  if (u) {
+    console.info("[claude.chat.usage]", JSON.stringify({
+      model, in: u.input_tokens, out: u.output_tokens,
+      cache_read: u.cache_read_input_tokens ?? 0, cache_write: u.cache_creation_input_tokens ?? 0,
+    }));
+    if (opts.onUsage) {
+      try {
+        opts.onUsage({
+          model, input: u.input_tokens ?? 0, output: u.output_tokens ?? 0,
+          cacheRead: u.cache_read_input_tokens ?? 0, cacheWrite: u.cache_creation_input_tokens ?? 0,
+        });
+      } catch { /* best-effort */ }
+    }
+  }
+  return (j.content || []).map((b: any) => (b.type === "text" ? b.text : "")).join("").trim();
+}
+
 // Web-research call: enables Anthropic's server-side web_search tool so the model pulls
 // CURRENT public data and synthesises an answer. Used by the knowledge-refresh cron.
 // web_search_20260209 is GA (dynamic filtering built in) — no beta header needed.

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ModeProvider, useMode, useHelpTips } from "./mode";
 import OrgSwitcher from "./OrgSwitcher";
+import ChatPanel from "./ChatPanel";
 import { can, requiredPlan, PLAN_LABEL, FEATURE_LABEL, type Feature, type Plan } from "@/lib/entitlements";
 
 // V6 P2 dual-mode nav. `advanced` items show only in Advanced mode; `feature` items show only
@@ -26,6 +27,7 @@ const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
     { href: "/boost", label: "Boost & Reach", icon: "🚀", desc: "Project a post's reach if you boost it", feature: "content_publish" },
     { href: "/content/calendar", label: "Content Calendar", icon: "📅", desc: "Scheduled posts at a glance", advanced: true, feature: "content_publish" },
     { href: "/creative", label: "Creative Library", icon: "🖼️", desc: "Link or upload audio/video/photo", advanced: true, feature: "creative_studio" },
+    { href: "/creative-scorecard", label: "Creative Scorecard", icon: "📉", desc: "Hook rate, CTR decay & fatigue per ad", advanced: true, feature: "creative_studio" },
     { href: "/canva-creator", label: "Canva Creator", icon: "🎨", desc: "On-brand creative briefs & prompts", advanced: true, feature: "creative_studio" },
     { href: "/messenger", label: "Messenger", icon: "💬", desc: "Auto-replies, greeting & menu", advanced: true, feature: "messenger_automation" },
     { href: "/portfolio", label: "Clients", icon: "👥", desc: "All your clients at a glance", advanced: true, feature: "multi_client" },
@@ -201,6 +203,7 @@ export default function AppShell({ children, email, plan = "free" }: { children:
   return (
     <ModeProvider>
       <div className="min-h-screen bg-surface md:grid md:grid-cols-[260px_1fr]">
+        <ChatPanel plan={plan} />
         {/* Mobile top bar (sticky so the menu is always reachable) */}
         <div className="sticky top-0 z-30 flex items-center justify-between border-b border-border-subtle bg-white px-4 py-3 md:hidden print:hidden">
           <span className="flex items-center gap-2 font-extrabold text-ink">
