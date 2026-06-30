@@ -5,11 +5,11 @@
       "Skill"
     ]
   },
-  "model": "opus",
+  "model": "sonnet",
   "effortLevel": "high",
   "autoCompactEnabled": true,
   "autoCompactWindow": 150000,
-  "fallbackModel": ["sonnet", "haiku"],
+  "fallbackModel": ["opus", "haiku"],
   "enableAllProjectMcpServers": true,
   "enabledPlugins": {
     "code-review@claude-plugins-official": true,

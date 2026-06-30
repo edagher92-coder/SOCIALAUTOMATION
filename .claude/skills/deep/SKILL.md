@@ -23,7 +23,7 @@ When you need to spawn subagents (Agent tool), use these overrides:
 - **Tier 2 — code implementation, single-file**: `model: "opus"`, `effort: "high"` (Opus for quality)
 - **Tier 1 — architecture, security, review**: `model: "opus"`, `effort: "xhigh"` (maximum depth)
 - **Workflows**: `effort: "high"` on all stages, `"xhigh"` on verify stages
-- Main session stays on Opus/high — this mode pushes subagents to Opus too
+- Main session stays on Sonnet 5 / high — this mode pushes subagents to Opus
 
 ## What to do MORE of
 - Read surrounding code before editing — understand the full context
@@ -31,4 +31,4 @@ When you need to spawn subagents (Agent tool), use these overrides:
 - Consider edge cases and failure modes
 - Parallelize independent searches for thoroughness
 
-Confirm the switch by saying: **Deep mode on. Full reasoning enabled, Opus/Sonnet subagents for thorough work.**
+Confirm the switch by saying: **Deep mode on. Full reasoning enabled, Opus subagents for thorough work.**
