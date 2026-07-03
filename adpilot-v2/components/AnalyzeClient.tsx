@@ -37,11 +37,11 @@ Example Co,meta,promo2,2026-06-13,1200,60000,28000,360,0,0,0,8000,2000,,,,broken
 // score ring so the gauge language is identical on Ads Health and Mission Control.
 
 const SEVERITY_BG: Record<string, string> = {
-  CRITICAL: "bg-red-100 text-band-red",
-  HIGH:     "bg-orange-100 text-band-orange",
-  MEDIUM:   "bg-yellow-100 text-band-yellow",
-  LOW:      "bg-green-100 text-band-green",
-  INFO:     "bg-gray-100 text-muted",
+  CRITICAL: "bg-bad/15 text-bad",
+  HIGH:     "bg-warn/15 text-warn",
+  MEDIUM:   "bg-warn/15 text-warn",
+  LOW:      "bg-good/15 text-good",
+  INFO:     "bg-muted/15 text-muted",
 };
 
 export default function AnalyzeClient() {
@@ -69,7 +69,7 @@ export default function AnalyzeClient() {
   return (
     <div className="grid gap-5 md:grid-cols-[320px_1fr]">
       {/* ── Input panel ─────────────────────────────────── */}
-      <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <p className="mb-3 text-xs font-bold uppercase tracking-widest text-muted">Load sample</p>
         <div className="mb-4 flex flex-wrap gap-2">
           {(["clean", "fatigued", "broken"] as const).map((k) => (
@@ -127,10 +127,10 @@ export default function AnalyzeClient() {
       </div>
 
       {/* ── Results panel ───────────────────────────────── */}
-      <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         {/* Error */}
         {err && (
-          <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-band-red">
+          <div role="alert" className="mb-4 rounded-xl border border-bad/40 bg-bad/10 px-4 py-3 text-sm font-medium text-bad">
             {err}
           </div>
         )}
@@ -241,7 +241,7 @@ export default function AnalyzeClient() {
                     {res.health.findings.map((fd: any, i: number) => (
                       <tr key={i} className="border-b border-border-subtle last:border-0 hover:bg-surface">
                         <td className="py-3 pl-4 pr-3 align-top">
-                          <span className={`inline-block rounded-md px-2 py-0.5 text-2xs font-bold ${SEVERITY_BG[fd.severity] || "bg-gray-100 text-muted"}`}>
+                          <span className={`inline-block rounded-md px-2 py-0.5 text-2xs font-bold ${SEVERITY_BG[fd.severity] || "bg-muted/15 text-muted"}`}>
                             {fd.severity}
                           </span>
                         </td>
@@ -267,9 +267,9 @@ export default function AnalyzeClient() {
                       <tr key={i} className="border-b border-border-subtle last:border-0 hover:bg-surface">
                         <td className="py-3 pl-4 pr-3 align-top">
                           <span className={`inline-block rounded-md px-2 py-0.5 text-2xs font-bold capitalize ${
-                            d.verdict === "scale" ? "bg-green-100 text-band-green" :
-                            d.verdict === "kill" || d.verdict === "fix-tracking" ? "bg-red-100 text-band-red" :
-                            "bg-gray-100 text-muted"
+                            d.verdict === "scale" ? "bg-good/15 text-good" :
+                            d.verdict === "kill" || d.verdict === "fix-tracking" ? "bg-bad/15 text-bad" :
+                            "bg-muted/15 text-muted"
                           }`}>
                             {d.verdict}
                           </span>

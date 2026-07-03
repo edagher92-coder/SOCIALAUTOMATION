@@ -35,7 +35,7 @@ function Bubble({ msg }: { msg: Message }) {
       <div className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs ${isUser ? "bg-brand text-white" : "bg-surface border border-border-subtle text-base"}`}>
         {isUser ? "You" : <span aria-hidden>{CHAT_AGENTS.find(a => a.name === msg.agentName)?.emoji ?? "🧭"}</span>}
       </div>
-      <div className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${isUser ? "bg-brand text-white rounded-tr-sm" : "bg-white border border-border-subtle text-ink rounded-tl-sm shadow-card"}`}>
+      <div className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${isUser ? "bg-brand text-white rounded-tr-sm" : "bg-surface-raised border border-border-subtle text-ink rounded-tl-sm shadow-card"}`}>
         {isUser ? msg.content : <MarkdownText text={msg.content} />}
         {!isUser && msg.agentName && (
           <p className="mt-1.5 text-2xs text-muted">{msg.agentName}</p>
@@ -124,7 +124,7 @@ export default function ChatPanel({ plan }: { plan: Plan }) {
         <div
           role="dialog"
           aria-label="AdPilot Assistant"
-          className="fixed bottom-24 right-5 z-50 flex w-[360px] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-border-subtle bg-white shadow-2xl print:hidden"
+          className="fixed bottom-24 right-5 z-50 flex w-[360px] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface-raised shadow-2xl print:hidden"
           style={{ maxHeight: "min(600px, calc(100vh - 8rem))" }}>
 
           {/* Header */}
@@ -140,7 +140,7 @@ export default function ChatPanel({ plan }: { plan: Plan }) {
               <p className="truncate text-2xs text-muted">{activeAgent.desc}</p>
             </div>
             {messages.length > 0 && (
-              <button type="button" onClick={clearChat} className="flex-shrink-0 rounded-lg px-2 py-1 text-2xs font-semibold text-muted hover:text-ink hover:bg-white transition">Clear</button>
+              <button type="button" onClick={clearChat} className="flex-shrink-0 rounded-lg px-2 py-1 text-2xs font-semibold text-muted hover:text-ink hover:bg-surface-raised transition">Clear</button>
             )}
           </div>
 
@@ -152,7 +152,7 @@ export default function ChatPanel({ plan }: { plan: Plan }) {
                 type="button"
                 onClick={() => setAgentId(a.id)}
                 title={a.desc}
-                className={`flex-shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${agentId === a.id ? "bg-brand text-white shadow-sm" : "bg-white border border-border-subtle text-ink hover:border-brand/40"}`}>
+                className={`flex-shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${agentId === a.id ? "bg-brand text-white shadow-sm" : "bg-surface-raised border border-border-subtle text-ink hover:border-brand/40"}`}>
                 {a.emoji} {a.name}
               </button>
             ))}
@@ -184,7 +184,7 @@ export default function ChatPanel({ plan }: { plan: Plan }) {
                 <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-surface border border-border-subtle text-base">
                   <span aria-hidden>{activeAgent.emoji}</span>
                 </div>
-                <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm bg-white border border-border-subtle px-3.5 py-2.5 shadow-card">
+                <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm bg-surface-raised border border-border-subtle px-3.5 py-2.5 shadow-card">
                   <span className="animate-bounce text-muted" style={{ animationDelay: "0ms" }}>·</span>
                   <span className="animate-bounce text-muted" style={{ animationDelay: "150ms" }}>·</span>
                   <span className="animate-bounce text-muted" style={{ animationDelay: "300ms" }}>·</span>
@@ -198,7 +198,7 @@ export default function ChatPanel({ plan }: { plan: Plan }) {
           </div>
 
           {/* Input */}
-          <div className="border-t border-border-subtle bg-white p-3">
+          <div className="border-t border-border-subtle bg-surface-raised p-3">
             <div className="flex gap-2">
               <textarea
                 ref={textareaRef}

@@ -159,7 +159,7 @@ export default function OrganicAccountClient({ accountCpm, initialPosts, canExpl
   return (
     <div className="space-y-6">
       {/* ---- Editable post list ---- */}
-      <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 className="font-bold text-ink">Your organic posts</h2>
@@ -180,7 +180,7 @@ export default function OrganicAccountClient({ accountCpm, initialPosts, canExpl
             </label>
             <textarea id="organic-csv" value={csv} onChange={(e) => setCsv(e.target.value)} rows={4}
               placeholder={"name,platform,reach,impressions,engagements\nLaunch reel,tiktok,8200,15000,640\nSale post,meta,5000,9000,150"}
-              className="w-full rounded-lg border border-border-subtle bg-white px-3 py-2 font-mono text-xs text-ink shadow-inner-sm transition placeholder:text-muted focus:border-brand focus:outline-none focus:shadow-ring-brand" />
+              className="w-full rounded-lg border border-border-subtle bg-surface-raised px-3 py-2 font-mono text-xs text-ink shadow-inner-sm transition placeholder:text-muted focus:border-brand focus:outline-none focus:shadow-ring-brand" />
             <div className="mt-2 flex justify-end">
               <button type="button" onClick={importCsv} disabled={!csv.trim()}
                 className="rounded-lg bg-brand px-3 py-1.5 text-xs font-bold text-white transition disabled:opacity-50">
@@ -287,11 +287,11 @@ export default function OrganicAccountClient({ accountCpm, initialPosts, canExpl
           {/* Actions: report / save / AI explainer */}
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" onClick={downloadReport}
-              className="rounded-lg border border-border-subtle bg-white px-3 py-2 text-xs font-bold text-ink shadow-card transition hover:border-brand hover:text-brand">
+              className="rounded-lg border border-border-subtle bg-surface-raised px-3 py-2 text-xs font-bold text-ink shadow-card transition hover:border-brand hover:text-brand">
               ⬇ Download report (.md)
             </button>
             <button type="button" onClick={savePosts} disabled={saveState === "saving" || saveState === "saved"}
-              className="rounded-lg border border-border-subtle bg-white px-3 py-2 text-xs font-bold text-ink shadow-card transition hover:border-brand hover:text-brand disabled:opacity-60">
+              className="rounded-lg border border-border-subtle bg-surface-raised px-3 py-2 text-xs font-bold text-ink shadow-card transition hover:border-brand hover:text-brand disabled:opacity-60">
               {saveState === "saving" ? "Saving…" : saveState === "saved" ? "✓ Saved to account" : saveState === "error" ? "Save failed — retry" : "Save posts to account"}
             </button>
             {canExplain ? (
@@ -301,14 +301,14 @@ export default function OrganicAccountClient({ accountCpm, initialPosts, canExpl
               </button>
             ) : (
               <a href="/billing" title="The AI explainer is a Pro & Expert feature"
-                className="rounded-lg border border-border-subtle bg-white px-3 py-2 text-xs font-bold text-muted shadow-card transition hover:border-brand hover:text-brand">
+                className="rounded-lg border border-border-subtle bg-surface-raised px-3 py-2 text-xs font-bold text-muted shadow-card transition hover:border-brand hover:text-brand">
                 🧠 Explain with AI — Pro
               </a>
             )}
           </div>
           {aiErr && <p className="rounded-xl bg-band-red/10 px-3 py-2 text-sm text-band-red">{aiErr}</p>}
           {ai && (
-            <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+            <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
               <h3 className="font-bold text-ink">🧠 Dana explains</h3>
               <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap rounded-xl bg-surface p-3 text-sm leading-relaxed text-ink">{ai}</pre>
             </section>
@@ -316,7 +316,7 @@ export default function OrganicAccountClient({ accountCpm, initialPosts, canExpl
 
           {/* Per-platform breakdown */}
           {analysis.summary.byPlatform.length > 0 && (
-            <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+            <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
               <h3 className="text-2xs font-bold uppercase tracking-wide text-muted">By platform</h3>
               {advanced ? (
                 <div className="mt-3 overflow-x-auto">
@@ -359,7 +359,7 @@ export default function OrganicAccountClient({ accountCpm, initialPosts, canExpl
           )}
 
           {/* Boost-ready recommendations */}
-          <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
             <h3 className="font-bold text-ink">🚀 Boost-ready posts</h3>
             <p className="mt-1 text-xs text-muted">
               Ranked by projected impact. Only posts whose engagement is <b>confidently above benchmark</b> qualify — boosting amplifies a proven winner.
@@ -402,7 +402,7 @@ export default function OrganicAccountClient({ accountCpm, initialPosts, canExpl
 
           {/* Hold list */}
           {analysis.hold.length > 0 && (
-            <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+            <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
               <h3 className="font-bold text-ink">🌱 Hold &amp; improve first</h3>
               <p className="mt-1 text-xs text-muted">
                 These aren’t boost-ready: either engagement is below benchmark (improve the hook/offer organically first) or there isn’t enough reach yet to call it.
@@ -425,7 +425,7 @@ export default function OrganicAccountClient({ accountCpm, initialPosts, canExpl
           )}
 
           {/* Expectations */}
-          <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="font-bold text-ink">What to expect</h3>
               <CopyButton label="Copy for report" text={copyText} />
@@ -438,7 +438,7 @@ export default function OrganicAccountClient({ accountCpm, initialPosts, canExpl
           </section>
 
           {/* Explanations */}
-          <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
             <h3 className="font-bold text-ink">Why</h3>
             <ul className="mt-3 space-y-2 text-sm text-ink">
               {analysis.explanations.map((e, i) => (
@@ -448,7 +448,7 @@ export default function OrganicAccountClient({ accountCpm, initialPosts, canExpl
           </section>
 
           {advanced && (
-            <div className="rounded-2xl border border-border-subtle bg-white p-4 text-2xs text-muted shadow-card">
+            <div className="rounded-2xl border border-border-subtle bg-surface-raised p-4 text-2xs text-muted shadow-card">
               <div className="font-bold uppercase tracking-wide text-muted/80">How this is worked out</div>
               <ul className="mt-2 space-y-1">
                 <li>• Each post is projected at {money(budget)}: paid impressions = budget ÷ CPM × 1,000, then unique reach via an assumed boost frequency (~1.15), banded for repeat exposure.</li>
@@ -482,7 +482,7 @@ function Kpi({ label, value, sub, tip, accent }: {
   label: string; value: string; sub?: string; tip?: [string, string]; accent?: boolean;
 }) {
   return (
-    <div className={`rounded-xl border p-3 ${accent ? "border-brand-200 bg-brand-50" : "border-border-subtle bg-white"} shadow-card`}>
+    <div className={`rounded-xl border p-3 ${accent ? "border-brand-200 bg-brand-50" : "border-border-subtle bg-surface-raised"} shadow-card`}>
       <div className="flex items-center gap-1 text-2xs font-bold uppercase tracking-wide text-muted">
         {label}
         {tip && <Tip label={tip[0]} term={tip[0]}>{tip[1]}</Tip>}

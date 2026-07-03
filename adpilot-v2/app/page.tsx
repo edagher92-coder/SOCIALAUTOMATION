@@ -7,7 +7,7 @@ export default function Landing() {
   return (
     <main className="min-h-screen bg-surface antialiased">
       {/* ── Nav ─────────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 border-b border-border-subtle bg-white/90 backdrop-blur-md">
+      <nav className="sticky top-0 z-50 border-b border-border-subtle bg-surface/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-5">
           <Link href="/" className="flex items-center gap-2.5 text-lg font-extrabold tracking-tight text-ink">
             <span className="inline-block h-7 w-7 rounded-xl bg-gradient-to-br from-brand to-teal shadow-sm" />
@@ -29,7 +29,7 @@ export default function Landing() {
       </nav>
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <header className="relative overflow-hidden border-b border-border-subtle bg-gradient-to-b from-white via-white to-surface px-5 py-16 sm:py-24 lg:py-28">
+      <header className="relative overflow-hidden border-b border-border-subtle bg-gradient-to-b from-surface-raised via-surface to-surface px-5 py-16 sm:py-24 lg:py-28">
         {/* subtle decorative orb */}
         <div aria-hidden className="pointer-events-none absolute -top-32 left-1/2 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-brand-50 opacity-50 blur-3xl" />
         <div className="relative mx-auto max-w-3xl text-center">
@@ -54,7 +54,7 @@ export default function Landing() {
               Open the Command Centre →
             </Link>
             <Link href="/login"
-              className="rounded-xl border border-border-subtle bg-white px-6 py-3.5 text-base font-bold text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:shadow-ring-brand">
+              className="rounded-xl border border-border-subtle bg-surface-raised px-6 py-3.5 text-base font-bold text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:shadow-ring-brand">
               Sign in
             </Link>
           </div>
@@ -66,7 +66,7 @@ export default function Landing() {
       </header>
 
       {/* ── Trust bar ────────────────────────────────────────── */}
-      <section className="border-b border-border-subtle bg-white px-5 py-6">
+      <section className="border-b border-border-subtle bg-surface-raised px-5 py-6">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-x-10 gap-y-3 text-sm font-semibold text-muted">
           {["Never touches a live ad", "AES-256 encrypted tokens", "Meta & TikTok read-only", "Numbers-first · no fluff"].map((t) => (
             <span key={t} className="flex items-center gap-1.5">
@@ -95,7 +95,7 @@ export default function Landing() {
             ["👥", "Manage every client", "Switch between clients in a click and see each one's health at a glance."],
             ["🗃️", "White-label reports", "Send client-ready reports and PDFs branded as your agency — your logo, your colours."],
           ] as [string, string, string][]).map(([icon, title, body]) => (
-            <div key={title} className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+            <div key={title} className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
               <div className="text-2xl" aria-hidden>{icon}</div>
               <h3 className="mt-2 font-bold text-ink">{title}</h3>
               <p className="mt-1 text-sm leading-relaxed text-muted">{body}</p>
@@ -126,7 +126,7 @@ export default function Landing() {
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {PLANS.map((t) => (
             <div key={t.id}
-              className={`relative flex flex-col rounded-2xl border bg-white p-6 shadow-card transition hover:shadow-card-hover ${t.mostPopular ? "border-brand ring-1 ring-brand/20" : "border-border-subtle"}`}>
+              className={`relative flex flex-col rounded-2xl border bg-surface-raised p-6 shadow-card transition hover:shadow-card-hover ${t.mostPopular ? "border-brand ring-1 ring-brand/20" : "border-border-subtle"}`}>
               {t.mostPopular && (
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand px-3 py-1 text-xs font-bold text-white shadow-sm">
                   Most popular
@@ -155,7 +155,7 @@ export default function Landing() {
       </section>
 
       {/* ── Footer ───────────────────────────────────────────── */}
-      <footer className="border-t border-border-subtle bg-white px-5 py-10">
+      <footer className="border-t border-border-subtle bg-surface-raised px-5 py-10">
         <div className="mx-auto max-w-6xl flex flex-col items-center gap-2 text-center text-sm text-muted sm:flex-row sm:justify-between">
           <span className="flex items-center gap-2 font-semibold text-ink">
             <span className="inline-block h-5 w-5 rounded-lg bg-gradient-to-br from-brand to-teal" />

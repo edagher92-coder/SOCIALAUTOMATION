@@ -20,7 +20,7 @@ export default function RangeToggle({
   const container =
     variant === "cockpit"
       ? "border-cockpit-edge bg-cockpit-raised"
-      : "border-border-subtle bg-white shadow-card";
+      : "border-border-subtle bg-surface-raised shadow-card";
   const inactive = variant === "cockpit" ? "text-cockpit-muted hover:text-cockpit-ink" : "text-muted hover:text-ink";
 
   return (

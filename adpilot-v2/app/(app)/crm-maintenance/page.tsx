@@ -35,7 +35,7 @@ export default function CrmMaintenance() {
           <span className="text-sm font-bold text-ink">{pct}%</span>
         </div>
         {pct === 100 && (
-          <div className="mb-3 rounded-xl border border-teal/30 bg-teal-50 p-3 text-sm font-semibold text-teal">
+          <div className="mb-3 rounded-xl border border-good/40 bg-good/10 p-3 text-sm font-semibold text-good">
             All clear — your CRM checklist is complete for this week. 🎉
           </div>
         )}

@@ -133,7 +133,7 @@ export default function CreativeScorecardPage() {
         </div>
         <div className="flex items-center gap-3">
           <RangeToggle days={days} onChange={setDays} />
-          <Link href="/creative" className="rounded-xl border border-border-subtle bg-white px-3.5 py-2 text-sm font-semibold text-ink shadow-sm transition hover:border-brand hover:text-brand">
+          <Link href="/creative" className="rounded-xl border border-border-subtle bg-surface-raised px-3.5 py-2 text-sm font-semibold text-ink shadow-sm transition hover:border-brand hover:text-brand">
             Creative Library →
           </Link>
         </div>
@@ -149,12 +149,12 @@ export default function CreativeScorecardPage() {
               {waste.killCount} kill · {waste.reduceCount} reduce — {waste.wastedFraction != null ? pct(waste.wastedFraction) : "—"} of spend
             </div>
           </div>
-          <div className="flex-1 min-w-[200px] rounded-2xl border border-border-subtle bg-white px-5 py-4 shadow-card">
+          <div className="flex-1 min-w-[200px] rounded-2xl border border-border-subtle bg-surface-raised px-5 py-4 shadow-card">
             <div className="text-xs font-bold uppercase tracking-widest text-muted">Kill spend</div>
             <div className="mt-1 text-2xl font-extrabold tabular-nums text-ink">{sym}{fmt(waste.killSpend)}</div>
             <div className="mt-0.5 text-xs text-muted">{waste.killCount} ad{waste.killCount !== 1 ? "s" : ""} flagged for pause</div>
           </div>
-          <div className="flex-1 min-w-[200px] rounded-2xl border border-border-subtle bg-white px-5 py-4 shadow-card">
+          <div className="flex-1 min-w-[200px] rounded-2xl border border-border-subtle bg-surface-raised px-5 py-4 shadow-card">
             <div className="text-xs font-bold uppercase tracking-widest text-muted">Reduce spend</div>
             <div className="mt-1 text-2xl font-extrabold tabular-nums text-ink">{sym}{fmt(waste.reduceSpend)}</div>
             <div className="mt-0.5 text-xs text-muted">{waste.reduceCount} ad{waste.reduceCount !== 1 ? "s" : ""} above break-even</div>
@@ -163,7 +163,7 @@ export default function CreativeScorecardPage() {
       )}
 
       {loading && (
-        <div className="rounded-2xl border border-border-subtle bg-white p-8 text-center text-muted shadow-card">
+        <div className="rounded-2xl border border-border-subtle bg-surface-raised p-8 text-center text-muted shadow-card">
           Loading creative scorecard…
         </div>
       )}
@@ -188,7 +188,7 @@ export default function CreativeScorecardPage() {
       )}
 
       {!loading && !err && sorted.length > 0 && (
-        <div className="overflow-x-auto rounded-2xl border border-border-subtle bg-white shadow-card">
+        <div className="overflow-x-auto rounded-2xl border border-border-subtle bg-surface-raised shadow-card">
           <table className="w-full min-w-[800px] text-sm">
             <thead>
               <tr className="border-b border-border-subtle bg-surface/60">

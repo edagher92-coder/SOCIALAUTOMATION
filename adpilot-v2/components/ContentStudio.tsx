@@ -12,7 +12,7 @@ const PLATFORMS = [
   { v: "tiktok", label: "TikTok" },
 ];
 const STATUS_CLS: Record<string, string> = {
-  draft: "bg-surface text-muted", approved: "bg-brand-50 text-brand", scheduled: "bg-teal-50 text-teal",
+  draft: "bg-surface text-muted", approved: "bg-brand-50 text-brand", scheduled: "bg-ice/15 text-ice",
   published: "bg-band-green/10 text-band-green", failed: "bg-band-red/10 text-band-red",
 };
 
@@ -135,7 +135,7 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
   return (
     <div className="space-y-6">
       {/* Composer */}
-      <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <h2 className="mb-3 font-bold">Create a post / reel</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-sm"><span className="mb-1 block font-semibold">Platform</span>
@@ -236,7 +236,7 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
         ) : (
           <div className="space-y-2.5">
             {posts.map((p) => (
-              <div key={p.id} className="rounded-2xl border border-border-subtle bg-white p-4 shadow-card">
+              <div key={p.id} className="rounded-2xl border border-border-subtle bg-surface-raised p-4 shadow-card">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">

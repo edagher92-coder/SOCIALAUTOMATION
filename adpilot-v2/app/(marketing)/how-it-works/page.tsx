@@ -175,7 +175,7 @@ export default function HowItWorksPage() {
       </nav>
 
       {/* ── Hero ─────────────────────────────────────────────────── */}
-      <header className="relative overflow-hidden border-b border-border-subtle bg-gradient-to-b from-white via-white to-surface px-5 py-16 sm:py-24">
+      <header className="relative overflow-hidden border-b border-border-subtle bg-gradient-to-b from-surface-raised via-surface to-surface px-5 py-16 sm:py-24">
         <div aria-hidden className="pointer-events-none absolute -top-28 left-1/2 h-[420px] w-[640px] -translate-x-1/2 rounded-full bg-brand-50 opacity-50 blur-3xl" />
         <div className="relative mx-auto max-w-2xl text-center">
           <span className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3.5 py-1.5 text-sm font-semibold text-brand">

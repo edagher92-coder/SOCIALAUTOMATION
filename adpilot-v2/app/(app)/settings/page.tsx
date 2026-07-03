@@ -60,7 +60,7 @@ export default function Settings() {
     <div className="max-w-xl">
       <h1 className="text-2xl font-extrabold tracking-tight">Settings</h1>
       <p className="mb-5 mt-1 text-muted">Economics for the current client{name ? ` — ${name}` : ""}. These drive break-even and the scheduled score.</p>
-      <div className="space-y-4 rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="space-y-4 rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <div><label className="mb-1 block text-sm font-bold">Average sale value (AUD)</label>
           <input type="number" value={avg} onChange={(e) => setAvg(+e.target.value)} className="w-full rounded-lg border border-border-subtle p-2.5" /></div>
         <div><label className="mb-1 block text-sm font-bold">Gross margin (0–1)</label>

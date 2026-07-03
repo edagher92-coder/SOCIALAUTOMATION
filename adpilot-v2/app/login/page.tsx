@@ -69,7 +69,7 @@ export default function Login() {
       </div>
 
       <div className="w-full max-w-sm">
-        <div className="rounded-2xl border border-border-subtle bg-white p-8 shadow-card">
+        <div className="rounded-2xl border border-border-subtle bg-surface-raised p-8 shadow-card">
           <h1 className="text-2xl font-extrabold tracking-tight text-ink">
             {mode === "signin" ? "Welcome back" : mode === "signup" ? "Create account" : "Reset your password"}
           </h1>
@@ -147,7 +147,7 @@ export default function Login() {
           </form>
 
           {msg && (
-            <div role="alert" className={`mt-4 rounded-xl border px-4 py-3 text-sm font-medium ${msg.includes("Check") ? "border-teal-100 bg-teal-50 text-teal" : "border-red-100 bg-red-50 text-band-red"}`}>
+            <div role="alert" className={`mt-4 rounded-xl border px-4 py-3 text-sm font-medium ${msg.includes("Check") ? "border-good/40 bg-good/10 text-good" : "border-bad/40 bg-bad/10 text-bad"}`}>
               {msg}
             </div>
           )}

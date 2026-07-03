@@ -93,24 +93,21 @@ export default function MissingInsightsCard({ lastScore, lastBand }: Props) {
   return (
     <section
       aria-label="What Pro would show you"
-      className="overflow-hidden rounded-2xl border border-[#ffb224]/30 bg-white shadow-card"
+      className="overflow-hidden rounded-2xl border border-[#ffb224]/30 bg-surface-raised shadow-card"
     >
       {/* Header strip */}
-      <div
-        className="flex items-center gap-3 px-5 py-4"
-        style={{ background: "linear-gradient(90deg, #fff5f2 0%, #fffbf0 100%)" }}
-      >
+      <div className="flex items-center gap-3 bg-gradient-to-r from-brand/10 to-teal/10 px-5 py-4">
         {/* Amber spark icon */}
         <span
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-base shadow-sm"
-          style={{ background: "linear-gradient(135deg, #f9603f 0%, #ffb224 100%)", color: "#fff" }}
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-base text-white shadow-sm"
+          style={{ background: "linear-gradient(135deg, #f9603f 0%, #ffb224 100%)" }}
           aria-hidden
         >
           ✦
         </span>
         <div>
-          <p className="text-sm font-bold text-[#1a2236]">You're missing {insights.length} insights</p>
-          <p className="text-xs text-[#5a6577]">{scoreContext}</p>
+          <p className="text-sm font-bold text-ink">You're missing {insights.length} insights</p>
+          <p className="text-xs text-muted">{scoreContext}</p>
         </div>
       </div>
 
@@ -120,17 +117,16 @@ export default function MissingInsightsCard({ lastScore, lastBand }: Props) {
           <li key={i} className="flex items-start gap-3 py-3.5">
             {/* Icon dot */}
             <span
-              className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-sm"
-              style={{ background: "#fff5f2", border: "1px solid #f9603f22" }}
+              className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-brand/20 bg-brand/10 text-sm"
               aria-hidden
             >
               {item.icon}
             </span>
             <div className="min-w-0 flex-1">
               {/* Blurred "locked" effect on detail text — CSS blur without hiding content from a11y */}
-              <p className="text-xs font-semibold text-[#1a2236]">{item.title}</p>
+              <p className="text-xs font-semibold text-ink">{item.title}</p>
               <p
-                className="mt-0.5 select-none text-xs leading-relaxed text-[#5a6577] transition-all duration-300"
+                className="mt-0.5 select-none text-xs leading-relaxed text-muted transition-all duration-300"
                 style={{ filter: "blur(2.5px)", userSelect: "none" }}
                 aria-hidden // The blurred content is decorative; the title conveys the concept
               >
@@ -141,8 +137,7 @@ export default function MissingInsightsCard({ lastScore, lastBand }: Props) {
             </div>
             {/* Locked badge */}
             <span
-              className="mt-0.5 flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold"
-              style={{ background: "#f9603f14", color: "#f9603f" }}
+              className="mt-0.5 flex-shrink-0 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-bold text-brand"
               aria-label="Pro feature"
             >
               Pro
@@ -153,12 +148,12 @@ export default function MissingInsightsCard({ lastScore, lastBand }: Props) {
 
       {/* CTA footer */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-subtle bg-surface px-5 py-4">
-        <p className="text-xs text-[#5a6577]">
+        <p className="text-xs text-muted">
           Pro is $149/mo AUD · API connect + AI team + auto-sync included.
         </p>
         <Link
           href="/billing"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-[#f9603f] px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#e0522f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#f9603f]"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
         >
           Compare plans
           <span aria-hidden>→</span>

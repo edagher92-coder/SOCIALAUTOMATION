@@ -84,7 +84,7 @@ export default async function Proposals() {
                   </div>
                   <div className="space-y-3">
                     {items.map((r: any) => (
-                      <div key={r.id} className="rounded-2xl border border-border-subtle bg-white p-4 shadow-card">
+                      <div key={r.id} className="rounded-2xl border border-border-subtle bg-surface-raised p-4 shadow-card">
                         <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
