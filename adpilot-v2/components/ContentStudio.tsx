@@ -259,7 +259,7 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
                   </div>
                 </div>
                 {p.status === "approved" && canPublishPost(p) && (
-                  <div className="mt-2 flex items-center gap-2 border-t border-[#eef2f7] pt-2">
+                  <div className="mt-2 flex items-center gap-2 border-t border-border-subtle pt-2">
                     <input type="datetime-local" min={minScheduleLocal()} className="rounded-lg border border-border-subtle p-1.5 text-xs"
                       onChange={(e) => {
                         if (!e.target.value) return;

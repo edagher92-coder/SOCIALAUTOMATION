@@ -39,7 +39,7 @@ function Gauge({ score, band }: { score: number; band: string }) {
   return (
     <div className="relative h-[150px] w-[150px] flex-shrink-0">
       <svg width={150} height={150} viewBox="0 0 150 150" aria-hidden>
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#eef2f7" strokeWidth={13} />
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#ece7e1" strokeWidth={13} />
         <circle cx={cx} cy={cy} r={r} fill="none" stroke={col} strokeWidth={13} strokeLinecap="round"
           strokeDasharray={circ} strokeDashoffset={off} transform={`rotate(-90 ${cx} ${cy})`} />
       </svg>

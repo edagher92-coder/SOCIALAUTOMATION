@@ -15,12 +15,12 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "AdPilot OS", description: "Meta & TikTok ads health — explainable & safe." },
 };
 
-export const viewport = { themeColor: "#0b1f3a" };
+export const viewport = { themeColor: "#161221" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-[#f4f7fb] text-ink font-sans antialiased">{children}</body>
+      <body className="bg-surface text-ink font-sans antialiased">{children}</body>
     </html>
   );
 }

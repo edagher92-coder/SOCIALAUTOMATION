@@ -1,6 +1,10 @@
 "use client";
 import Link from "next/link";
 import { fmt } from "@/lib/engine/metrics";
+import { Icon } from "./icons";
+
+// V7 cockpit "hot" tile — the one number on Mission Control allowed to shout.
+// Renders nothing when there's no flagged waste (an empty alarm is noise).
 
 interface Props {
   /** Total wasted spend (kill + reduce verdicts) in the account's currency. */
@@ -21,29 +25,20 @@ export default function WastedSpendCounter({ total, flaggedCount, currency = "AU
   return (
     <Link
       href={canViewScorecard ? "/creative-scorecard" : "/billing"}
-      className="group relative flex items-center gap-3 overflow-hidden rounded-2xl border border-band-red/25 bg-band-red/5 px-4 py-3.5 transition hover:border-band-red/50 hover:bg-band-red/10 focus-visible:shadow-ring-brand"
+      className="group flex flex-col justify-between rounded-2xl border border-bad/40 bg-bad/10 p-4 transition hover:border-bad/70 focus-visible:shadow-ring-brand"
       aria-label={`${sym}${fmt(total)} flagged as potential waste — view creative scorecard`}
     >
-      {/* Left accent pulse */}
-      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-band-red/10 text-xl" aria-hidden>
-        🔥
-      </span>
-
-      <div className="flex-1 min-w-0">
-        <div className="flex items-baseline gap-1.5">
-          <span className="text-xl font-extrabold tabular-nums text-band-red">
-            {sym}{fmt(total)}
-          </span>
-          <span className="text-xs font-semibold text-muted">potential waste</span>
-        </div>
-        <p className="truncate text-xs text-muted">
-          {flaggedCount} ad{flaggedCount !== 1 ? "s" : ""} flagged for kill or reduce
-        </p>
+      <div className="flex items-center justify-between">
+        <span className="text-2xs font-bold uppercase tracking-widest text-bad/90">Potential waste</span>
+        <span className="text-bad" aria-hidden><Icon name="flame" size={16} /></span>
       </div>
-
-      <span className="flex-shrink-0 text-sm text-muted transition group-hover:text-ink" aria-hidden>
-        {canViewScorecard ? "View scorecard →" : "Upgrade →"}
-      </span>
+      <div className="mt-2 flex items-baseline gap-2">
+        <span className="text-2xl font-extrabold tabular-nums text-bad">{sym}{fmt(total)}</span>
+      </div>
+      <p className="mt-2 text-2xs text-cockpit-muted">
+        {flaggedCount} ad{flaggedCount !== 1 ? "s" : ""} flagged kill or reduce ·{" "}
+        <span className="font-semibold text-bad/90 group-hover:underline">{canViewScorecard ? "view scorecard →" : "upgrade →"}</span>
+      </p>
     </Link>
   );
 }

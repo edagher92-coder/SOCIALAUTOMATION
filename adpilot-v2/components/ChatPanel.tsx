@@ -128,7 +128,7 @@ export default function ChatPanel({ plan }: { plan: Plan }) {
           style={{ maxHeight: "min(600px, calc(100vh - 8rem))" }}>
 
           {/* Header */}
-          <div className="flex items-center gap-2.5 border-b border-border-subtle bg-[#eef2f8] px-4 py-3">
+          <div className="flex items-center gap-2.5 border-b border-border-subtle bg-surface px-4 py-3">
             <span className="text-xl" aria-hidden>{activeAgent.emoji}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">

@@ -39,6 +39,20 @@ const config: Config = {
           orange: "#ea580c",
           red:    "#dc2626",
         },
+        // V7 "Warm Cockpit" — dark money-surface tokens (Mission Control & co). Semantic
+        // good/warn/bad are the ONLY status carriers on cockpit surfaces; brand coral stays
+        // reserved for actions/CTAs so "action" and "alarm" never blur.
+        cockpit: {
+          DEFAULT: "#0e1220",   // cockpit page background
+          raised:  "#161b2e",   // cockpit card/panel
+          edge:    "#242b42",   // cockpit border/divider
+          ink:     "#eef1f8",   // primary text on cockpit
+          muted:   "#8b93ab",   // secondary text on cockpit
+        },
+        good: "#37d399",
+        warn: "#ffb84d",
+        bad:  "#ff6b6b",
+        ice:  "#56c5ff",
       },
       fontFamily: {
         sans: ["Inter", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "sans-serif"],
