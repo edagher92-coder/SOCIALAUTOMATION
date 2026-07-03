@@ -115,7 +115,7 @@ export default function MissingInsightsCard({ lastScore, lastBand }: Props) {
       </div>
 
       {/* Insight list */}
-      <ul className="divide-y divide-[#eef2f7] px-5" role="list">
+      <ul className="divide-y divide-border-subtle px-5" role="list">
         {insights.map((item, i) => (
           <li key={i} className="flex items-start gap-3 py-3.5">
             {/* Icon dot */}
@@ -152,7 +152,7 @@ export default function MissingInsightsCard({ lastScore, lastBand }: Props) {
       </ul>
 
       {/* CTA footer */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#eef2f7] bg-[#fafbfc] px-5 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-subtle bg-surface px-5 py-4">
         <p className="text-xs text-[#5a6577]">
           Pro is $149/mo AUD · API connect + AI team + auto-sync included.
         </p>

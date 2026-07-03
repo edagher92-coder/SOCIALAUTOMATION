@@ -144,7 +144,7 @@ export default function MessengerBot({ webhookUrl, verifyConfigured, appSecretCo
         {pages.length > 0 && (
           <div className="mt-3 space-y-1.5">
             {pages.map((p) => (
-              <div key={p.external_page_id} className="flex items-center justify-between gap-2 rounded-lg border border-[#eef2f7] px-3 py-1.5 text-sm">
+              <div key={p.external_page_id} className="flex items-center justify-between gap-2 rounded-lg border border-border-subtle px-3 py-1.5 text-sm">
                 <button onClick={() => setActive(p.external_page_id)} className={`text-left font-semibold ${active === p.external_page_id ? "text-brand" : "text-ink"}`}>
                   {p.display_name} <span className="text-2xs uppercase text-muted">{p.channel}</span>
                 </button>
@@ -165,7 +165,7 @@ export default function MessengerBot({ webhookUrl, verifyConfigured, appSecretCo
           <div className="mt-3 space-y-2">
             {rules.length === 0 && <p className="text-sm text-muted">No rules yet. Add a welcome + a few keyword rules (e.g. <code>winter</code> → your service reply).</p>}
             {rules.map((r) => (
-              <div key={r.id} className="flex items-start justify-between gap-3 rounded-xl border border-[#eef2f7] p-3 text-sm">
+              <div key={r.id} className="flex items-start justify-between gap-3 rounded-xl border border-border-subtle p-3 text-sm">
                 <div className="min-w-0">
                   <span className="rounded-full bg-surface px-2 py-0.5 text-2xs font-bold uppercase text-muted">{r.trigger_type}</span>
                   {r.trigger && <span className="ml-2 font-semibold text-ink">{r.trigger}</span>}
@@ -175,7 +175,7 @@ export default function MessengerBot({ webhookUrl, verifyConfigured, appSecretCo
               </div>
             ))}
           </div>
-          <div className="mt-4 space-y-2 border-t border-[#eef2f7] pt-3">
+          <div className="mt-4 space-y-2 border-t border-border-subtle pt-3">
             <div className="grid gap-2 sm:grid-cols-2">
               <select value={form.trigger_type} onChange={(e) => setForm({ ...form, trigger_type: e.target.value })} className="rounded-lg border border-border-subtle p-2 text-sm">
                 {TRIGGER_TYPES.map((t) => <option key={t.v} value={t.v}>{t.label}</option>)}

@@ -102,7 +102,7 @@ export default function ActionsConsole({ writeEnabled }: { writeEnabled: boolean
                 </div>
                 {a.error && <p className="mt-1 text-2xs text-band-red">{a.error}</p>}
                 {a.status === "proposed" && (
-                  <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-[#eef2f7] pt-2">
+                  <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-border-subtle pt-2">
                     <span className="text-2xs text-muted">Type to authorise: <code className="rounded bg-surface px-1 py-0.5 text-ink">{a.confirm_phrase}</code></span>
                     <input value={confirm[a.id] || ""} onChange={(e) => setConfirm({ ...confirm, [a.id]: e.target.value })} placeholder="type the exact phrase" className="flex-1 rounded-lg border border-border-subtle p-1.5 text-xs" />
                     <button onClick={() => execute(a)} disabled={busy === "exec:" + a.id || (confirm[a.id] || "") !== a.confirm_phrase} className="rounded-lg bg-band-red px-3 py-1.5 text-xs font-bold text-white disabled:opacity-40">{busy === "exec:" + a.id ? "…" : "Execute live"}</button>
@@ -110,7 +110,7 @@ export default function ActionsConsole({ writeEnabled }: { writeEnabled: boolean
                   </div>
                 )}
                 {a.status === "done" && (
-                  <div className="mt-2 flex items-center gap-2 border-t border-[#eef2f7] pt-2">
+                  <div className="mt-2 flex items-center gap-2 border-t border-border-subtle pt-2">
                     <span className="text-2xs text-muted">Executed{a.executed_at ? ` ${new Date(a.executed_at).toLocaleString()}` : ""}.</span>
                     <button onClick={() => revert(a)} disabled={busy === "rev:" + a.id} className="rounded-lg border border-brand px-3 py-1 text-xs font-semibold text-brand disabled:opacity-50">{busy === "rev:" + a.id ? "…" : "Revert"}</button>
                   </div>
