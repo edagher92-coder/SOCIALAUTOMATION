@@ -35,6 +35,7 @@ export function bandMeta(b?: string) {
 export function cadenceText(hours?: number | null): string {
   const h = Number(hours ?? 24);
   if (!h || h <= 0) return "manual only";
+  if (h === 0.5) return "every 30 min";
   if (h === 1) return "hourly";
   if (h < 24) return `every ${h}h`;
   if (h === 24) return "daily";

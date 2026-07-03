@@ -75,7 +75,7 @@ export default function UtmBuilder() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Inputs */}
         <div className="space-y-5">
-          <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
             <h2 className="mb-3 text-sm font-bold text-ink">Campaign · <code className="text-2xs text-muted">{"{business}_{offer}_{objective}_{location}_{YYYYMMDD}"}</code></h2>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Business" value={business} onChange={setBusiness} placeholder="Bright Plumbing" />
@@ -86,7 +86,7 @@ export default function UtmBuilder() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
             <h2 className="mb-3 text-sm font-bold text-ink">Ad set · <code className="text-2xs text-muted">{"{audience}_{placement}_{optimisation}"}</code></h2>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Audience" value={audience} onChange={setAudience} placeholder="Homeowners 35-60" />
@@ -95,7 +95,7 @@ export default function UtmBuilder() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
             <h2 className="mb-3 text-sm font-bold text-ink">Ad · <code className="text-2xs text-muted">{"{angle}_{format}_{version}"}</code></h2>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Angle" value={angle} onChange={setAngle} placeholder="pain point" />
@@ -104,7 +104,7 @@ export default function UtmBuilder() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
             <h2 className="mb-3 text-sm font-bold text-ink">Tagged URL</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="sm:col-span-2"><Field label="Landing page URL" value={url} onChange={setUrl} placeholder="https://example.com.au/quote" /></div>
@@ -117,7 +117,7 @@ export default function UtmBuilder() {
 
         {/* Live preview */}
         <div className="space-y-5">
-          <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
             <h2 className="mb-3 text-sm font-bold text-ink">Live preview</h2>
             <div className="space-y-3">
               <Preview label="Campaign name" value={names.campaign} />
@@ -127,7 +127,7 @@ export default function UtmBuilder() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
             <h2 className="mb-1 text-sm font-bold text-ink">Validate an existing name</h2>
             <p className="mb-3 text-2xs text-muted">Paste a name you already use — we'll flag spaces, wrong case, invalid characters or missing fields.</p>
             <div className="mb-3 flex gap-2">

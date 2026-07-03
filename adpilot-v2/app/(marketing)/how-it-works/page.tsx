@@ -199,7 +199,7 @@ export default function HowItWorksPage() {
               Run your free audit →
             </Link>
             <Link href="#how-it-works"
-              className="rounded-xl border border-border-subtle bg-white px-6 py-3.5 text-base font-bold text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:shadow-ring-brand">
+              className="rounded-xl border border-border-subtle bg-surface-raised px-6 py-3.5 text-base font-bold text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:shadow-ring-brand">
               See how it works
             </Link>
           </div>
@@ -208,7 +208,7 @@ export default function HowItWorksPage() {
       </header>
 
       {/* ── Pain ─────────────────────────────────────────────────── */}
-      <section className="border-b border-border-subtle bg-white px-5 py-16">
+      <section className="border-b border-border-subtle bg-surface-raised px-5 py-16">
         <div className="mx-auto max-w-5xl">
           <div className="mb-10 text-center">
             <span className="text-sm font-bold uppercase tracking-widest text-brand">The problem</span>
@@ -260,7 +260,7 @@ export default function HowItWorksPage() {
           </div>
 
           {/* Factor table */}
-          <div className="overflow-x-auto rounded-2xl border border-border-subtle bg-white shadow-card">
+          <div className="overflow-x-auto rounded-2xl border border-border-subtle bg-surface-raised shadow-card">
             <table className="w-full min-w-[480px] text-sm">
               <thead>
                 <tr className="border-b border-border-subtle bg-surface/60">
@@ -286,7 +286,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* ── Features ─────────────────────────────────────────────── */}
-      <section className="border-b border-border-subtle bg-white px-5 py-16">
+      <section className="border-b border-border-subtle bg-surface-raised px-5 py-16">
         <div className="mx-auto max-w-5xl">
           <div className="mb-10 text-center">
             <span className="text-sm font-bold uppercase tracking-widest text-brand">What you get</span>
@@ -322,7 +322,7 @@ export default function HowItWorksPage() {
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {TIERS.map((t) => (
               <div key={t.id}
-                className={`relative flex flex-col rounded-2xl border bg-white p-6 shadow-card transition hover:shadow-card-hover
+                className={`relative flex flex-col rounded-2xl border bg-surface-raised p-6 shadow-card transition hover:shadow-card-hover
                   ${t.highlight ? "border-brand ring-1 ring-brand/20" : "border-border-subtle"}`}>
                 {t.highlight && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand px-3 py-1 text-xs font-bold text-white shadow-sm">
@@ -374,7 +374,7 @@ export default function HowItWorksPage() {
               Run your free audit →
             </Link>
             <Link href="/"
-              className="rounded-xl border border-border-subtle bg-white px-7 py-4 text-base font-bold text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:shadow-ring-brand">
+              className="rounded-xl border border-border-subtle bg-surface-raised px-7 py-4 text-base font-bold text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:shadow-ring-brand">
               Back to home
             </Link>
           </div>
@@ -387,7 +387,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* ── Footer ───────────────────────────────────────────────── */}
-      <footer className="border-t border-border-subtle bg-white px-5 py-8">
+      <footer className="border-t border-border-subtle bg-surface-raised px-5 py-8">
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-2 text-center text-sm text-muted sm:flex-row sm:justify-between">
           <Link href="/" className="flex items-center gap-2 font-semibold text-ink">
             <span className="inline-block h-5 w-5 rounded-lg bg-gradient-to-br from-brand to-teal" aria-hidden />

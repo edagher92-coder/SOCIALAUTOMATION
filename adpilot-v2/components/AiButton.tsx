@@ -27,7 +27,7 @@ export default function AiButton({ task, getInputs, label = "✨ Write with AI" 
         {busy ? "Writing…" : label}
       </button>
       {err && <p className="mt-2 text-sm text-band-red">{err} <span className="text-muted">(the template above still works.)</span></p>}
-      {text && <pre className="mt-3 whitespace-pre-wrap rounded-lg border border-[#e3e8ef] bg-white p-3 text-sm shadow-card">{text}</pre>}
+      {text && <pre className="mt-3 whitespace-pre-wrap rounded-lg border border-border-subtle bg-surface-raised p-3 text-sm shadow-card">{text}</pre>}
     </div>
   );
 }

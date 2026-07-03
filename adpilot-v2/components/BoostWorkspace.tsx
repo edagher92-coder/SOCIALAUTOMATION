@@ -24,7 +24,7 @@ export default function BoostWorkspace({ accountCpm, initialPosts, canExplain }:
       <div className="inline-flex flex-wrap gap-1 rounded-xl border border-border-subtle bg-surface p-1 text-sm font-bold">
         {tabs.map(([t, label, desc]) => (
           <button key={t} type="button" onClick={() => setTab(t)} aria-pressed={tab === t} title={desc}
-            className={`rounded-lg px-4 py-1.5 transition ${tab === t ? "bg-brand text-white shadow-sm" : "text-muted hover:bg-white hover:text-ink"}`}>
+            className={`rounded-lg px-4 py-1.5 transition ${tab === t ? "bg-brand text-white shadow-sm" : "text-muted hover:bg-surface-raised hover:text-ink"}`}>
             {label}
           </button>
         ))}

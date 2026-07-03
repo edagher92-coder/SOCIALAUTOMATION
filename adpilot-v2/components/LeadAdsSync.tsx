@@ -24,7 +24,7 @@ export default function LeadAdsSync() {
   }
 
   return (
-    <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+    <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
       <h3 className="font-bold">📥 Sync Facebook Lead Ads leads</h3>
       <p className="mb-3 mt-1 text-sm text-muted">
         Pull lead-form leads into your lead-quality loop (read-only — only hashed contact details

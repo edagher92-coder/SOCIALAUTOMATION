@@ -59,7 +59,7 @@ export default async function Connect(props: { searchParams: Promise<{ connected
       </div>
       <p className="mb-5 text-xs text-muted">🔒 Tokens are encrypted at rest (AES-256-GCM) and never sent back to your browser.</p>
 
-      {msg && <div className="mb-4 rounded-xl border border-border-subtle bg-white p-3 text-sm shadow-card">{msg}</div>}
+      {msg && <div className="mb-4 rounded-xl border border-border-subtle bg-surface-raised p-3 text-sm shadow-card">{msg}</div>}
       {accounts?.some((a: any) => a.status === "disconnected" || a.status === "error") && (
         <div className="mb-4 rounded-xl border border-band-red/30 bg-band-red/5 p-3 text-sm font-semibold text-band-red">
           ⚠ One or more accounts need reconnecting — AdPilot can&apos;t pull fresh data until you do, so your scores may be stale.{" "}
@@ -102,13 +102,13 @@ export default async function Connect(props: { searchParams: Promise<{ connected
         <>
           <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-muted">Easiest — one click, read-only</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+            <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
               <div className="mb-2 text-2xl">🔵</div>
               <h3 className="font-bold">Meta (Facebook / Instagram)</h3>
               <p className="mb-3 mt-1 text-sm text-muted">Scope: ads_read, read_insights (read-only).</p>
               <a href="/api/oauth/meta/start" className="inline-block rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white">Connect Meta</a>
             </div>
-            <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+            <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
               <div className="mb-2 text-2xl">⚫</div>
               <h3 className="font-bold">TikTok Ads</h3>
               <p className="mb-3 mt-1 text-sm text-muted">Scope: ads.read (read-only).</p>
@@ -136,7 +136,7 @@ export default async function Connect(props: { searchParams: Promise<{ connected
             const needsReconnect = a.status === "disconnected" || a.status === "error";
             const p = a.platform === "tiktok" ? "tiktok" : "meta";
             return (
-              <div key={i} className={`flex items-center justify-between rounded-xl border bg-white p-4 shadow-card ${needsReconnect ? "border-band-red/40" : "border-border-subtle"}`}>
+              <div key={i} className={`flex items-center justify-between rounded-xl border bg-surface-raised p-4 shadow-card ${needsReconnect ? "border-band-red/40" : "border-border-subtle"}`}>
                 <div>
                   <div className="font-semibold">{a.display_name} <span className="text-xs uppercase text-muted">{a.platform}</span></div>
                   {needsReconnect
@@ -161,7 +161,7 @@ export default async function Connect(props: { searchParams: Promise<{ connected
         </div>
       )}
 
-      <details id="token-help" className="mt-6 scroll-mt-24 rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <details id="token-help" className="mt-6 scroll-mt-24 rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <summary className="cursor-pointer list-none font-bold">
           🔑 Token expired? Get a Meta token that <span className="text-brand">won&apos;t expire</span>
           <span className="ml-2 text-xs font-normal text-muted">(tap to open)</span>

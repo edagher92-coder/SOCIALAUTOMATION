@@ -47,7 +47,7 @@ export default function TokenConnect() {
   }
 
   return (
-    <div className="mt-4 rounded-2xl border border-[#e3e8ef] bg-white p-5 shadow-card">
+    <div className="mt-4 rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
       <h3 className="font-bold">Advanced — connect with an access token (dev link)</h3>
       <p className="mb-3 mt-1 text-sm text-muted">
         Paste a read-only token to connect now without OAuth app review. Meta: a token with

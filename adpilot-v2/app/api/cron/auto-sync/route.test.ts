@@ -174,6 +174,27 @@ describe("cadence due-time gating", () => {
     expect((await r.json()).synced).toBe(1); // 4-min-early run allowed by the 5-min slack
   });
 
+  it("runs a fractional (30-min) cadence when the interval has elapsed", async () => {
+    DB = {
+      organisations: [{ id: "o1", sync_interval_hours: 0.5, last_synced_at: new Date(Date.now() - 40 * 60_000).toISOString() }],
+      billing_subscriptions: proSub,
+      connected_ad_accounts: [{ platform: "meta" }],
+    };
+    syncOrgPlatform.mockResolvedValue(3);
+    const r = await GET(req({ key: SECRET }));
+    expect((await r.json()).synced).toBe(1);
+  });
+
+  it("skips a fractional (30-min) cadence when synced 10 minutes ago", async () => {
+    DB = {
+      organisations: [{ id: "o1", sync_interval_hours: 0.5, last_synced_at: new Date(Date.now() - 10 * 60_000).toISOString() }],
+      billing_subscriptions: proSub,
+    };
+    const r = await GET(req({ key: SECRET }));
+    expect((await r.json()).skipped).toBe(1);
+    expect(syncOrgPlatform).not.toHaveBeenCalled();
+  });
+
   it("runs immediately when never synced (last_synced_at null)", async () => {
     DB = {
       organisations: [{ id: "o1", sync_interval_hours: 24, last_synced_at: null }],

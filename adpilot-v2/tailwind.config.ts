@@ -27,11 +27,14 @@ const config: Config = {
           50:  "#fff8ea",
           100: "#ffedc7",
         },
-        ink: "#1c1726",       // warm near-black text
-        muted: "#6b6478",     // warm grey
-        surface: "#faf7f4",   // warm off-white (was cool #f7f9fc)
-        "surface-raised": "#ffffff",
-        "border-subtle": "#ece7e1",
+        // V7 — the whole app runs on the dark "Warm Cockpit" surface (not just Mission Control).
+        // These generic tokens are the cockpit palette under different names, so every existing
+        // `bg-surface`/`text-ink`/`border-border-subtle` usage goes dark for free.
+        ink: "#eef1f8",        // primary text on the dark surface
+        muted: "#8b93ab",      // secondary text on the dark surface
+        surface: "#0e1220",    // page background
+        "surface-raised": "#161b2e", // card/panel background
+        "border-subtle": "#242b42",
         "border-focus": "#f9603f",
         band: {
           green:  "#16a34a",

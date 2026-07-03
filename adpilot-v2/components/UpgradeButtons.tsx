@@ -41,7 +41,7 @@ export default function UpgradeButtons() {
     <div>
       <div className="grid gap-4 sm:grid-cols-3">
         {TIERS.map((t) => (
-          <div key={t.plan} className={`relative flex flex-col rounded-2xl border bg-white p-5 shadow-card ${t.popular ? "border-brand ring-1 ring-brand/30" : "border-[#e3e8ef]"}`}>
+          <div key={t.plan} className={`relative flex flex-col rounded-2xl border bg-surface-raised p-5 shadow-card ${t.popular ? "border-brand ring-1 ring-brand/30" : "border-border-subtle"}`}>
             {t.popular && <span className="absolute -top-2 right-4 rounded-full bg-brand px-2 py-0.5 text-[11px] font-bold text-white">Most popular</span>}
             <h3 className="text-lg font-bold">{t.plan}</h3>
             <p className="text-sm font-semibold text-brand">{t.priceLabel}</p>

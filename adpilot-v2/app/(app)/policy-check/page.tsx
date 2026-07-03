@@ -67,7 +67,7 @@ export default function PolicyCheck() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <div className="mb-3 flex gap-2">
           {(["meta", "tiktok", "both"] as const).map((p) => (
             <button

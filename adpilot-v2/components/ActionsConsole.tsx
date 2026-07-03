@@ -65,7 +65,7 @@ export default function ActionsConsole({ writeEnabled }: { writeEnabled: boolean
       </div>
 
       {/* Stage an action */}
-      <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <h3 className="font-bold">Stage a change</h3>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           <select value={form.platform} onChange={(e) => setForm({ ...form, platform: e.target.value })} className="rounded-lg border border-border-subtle p-2 text-sm">
@@ -95,7 +95,7 @@ export default function ActionsConsole({ writeEnabled }: { writeEnabled: boolean
         ) : (
           <div className="space-y-2.5">
             {actions.map((a) => (
-              <div key={a.id} className="rounded-2xl border border-border-subtle bg-white p-4 shadow-card">
+              <div key={a.id} className="rounded-2xl border border-border-subtle bg-surface-raised p-4 shadow-card">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-semibold text-ink">{a.confirm_phrase} <span className="text-2xs uppercase text-muted">{a.platform}</span></span>
                   <span className={`rounded-full px-2 py-0.5 text-2xs font-bold capitalize ${STATUS_CLS[a.status] || ""}`}>{a.status}</span>

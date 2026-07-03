@@ -12,6 +12,7 @@ import ReadOnlyBadge from "@/components/ReadOnlyBadge";
 import Tip from "@/components/Tip";
 import RecActions from "@/components/RecActions";
 import WastedSpendWidget from "@/components/WastedSpendWidget";
+import GuardrailRangeToggle from "@/components/GuardrailRangeToggle";
 import { Icon, VERDICT_ICON } from "@/components/icons";
 import { RingGauge, TrendChart, PacingBar, DistributionStrip, TONE, toneForBand, type Tone } from "@/components/charts";
 
@@ -71,7 +72,17 @@ function StatusChip({ status }: { status: "ok" | "warn" | "breach" | "no-ceiling
   );
 }
 
-export default async function MissionControl() {
+const ALLOWED_GUARDRAIL_DAYS = new Set([1, 7, 30]);
+
+export default async function MissionControl({
+  searchParams,
+}: {
+  searchParams?: Promise<{ days?: string }>;
+}) {
+  const sp = await searchParams;
+  const requestedDays = Number(sp?.days);
+  const guardrailDays = ALLOWED_GUARDRAIL_DAYS.has(requestedDays) ? requestedDays : 7;
+
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const orgId = user ? await getActiveOrgId(user.id, user.email ?? undefined) : "";
@@ -92,7 +103,7 @@ export default async function MissionControl() {
   const plan = await planForOrg(orgId);
   const aiEnabled = can(plan, "ai_team");
   const apiEnabled = can(plan, "api_connect");
-  const since = daysAgoIso(14);
+  const since = daysAgoIso(guardrailDays);
 
   const [orgRes, scoreRes, openRecsRes, accountsRes, reportsRes, trendRes, latestReportRes, snapshotsRes, ingestionRes] = await Promise.all([
     supabase.from("organisations").select("name,last_synced_at,sync_interval_hours,monthly_budget").eq("id", orgId).maybeSingle(),
@@ -102,7 +113,7 @@ export default async function MissionControl() {
     supabase.from("reports").select("id,title,created_at").eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(4),
     supabase.from("health_scores").select("total,created_at").eq("organisation_id", orgId).order("created_at", { ascending: true }).limit(60),
     supabase.from("reports").select("payload").eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-    // Budget guardrails input — last 14 days of per-campaign daily rows (spend + budget on record).
+    // Budget guardrails input — last N days (1/7/30, user-selectable) of per-campaign daily rows (spend + budget on record).
     supabase.from("campaign_snapshots").select("campaign_name,platform,date,spend,daily_budget").eq("organisation_id", orgId).gte("date", since).limit(4000),
     apiEnabled
       ? supabase.from("ingestion_runs").select("platform,status,rows_written,window_days,started_at").eq("organisation_id", orgId).order("started_at", { ascending: false }).limit(5)
@@ -275,10 +286,13 @@ export default async function MissionControl() {
             <span className="flex items-center gap-2 text-2xs font-bold uppercase tracking-widest text-cockpit-muted">
               <Icon name="shield" size={14} /> Budget guardrails
             </span>
-            <span className="text-2xs text-cockpit-muted">warn at {Math.round(DEFAULT_GUARDRAILS.warnAt * 100)}% · read-only — breaches become proposals, never actions</span>
+            <div className="flex items-center gap-2">
+              <span className="text-2xs text-cockpit-muted">warn at {Math.round(DEFAULT_GUARDRAILS.warnAt * 100)}% · read-only — breaches become proposals, never actions</span>
+              <GuardrailRangeToggle days={guardrailDays} />
+            </div>
           </div>
           {withCeiling.length === 0 && noCeiling.length === 0 ? (
-            <p className="mt-3 text-sm text-cockpit-muted">No campaign data in the last 14 days. Connect an account or paste a CSV on Ads Health.</p>
+            <p className="mt-3 text-sm text-cockpit-muted">No campaign data in the last {guardrailDays} day{guardrailDays !== 1 ? "s" : ""}. Connect an account or paste a CSV on Ads Health.</p>
           ) : (
             <div className="mt-3 space-y-2.5">
               {withCeiling.map((c) => (

@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { fmt } from "@/lib/engine/metrics";
 import { Spark } from "@/components/charts";
+import RangeToggle from "@/components/RangeToggle";
 import type { CreativeScorecardRow } from "@/lib/engine/creative";
 import type { WastedSpendSummary } from "@/lib/engine/waste";
 
@@ -60,7 +61,8 @@ export default function CreativeScorecardPage() {
   const [scorecard, setScorecard] = useState<CreativeScorecardRow[]>([]);
   const [waste, setWaste] = useState<WastedSpendSummary | null>(null);
   const [currency, setCurrency] = useState("AUD");
-  const [windowDays, setWindowDays] = useState(14);
+  const [days, setDays] = useState(7);
+  const [windowDays, setWindowDays] = useState(7);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [upgradeNeeded, setUpgradeNeeded] = useState(false);
@@ -69,7 +71,8 @@ export default function CreativeScorecardPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch("/api/creative/scorecard")
+    setErr("");
+    fetch(`/api/creative/scorecard?days=${days}`)
       .then((r) => r.json())
       .then((j) => {
         if (j.upgrade) { setUpgradeNeeded(true); return; }
@@ -77,11 +80,11 @@ export default function CreativeScorecardPage() {
         setScorecard(j.scorecard || []);
         setWaste(j.waste ?? null);
         setCurrency(j.currency || "AUD");
-        setWindowDays(j.windowDays || 14);
+        setWindowDays(j.windowDays || days);
       })
       .catch(() => setErr("Couldn't load scorecard. Check your connection."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [days]);
 
   const handleSort = useCallback((k: SortKey) => {
     setSortDir((prev) => (sortKey === k ? (prev === "asc" ? "desc" : "asc") : "desc"));
@@ -128,9 +131,12 @@ export default function CreativeScorecardPage() {
             <span className="font-semibold">Read-only — no live ad changes.</span>
           </p>
         </div>
-        <Link href="/creative" className="rounded-xl border border-border-subtle bg-white px-3.5 py-2 text-sm font-semibold text-ink shadow-sm transition hover:border-brand hover:text-brand">
-          Creative Library →
-        </Link>
+        <div className="flex items-center gap-3">
+          <RangeToggle days={days} onChange={setDays} />
+          <Link href="/creative" className="rounded-xl border border-border-subtle bg-white px-3.5 py-2 text-sm font-semibold text-ink shadow-sm transition hover:border-brand hover:text-brand">
+            Creative Library →
+          </Link>
+        </div>
       </div>
 
       {/* Wasted spend summary */}

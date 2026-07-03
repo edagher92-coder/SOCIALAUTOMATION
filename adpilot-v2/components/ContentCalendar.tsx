@@ -98,7 +98,7 @@ export default function ContentCalendar() {
               key={key}
               onClick={() => setSelected(key)}
               aria-label={`${d.getDate()} — ${dayPosts.length} post${dayPosts.length === 1 ? "" : "s"}`}
-              className={`flex min-h-[56px] flex-col rounded-lg border p-1 text-left transition hover:border-brand focus-visible:shadow-ring-brand sm:min-h-[84px] ${isSel ? "border-brand ring-1 ring-brand/30" : "border-border-subtle"} ${inMonth ? "bg-white" : "bg-surface"}`}>
+              className={`flex min-h-[56px] flex-col rounded-lg border p-1 text-left transition hover:border-brand focus-visible:shadow-ring-brand sm:min-h-[84px] ${isSel ? "border-brand ring-1 ring-brand/30" : "border-border-subtle"} ${inMonth ? "bg-surface-raised" : "bg-surface"}`}>
               <span className={`text-2xs font-bold ${isToday ? "grid h-5 w-5 place-items-center rounded-full bg-brand text-white" : inMonth ? "text-ink" : "text-muted/50"}`}>{d.getDate()}</span>
               <span className="mt-auto flex flex-wrap gap-0.5">
                 {dayPosts.slice(0, 4).map((p) => (
@@ -128,7 +128,7 @@ export default function ContentCalendar() {
         ) : (
           <div className="space-y-2">
             {selPosts.map((p) => (
-              <div key={p.id} className="flex items-start gap-3 rounded-xl border border-border-subtle bg-white p-3 shadow-card">
+              <div key={p.id} className="flex items-start gap-3 rounded-xl border border-border-subtle bg-surface-raised p-3 shadow-card">
                 <span className="text-lg" aria-hidden>{PLATFORM[p.platform]?.emoji || "📱"}</span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">

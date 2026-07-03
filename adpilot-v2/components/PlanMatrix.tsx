@@ -8,7 +8,7 @@ import { FEATURE_MIN_PLAN, FEATURE_LABEL, FEATURE_DESC, PLAN_LABEL, can, require
 export default function PlanMatrix() {
   const features = Object.keys(FEATURE_MIN_PLAN) as Feature[];
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border-subtle bg-white shadow-card">
+    <div className="overflow-x-auto rounded-2xl border border-border-subtle bg-surface-raised shadow-card">
       <table className="w-full min-w-[560px] text-sm">
         <thead>
           <tr className="border-b border-border-subtle">

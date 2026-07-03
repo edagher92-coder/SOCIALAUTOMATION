@@ -1,7 +1,7 @@
 "use client";
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
-    <div className="mx-auto max-w-md rounded-2xl border border-border-subtle bg-white p-8 text-center shadow-card">
+    <div className="mx-auto max-w-md rounded-2xl border border-border-subtle bg-surface-raised p-8 text-center shadow-card">
       <div className="text-3xl">⚠️</div>
       <h2 className="mt-2 text-lg font-bold">Something went wrong</h2>
       <p className="mt-1 text-sm text-muted">{error.message || "An unexpected error occurred."}</p>

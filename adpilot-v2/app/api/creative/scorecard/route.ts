@@ -9,12 +9,13 @@ import type { Cfg } from "@/lib/engine/types";
 
 export const runtime = "nodejs";
 
-// Query window: last 14 days of snapshots — enough for fatigue detection without
-// including stale creative that's been off for weeks.
-const WINDOW_DAYS = 14;
+// Query window: how far back to pull snapshots. Defaults to 7 days; the UI also offers
+// 1 and 30 day views. Anything else falls back to the default rather than an arbitrary pull.
+const DEFAULT_WINDOW_DAYS = 7;
+const ALLOWED_WINDOW_DAYS = new Set([1, 7, 30]);
 const MAX_ROWS = 5000;
 
-export async function GET() {
+export async function GET(req: Request) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
@@ -27,6 +28,9 @@ export async function GET() {
       { status: 402 },
     );
   }
+
+  const requestedDays = Number(new URL(req.url).searchParams.get("days"));
+  const WINDOW_DAYS = ALLOWED_WINDOW_DAYS.has(requestedDays) ? requestedDays : DEFAULT_WINDOW_DAYS;
 
   const admin = createAdminClient();
   const since = new Date(Date.now() - WINDOW_DAYS * 86400_000).toISOString().slice(0, 10);
