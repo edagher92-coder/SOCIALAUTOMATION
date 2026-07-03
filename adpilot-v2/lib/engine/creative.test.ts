@@ -86,6 +86,19 @@ describe("computeCreativeScorecard", () => {
     expect(killIdx).toBeLessThan(scaleIdx);
   });
 
+  it("emits a daily CTR series (oldest→newest) for multi-day ads, empty for single-day", () => {
+    const rows = [
+      row({ ad_id: "a1", ctr: 0.04, date: "2026-01-01" }),
+      row({ ad_id: "a1", ctr: 0.02, date: "2026-01-03" }),
+      row({ ad_id: "a1", ctr: 0.03, date: "2026-01-02" }),
+      row({ ad_id: "single", date: "2026-01-01" }),
+    ];
+    const sc = computeCreativeScorecard(rows, CFG);
+    const a1 = sc.find((r) => r.adKey === "a1")!;
+    expect(a1.ctrSeries).toEqual([0.04, 0.03, 0.02]); // sorted by date, not input order
+    expect(sc.find((r) => r.adKey === "single")!.ctrSeries).toEqual([]);
+  });
+
   it("uses ad_name as fallback key when no ad_id", () => {
     const rows = [
       { ...row(), ad_id: undefined, ad_name: "Named Ad" },

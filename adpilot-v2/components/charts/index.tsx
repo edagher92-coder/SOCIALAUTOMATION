@@ -160,7 +160,7 @@ export function FactorBars({ items }: {
         const tone: Tone = f.score == null ? "muted" : f.score >= 80 ? "good" : f.score >= 50 ? "warn" : "bad";
         return (
           <div key={f.label} className="flex items-center gap-3">
-            <span className="w-40 flex-shrink-0 truncate text-xs font-semibold" title={f.label}>{f.label}</span>
+            <span className="flex w-40 flex-shrink-0 items-center gap-1 truncate text-xs font-semibold" title={f.label}>{f.label}{f.hint}</span>
             <div className="relative h-2.5 flex-1 overflow-hidden rounded-full" style={{ background: "rgba(139,147,171,.15)" }}>
               <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${f.score ?? 0}%`, background: TONE[tone] }} />
             </div>

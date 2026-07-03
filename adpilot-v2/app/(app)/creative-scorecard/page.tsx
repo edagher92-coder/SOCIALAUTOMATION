@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { fmt } from "@/lib/engine/metrics";
+import { Spark } from "@/components/charts";
 import type { CreativeScorecardRow } from "@/lib/engine/creative";
 import type { WastedSpendSummary } from "@/lib/engine/waste";
 
@@ -190,6 +191,7 @@ export default function CreativeScorecardPage() {
                 <SortTh label="Spend"    sortKey="spend"    current={sortKey} dir={sortDir} onSort={handleSort} />
                 <SortTh label="CTR"      sortKey="ctr"      current={sortKey} dir={sortDir} onSort={handleSort} />
                 <SortTh label="CTR Decay" sortKey="ctrDecay" current={sortKey} dir={sortDir} onSort={handleSort} />
+                <th className="p-3 text-left text-xs font-bold uppercase tracking-wide text-muted">Trend</th>
                 <SortTh label="Hook %"   sortKey="hookRate" current={sortKey} dir={sortDir} onSort={handleSort} />
                 <SortTh label="Hold %"   sortKey="holdRate" current={sortKey} dir={sortDir} onSort={handleSort} />
                 <SortTh label="CPA"      sortKey="cpa"      current={sortKey} dir={sortDir} onSort={handleSort} />
@@ -214,6 +216,11 @@ export default function CreativeScorecardPage() {
                     <td className="p-3 tabular-nums text-ink">{pct(row.ctr)}</td>
                     <td className={`p-3 tabular-nums ${decayHigh ? "font-bold text-band-red" : "text-ink"}`}>
                       {pct(row.ctrDecay)}
+                    </td>
+                    <td className="p-3">
+                      {row.ctrSeries && row.ctrSeries.length >= 2
+                        ? <Spark values={row.ctrSeries} width={80} height={24} domain="auto" tone={decayHigh ? "bad" : "ice"} />
+                        : <span className="text-2xs text-muted">1 day</span>}
                     </td>
                     <td className="p-3 tabular-nums text-ink">{pct(row.hookRate)}</td>
                     <td className="p-3 tabular-nums text-ink">{pct(row.holdRate)}</td>
