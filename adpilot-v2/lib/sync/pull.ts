@@ -319,6 +319,7 @@ export async function syncOrgPlatform(admin: any, orgId: string, platform: Platf
   let status: IngestionStatus = "ok";
   let rowsWritten = 0;
   let partialPull = false;
+  let schemaDriftNote: string | null = null;
   let accountIdsForLog: string | null = null;
   let errorMessage: string | null = null;
   try {
@@ -383,7 +384,21 @@ export async function syncOrgPlatform(admin: any, orgId: string, platform: Platf
       .gte("date", daysAgo(SYNC_WINDOW_DAYS));
     if (delErr) throw new Error(delErr.message || "Failed to clear stale snapshots");
     if (rows.length) {
-      const { error: insErr } = await admin.from("campaign_snapshots").insert(rows);
+      let insErr = (await admin.from("campaign_snapshots").insert(rows)).error;
+      // Schema-drift resilience: if the deployed DB is behind on a migration, PostgREST rejects
+      // the whole insert with "Could not find the 'X' column ... in the schema cache" — which
+      // used to zero out the entire first sync. Retry ONCE without the offending column(s) so
+      // the user still gets their rows; the drift note lands in ingestion_runs.error_message so
+      // the missing migration is visible, not silent.
+      for (let attempt = 0; insErr && attempt < 3; attempt++) {
+        const missing = /Could not find the '([A-Za-z0-9_]+)' column/.exec(insErr.message || "")?.[1];
+        if (!missing) break;
+        for (const r of rows) delete (r as any)[missing];
+        schemaDriftNote = schemaDriftNote
+          ? `${schemaDriftNote}, '${missing}'`
+          : `DB is missing column '${missing}' on campaign_snapshots — apply pending migrations; synced without it`;
+        insErr = (await admin.from("campaign_snapshots").insert(rows)).error;
+      }
       if (insErr) throw new Error(insErr.message || "Failed to write snapshots");
     }
     rowsWritten = rows.length;
@@ -404,7 +419,7 @@ export async function syncOrgPlatform(admin: any, orgId: string, platform: Platf
         organisation_id: orgId, platform, account_id: accountIdsForLog,
         started_at: startedAt, finished_at: new Date().toISOString(),
         window_days: SYNC_WINDOW_DAYS, rows_written: rowsWritten, status,
-        error_message: errorMessage, graph_version: platform === "meta" ? META_GRAPH_VERSION : null,
+        error_message: errorMessage ?? schemaDriftNote, graph_version: platform === "meta" ? META_GRAPH_VERSION : null,
       });
     } catch { /* ingestion audit log is best-effort */ }
   }

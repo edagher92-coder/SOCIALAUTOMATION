@@ -105,7 +105,7 @@ export async function POST(req: Request) {
         );
       }
 
-      const r = await fetch(`${META_GRAPH_BASE}/me/adaccounts?fields=name,account_id&access_token=${encodeURIComponent(token)}`);
+      const r = await fetch(`${META_GRAPH_BASE}/me/adaccounts?fields=name,account_id&limit=100&access_token=${encodeURIComponent(token)}`);
       const j: any = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(metaTokenError(j, r.status));
       // Meta returns account_id (numeric, no prefix). Normalise away any act_ prefix.
@@ -113,6 +113,28 @@ export async function POST(req: Request) {
         const id = String(a.account_id || a.id || "").replace(/^act_/, "");
         return { id, name: a.name || `act_${id}` };
       }).filter((a: any) => a.id);
+
+      // Look deeper than /me/adaccounts: a System User token often reaches accounts through the
+      // Business (owned or client) that aren't directly "assigned" to the user. Traverse both
+      // edges and merge, deduped. Best-effort read-only discovery — some tokens can't list
+      // businesses at all, and that must never break the connect.
+      try {
+        const br = await fetch(
+          `${META_GRAPH_BASE}/me/businesses?fields=owned_ad_accounts{name,account_id},client_ad_accounts{name,account_id}&limit=50&access_token=${encodeURIComponent(token)}`,
+        );
+        const bj: any = await br.json().catch(() => ({}));
+        if (br.ok) {
+          for (const b of bj.data || []) {
+            for (const edge of [b.owned_ad_accounts, b.client_ad_accounts]) {
+              for (const a of edge?.data || []) {
+                const id = String(a.account_id || a.id || "").replace(/^act_/, "");
+                if (id && !accounts.some((x) => x.id === id)) accounts.push({ id, name: a.name || `act_${id}` });
+              }
+            }
+          }
+        }
+      } catch { /* business traversal is best-effort */ }
+
       if (accountId) {
         const match = accounts.filter((a) => a.id === accountId);
         accounts = match.length ? match : [{ id: accountId, name: `act_${accountId}` }];
