@@ -2,27 +2,30 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
-      "Skill"
+      "Skill",
+      "mcp__Claude_Code_Remote__create_trigger",
+      "mcp__Claude_Code_Remote__send_later"
     ]
   },
   "model": "sonnet",
   "effortLevel": "high",
   "autoCompactEnabled": true,
   "autoCompactWindow": 150000,
-  "fallbackModel": ["opus", "haiku"],
+  "fallbackModel": [
+    "opus",
+    "haiku"
+  ],
   "enableAllProjectMcpServers": true,
   "enabledPlugins": {
     "code-review@claude-plugins-official": true,
     "code-simplifier@claude-plugins-official": true,
     "pr-review-toolkit@claude-plugins-official": true,
     "security-guidance@claude-plugins-official": true,
-
     "feature-dev@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": true,
     "playground@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": true,
-
     "skill-creator@claude-plugins-official": true,
     "plugin-dev@claude-plugins-official": true,
     "agent-sdk-dev@claude-plugins-official": true,
@@ -30,10 +33,8 @@
     "hookify@claude-plugins-official": true,
     "claude-code-setup@claude-plugins-official": true,
     "claude-md-management@claude-plugins-official": true,
-
     "explanatory-output-style@claude-plugins-official": true,
     "learning-output-style@claude-plugins-official": true,
-
     "clangd-lsp@claude-plugins-official": true,
     "csharp-lsp@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true,
