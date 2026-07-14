@@ -7,15 +7,15 @@
       "mcp__Claude_Code_Remote__send_later"
     ]
   },
-  "model": "sonnet",
+  "model": "claude-sonnet-5",
   "effortLevel": "high",
   "autoCompactEnabled": true,
   "autoCompactWindow": 150000,
   "fallbackModel": [
-    "opus",
-    "haiku"
+    "haiku",
+    "opus"
   ],
-  "enableAllProjectMcpServers": true,
+  "enableAllProjectMcpServers": false,
   "enabledPlugins": {
     "code-review@claude-plugins-official": true,
     "code-simplifier@claude-plugins-official": true,
@@ -24,7 +24,7 @@
     "feature-dev@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": true,
-    "playground@claude-plugins-official": true,
+    "playground@claude-plugins-official": false,
     "ralph-loop@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "plugin-dev@claude-plugins-official": true,
@@ -33,8 +33,8 @@
     "hookify@claude-plugins-official": true,
     "claude-code-setup@claude-plugins-official": true,
     "claude-md-management@claude-plugins-official": true,
-    "explanatory-output-style@claude-plugins-official": true,
-    "learning-output-style@claude-plugins-official": true,
+    "explanatory-output-style@claude-plugins-official": false,
+    "learning-output-style@claude-plugins-official": false,
     "clangd-lsp@claude-plugins-official": true,
     "csharp-lsp@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true,
@@ -42,10 +42,53 @@
     "kotlin-lsp@claude-plugins-official": true,
     "lua-lsp@claude-plugins-official": true,
     "php-lsp@claude-plugins-official": true,
-    "pyright-lsp@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": false,
     "ruby-lsp@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
     "swift-lsp@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true
+    "typescript-lsp@claude-plugins-official": false,
+    "snowflow-hq@hq-marketplace": true,
+    "hq-playbooks@hq-marketplace": true,
+    "ai-specialists@hq-marketplace": true,
+    "impeccable@hq-marketplace": true,
+    "community-ai-agent-tooling@hq-marketplace": false,
+    "community-business-ops@hq-marketplace": false,
+    "community-customer-support@hq-marketplace": false,
+    "community-data-analytics@hq-marketplace": false,
+    "community-design-creative@hq-marketplace": false,
+    "community-dev-engineering@hq-marketplace": false,
+    "community-devops-infra@hq-marketplace": false,
+    "community-education-training@hq-marketplace": false,
+    "community-email-newsletters@hq-marketplace": false,
+    "community-finance-invoicing@hq-marketplace": false,
+    "community-hr-recruiting@hq-marketplace": false,
+    "community-legal-regulated@hq-marketplace": false,
+    "community-marketing-content@hq-marketplace": false,
+    "community-other@hq-marketplace": false,
+    "community-sales-crm@hq-marketplace": false,
+    "community-security-research@hq-marketplace": false,
+    "community-seo-web@hq-marketplace": false,
+    "community-social-media@hq-marketplace": false,
+    "community-video-audio-media@hq-marketplace": false,
+    "community-writing-editing@hq-marketplace": false,
+    "watch@hq-marketplace": false,
+    "notebooklm@hq-marketplace": false,
+    "graphify-knowledge-graph@hq-marketplace": false,
+    "obsidian@hq-marketplace": false,
+    "ponytail@hq-marketplace": false
+  },
+  "statusLine": {
+    "type": "command",
+    "command": ".claude/tools/claude_status_line.py",
+    "refreshInterval": 10
+  },
+  "extraKnownMarketplaces": {
+    "hq-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "edagher92-coder/Claude-code-Agents"
+      },
+      "autoUpdate": true
+    }
   }
 }
