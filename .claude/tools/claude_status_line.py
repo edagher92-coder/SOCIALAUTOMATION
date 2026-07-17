@@ -26,7 +26,15 @@ from pathlib import Path
 STATUS_FILE = Path.home() / ".claude" / ".routing-status.json"
 FRESH_SECONDS = 600  # how long a local/cloud badge stays visible after last use
 
-ENGINE_BADGE = {"local": "\U0001f5a5️ offline", "cloud": "☁️ cloud"}
+# Router engine badges. 'anthropic' = a router dispatch that went to the Claude
+# API (online, uses quota); 'cloud' = Ollama Cloud (online, flat-rate sub);
+# 'local' = genuinely on your own hardware (offline). Written by router.py's
+# _write_routing_status and the PowerShell classifier/HEAVY hooks.
+ENGINE_BADGE = {
+    "local": "\U0001f5a5️ offline",
+    "cloud": "☁️ online·Ollama Cloud",
+    "anthropic": "\U0001f310 online·Claude",
+}
 
 
 def _age_str(seconds: float) -> str:
