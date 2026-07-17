@@ -30,6 +30,8 @@ export interface CreativeScorecardRow {
   reason: string;
   cpa: number | null;
   roas: number | null;
+  /** Daily CTR series, oldest→newest (last 14 points), for the trend sparkline. Empty when <2 days. */
+  ctrSeries: number[];
 }
 
 function adKey(r: Row): string {
@@ -105,6 +107,10 @@ export function computeCreativeScorecard(rows: Row[], cfg: Cfg): CreativeScoreca
       }));
     const fatigue = grp.length >= 3 ? predictFatigue(series) : { status: "healthy" as const, onset: null };
 
+    // Daily CTR trend for the sparkline — same sorted series the fatigue detector saw, so the
+    // chart and the fatigue verdict can never disagree about the data. Capped at 14 points.
+    const ctrSeries = grp.length >= 2 ? series.slice(-14).map((s) => Math.round(s.ctr * 10000) / 10000) : [];
+
     // Aggregate row for the decision engine.
     const aggRow: Row = {
       ad_id: key, ad_name: adName(grp[0]), spend, impressions, clicks, leads, purchases, revenue,
@@ -131,6 +137,7 @@ export function computeCreativeScorecard(rows: Row[], cfg: Cfg): CreativeScoreca
       reason: d.reason,
       cpa,
       roas,
+      ctrSeries,
     });
   }
 

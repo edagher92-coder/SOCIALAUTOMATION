@@ -99,7 +99,7 @@ export default function MessengerBot({ webhookUrl, verifyConfigured, appSecretCo
   return (
     <div className="space-y-5">
       {/* Setup checklist */}
-      <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <h3 className="font-bold">Webhook (one-time, in your Meta app)</h3>
         <ol className="mt-2 space-y-1 text-sm text-muted">
           <li>1. Callback URL: <code className="rounded bg-surface px-1.5 py-0.5 text-ink">{webhookUrl || "set NEXT_PUBLIC_APP_URL"}</code> — works for Messenger, Instagram, and WhatsApp.</li>
@@ -110,7 +110,7 @@ export default function MessengerBot({ webhookUrl, verifyConfigured, appSecretCo
       </div>
 
       {/* Register channel */}
-      <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <h3 className="font-bold">Connect a channel</h3>
         <div className="mt-2 flex gap-2 text-sm">
           {(["messenger", "whatsapp"] as const).map((c) => (
@@ -134,7 +134,7 @@ export default function MessengerBot({ webhookUrl, verifyConfigured, appSecretCo
             <label>Close <input type="number" min={1} max={24} value={hours.close_hour} onChange={(e) => setHours({ ...hours, close_hour: +e.target.value })} className="w-16 rounded border border-border-subtle p-1" /></label>
             <label>UTC offset <input type="number" value={hours.tz_offset} onChange={(e) => setHours({ ...hours, tz_offset: +e.target.value })} className="w-16 rounded border border-border-subtle p-1" /></label>
             <span className="flex gap-1">{DAYS.map((d, i) => (
-              <button key={d} onClick={() => toggleDay(i)} className={`rounded px-1.5 py-0.5 text-2xs font-bold ${hours.days.includes(i) ? "bg-brand text-white" : "bg-white text-muted"}`}>{d}</button>
+              <button key={d} onClick={() => toggleDay(i)} className={`rounded px-1.5 py-0.5 text-2xs font-bold ${hours.days.includes(i) ? "bg-brand text-white" : "bg-surface-raised text-muted"}`}>{d}</button>
             ))}</span>
           </div>
         </div>
@@ -159,7 +159,7 @@ export default function MessengerBot({ webhookUrl, verifyConfigured, appSecretCo
       {/* Rules + AI smart mode */}
       {active && (
         <>
-        <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+        <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
           <h3 className="font-bold">Auto-reply rules <span className="text-xs font-normal text-muted">— {activePage?.display_name}</span></h3>
           <p className="mt-0.5 text-xs text-muted">Order: payload → keyword → first-message greeting (hours-aware) → default.</p>
           <div className="mt-3 space-y-2">
@@ -191,7 +191,7 @@ export default function MessengerBot({ webhookUrl, verifyConfigured, appSecretCo
         </div>
 
         {/* AI smart mode (LLM-grounded auto-reply) */}
-        <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+        <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="font-bold">AI smart replies <span className="text-xs font-normal text-muted">— answers from your verified facts only</span></h3>

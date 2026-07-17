@@ -59,7 +59,7 @@ export default function PolicyCheck() {
       />
 
       {needsUpgrade && (
-        <div className="mb-5 rounded-2xl border border-border-subtle bg-gradient-to-br from-[#eef4ff] to-white p-6 shadow-card" role="alert">
+        <div className="mb-5 rounded-2xl border border-border-subtle bg-gradient-to-br from-ice/10 to-surface-raised p-6 shadow-card" role="alert">
           <div className="mb-1 text-2xl">🔒</div>
           <h3 className="font-bold text-ink">Policy Check is a Pro &amp; Expert feature</h3>
           <p className="mb-3 mt-1 text-sm text-muted">It's part of the AI specialist team. Upgrade to have Paige review your copy for policy and Australian Consumer Law risk before you publish.</p>
@@ -67,7 +67,7 @@ export default function PolicyCheck() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <div className="mb-3 flex gap-2">
           {(["meta", "tiktok", "both"] as const).map((p) => (
             <button

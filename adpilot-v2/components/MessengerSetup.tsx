@@ -57,7 +57,7 @@ export default function MessengerSetup({ tokenConfigured }: { tokenConfigured: b
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <label className="block text-sm">
           <span className="mb-1 block font-semibold">Page token {tokenConfigured && <span className="font-normal text-muted">(optional — a server token is configured)</span>}</span>
           <input type="password" value={pageToken} onChange={(e) => setPageToken(e.target.value)} autoComplete="off"
@@ -67,7 +67,7 @@ export default function MessengerSetup({ tokenConfigured }: { tokenConfigured: b
         <p className="mt-1.5 text-2xs text-muted">Mint one in Graph API Explorer (no prompts there). Used to write the Page's Messenger profile; not stored.</p>
       </div>
 
-      <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <label className="block text-sm"><span className="mb-1 block font-semibold">Greeting</span>
           <textarea value={greeting} onChange={(e) => setGreeting(e.target.value)} maxLength={600} className="h-20 w-full rounded-lg border border-border-subtle p-2.5" />
         </label>

@@ -71,7 +71,7 @@ export default function DemoGuide() {
           { e: "🧭", t: "It proposes", d: "Prioritised, safe fixes: Fix · Kill · Reduce · Refresh · Scale." },
           { e: "🔒", t: "It's safe", d: "Read-only. It proposes — you approve. It never touches your live ads." },
         ].map((c) => (
-          <div key={c.t} className="rounded-2xl border border-border-subtle bg-white p-4 shadow-card">
+          <div key={c.t} className="rounded-2xl border border-border-subtle bg-surface-raised p-4 shadow-card">
             <div className="text-2xl" aria-hidden>{c.e}</div>
             <div className="mt-1 font-bold">{c.t}</div>
             <p className="mt-0.5 text-sm text-muted">{c.d}</p>
@@ -93,7 +93,7 @@ export default function DemoGuide() {
       </div>
 
       {/* persona card */}
-      <div className="mt-3 rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="mt-3 rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-lg font-extrabold">{p.name}</span>
           <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand">{p.tag}</span>
@@ -102,16 +102,16 @@ export default function DemoGuide() {
         <p className="mt-2 text-sm text-muted">{p.blurb}</p>
         <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-surface px-3 py-2 text-sm">
           <span className="font-bold">Log in:</span>
-          <code className="rounded bg-white px-2 py-0.5 font-mono text-brand shadow-sm">{p.login}</code>
+          <code className="rounded bg-surface-raised px-2 py-0.5 font-mono text-brand shadow-sm">{p.login}</code>
           <span className="text-muted">password</span>
-          <code className="rounded bg-white px-2 py-0.5 font-mono text-ink shadow-sm">AdPilotDemo!2026</code>
+          <code className="rounded bg-surface-raised px-2 py-0.5 font-mono text-ink shadow-sm">AdPilotDemo!2026</code>
         </div>
       </div>
 
       {/* tour steps */}
       <ol className="mt-4 space-y-3">
         {p.tour.map((s, i) => (
-          <li key={i} className="flex gap-4 rounded-2xl border border-border-subtle bg-white p-4 shadow-card">
+          <li key={i} className="flex gap-4 rounded-2xl border border-border-subtle bg-surface-raised p-4 shadow-card">
             <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-gradient text-sm font-extrabold text-white shadow-glow">{i + 1}</div>
             <div className="min-w-0 flex-1">
               <div className="font-bold">{s.step}</div>

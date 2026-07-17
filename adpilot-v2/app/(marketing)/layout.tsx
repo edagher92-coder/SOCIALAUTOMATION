@@ -6,7 +6,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex min-h-screen flex-col bg-surface antialiased">
       <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-12">{children}</main>
-      <footer className="border-t border-border-subtle bg-white px-5 py-8">
+      <footer className="border-t border-border-subtle bg-surface-raised px-5 py-8">
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-2 text-center text-sm text-muted sm:flex-row sm:justify-between">
           <Link href="/" className="flex items-center gap-2 font-semibold text-ink">
             <span className="inline-block h-5 w-5 rounded-lg bg-gradient-to-br from-brand to-teal" aria-hidden />

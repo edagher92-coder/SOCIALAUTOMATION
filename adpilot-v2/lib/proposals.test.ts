@@ -60,6 +60,7 @@ describe("cadenceText", () => {
   });
 
   it("maps the canonical cadences", () => {
+    expect(cadenceText(0.5)).toBe("every 30 min");
     expect(cadenceText(1)).toBe("hourly");
     expect(cadenceText(24)).toBe("daily");
     expect(cadenceText(168)).toBe("weekly");

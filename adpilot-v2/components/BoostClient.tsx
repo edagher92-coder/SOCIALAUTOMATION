@@ -46,7 +46,7 @@ export default function BoostClient({ accountCpm }: { accountCpm: CpmByPlatform 
   return (
     <div className="grid gap-5 md:grid-cols-[320px_1fr]">
       {/* ---- Inputs ---- */}
-      <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <h2 className="font-bold text-ink">This post, right now</h2>
         <p className="mt-1 text-xs text-muted">Enter what the post earned <b>organically</b> (from the post’s insights). We’ll cost the boost at your real CPM.</p>
 
@@ -56,7 +56,7 @@ export default function BoostClient({ accountCpm }: { accountCpm: CpmByPlatform 
             <div className="grid grid-cols-2 gap-1 rounded-xl border border-border-subtle bg-surface p-1 text-xs font-bold">
               {(["meta", "tiktok"] as const).map((p) => (
                 <button key={p} type="button" onClick={() => setPlatform(p)} aria-pressed={platform === p}
-                  className={`rounded-lg px-2 py-1.5 transition ${platform === p ? "bg-brand text-white shadow-sm" : "text-muted hover:bg-white hover:text-ink"}`}>
+                  className={`rounded-lg px-2 py-1.5 transition ${platform === p ? "bg-brand text-white shadow-sm" : "text-muted hover:bg-surface-raised hover:text-ink"}`}>
                   {PLATFORM_LABEL[p]}
                 </button>
               ))}
@@ -117,7 +117,7 @@ export default function BoostClient({ accountCpm }: { accountCpm: CpmByPlatform 
             </div>
 
             {advanced && (
-              <div className="rounded-2xl border border-border-subtle bg-white p-4 text-2xs text-muted shadow-card">
+              <div className="rounded-2xl border border-border-subtle bg-surface-raised p-4 text-2xs text-muted shadow-card">
                 <div className="font-bold uppercase tracking-wide text-muted/80">How this is worked out</div>
                 <ul className="mt-2 space-y-1">
                   <li>• Paid impressions = budget ÷ CPM × 1,000 = <b>{intf(proj.paidImpressions)}</b> at {money(proj.cpmUsed)} CPM ({proj.cpmSource === "account" ? "your real cost" : "benchmark"}).</li>
@@ -157,7 +157,7 @@ function Kpi({ label, value, sub, tip, accent }: {
   label: string; value: string; sub?: string; tip?: [string, string]; accent?: boolean;
 }) {
   return (
-    <div className={`rounded-xl border p-3 ${accent ? "border-brand-200 bg-brand-50" : "border-border-subtle bg-white"} shadow-card`}>
+    <div className={`rounded-xl border p-3 ${accent ? "border-brand-200 bg-brand-50" : "border-border-subtle bg-surface-raised"} shadow-card`}>
       <div className="flex items-center gap-1 text-2xs font-bold uppercase tracking-wide text-muted">
         {label}
         {tip && <Tip label={tip[0]} term={tip[0]}>{tip[1]}</Tip>}

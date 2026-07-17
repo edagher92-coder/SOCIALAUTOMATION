@@ -2,6 +2,8 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { fmt } from "@/lib/engine/metrics";
+import { Spark } from "@/components/charts";
+import RangeToggle from "@/components/RangeToggle";
 import type { CreativeScorecardRow } from "@/lib/engine/creative";
 import type { WastedSpendSummary } from "@/lib/engine/waste";
 
@@ -59,7 +61,8 @@ export default function CreativeScorecardPage() {
   const [scorecard, setScorecard] = useState<CreativeScorecardRow[]>([]);
   const [waste, setWaste] = useState<WastedSpendSummary | null>(null);
   const [currency, setCurrency] = useState("AUD");
-  const [windowDays, setWindowDays] = useState(14);
+  const [days, setDays] = useState(7);
+  const [windowDays, setWindowDays] = useState(7);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [upgradeNeeded, setUpgradeNeeded] = useState(false);
@@ -68,7 +71,8 @@ export default function CreativeScorecardPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch("/api/creative/scorecard")
+    setErr("");
+    fetch(`/api/creative/scorecard?days=${days}`)
       .then((r) => r.json())
       .then((j) => {
         if (j.upgrade) { setUpgradeNeeded(true); return; }
@@ -76,11 +80,11 @@ export default function CreativeScorecardPage() {
         setScorecard(j.scorecard || []);
         setWaste(j.waste ?? null);
         setCurrency(j.currency || "AUD");
-        setWindowDays(j.windowDays || 14);
+        setWindowDays(j.windowDays || days);
       })
       .catch(() => setErr("Couldn't load scorecard. Check your connection."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [days]);
 
   const handleSort = useCallback((k: SortKey) => {
     setSortDir((prev) => (sortKey === k ? (prev === "asc" ? "desc" : "asc") : "desc"));
@@ -127,9 +131,12 @@ export default function CreativeScorecardPage() {
             <span className="font-semibold">Read-only — no live ad changes.</span>
           </p>
         </div>
-        <Link href="/creative" className="rounded-xl border border-border-subtle bg-white px-3.5 py-2 text-sm font-semibold text-ink shadow-sm transition hover:border-brand hover:text-brand">
-          Creative Library →
-        </Link>
+        <div className="flex items-center gap-3">
+          <RangeToggle days={days} onChange={setDays} />
+          <Link href="/creative" className="rounded-xl border border-border-subtle bg-surface-raised px-3.5 py-2 text-sm font-semibold text-ink shadow-sm transition hover:border-brand hover:text-brand">
+            Creative Library →
+          </Link>
+        </div>
       </div>
 
       {/* Wasted spend summary */}
@@ -142,12 +149,12 @@ export default function CreativeScorecardPage() {
               {waste.killCount} kill · {waste.reduceCount} reduce — {waste.wastedFraction != null ? pct(waste.wastedFraction) : "—"} of spend
             </div>
           </div>
-          <div className="flex-1 min-w-[200px] rounded-2xl border border-border-subtle bg-white px-5 py-4 shadow-card">
+          <div className="flex-1 min-w-[200px] rounded-2xl border border-border-subtle bg-surface-raised px-5 py-4 shadow-card">
             <div className="text-xs font-bold uppercase tracking-widest text-muted">Kill spend</div>
             <div className="mt-1 text-2xl font-extrabold tabular-nums text-ink">{sym}{fmt(waste.killSpend)}</div>
             <div className="mt-0.5 text-xs text-muted">{waste.killCount} ad{waste.killCount !== 1 ? "s" : ""} flagged for pause</div>
           </div>
-          <div className="flex-1 min-w-[200px] rounded-2xl border border-border-subtle bg-white px-5 py-4 shadow-card">
+          <div className="flex-1 min-w-[200px] rounded-2xl border border-border-subtle bg-surface-raised px-5 py-4 shadow-card">
             <div className="text-xs font-bold uppercase tracking-widest text-muted">Reduce spend</div>
             <div className="mt-1 text-2xl font-extrabold tabular-nums text-ink">{sym}{fmt(waste.reduceSpend)}</div>
             <div className="mt-0.5 text-xs text-muted">{waste.reduceCount} ad{waste.reduceCount !== 1 ? "s" : ""} above break-even</div>
@@ -156,7 +163,7 @@ export default function CreativeScorecardPage() {
       )}
 
       {loading && (
-        <div className="rounded-2xl border border-border-subtle bg-white p-8 text-center text-muted shadow-card">
+        <div className="rounded-2xl border border-border-subtle bg-surface-raised p-8 text-center text-muted shadow-card">
           Loading creative scorecard…
         </div>
       )}
@@ -181,7 +188,7 @@ export default function CreativeScorecardPage() {
       )}
 
       {!loading && !err && sorted.length > 0 && (
-        <div className="overflow-x-auto rounded-2xl border border-border-subtle bg-white shadow-card">
+        <div className="overflow-x-auto rounded-2xl border border-border-subtle bg-surface-raised shadow-card">
           <table className="w-full min-w-[800px] text-sm">
             <thead>
               <tr className="border-b border-border-subtle bg-surface/60">
@@ -190,6 +197,7 @@ export default function CreativeScorecardPage() {
                 <SortTh label="Spend"    sortKey="spend"    current={sortKey} dir={sortDir} onSort={handleSort} />
                 <SortTh label="CTR"      sortKey="ctr"      current={sortKey} dir={sortDir} onSort={handleSort} />
                 <SortTh label="CTR Decay" sortKey="ctrDecay" current={sortKey} dir={sortDir} onSort={handleSort} />
+                <th className="p-3 text-left text-xs font-bold uppercase tracking-wide text-muted">Trend</th>
                 <SortTh label="Hook %"   sortKey="hookRate" current={sortKey} dir={sortDir} onSort={handleSort} />
                 <SortTh label="Hold %"   sortKey="holdRate" current={sortKey} dir={sortDir} onSort={handleSort} />
                 <SortTh label="CPA"      sortKey="cpa"      current={sortKey} dir={sortDir} onSort={handleSort} />
@@ -214,6 +222,11 @@ export default function CreativeScorecardPage() {
                     <td className="p-3 tabular-nums text-ink">{pct(row.ctr)}</td>
                     <td className={`p-3 tabular-nums ${decayHigh ? "font-bold text-band-red" : "text-ink"}`}>
                       {pct(row.ctrDecay)}
+                    </td>
+                    <td className="p-3">
+                      {row.ctrSeries && row.ctrSeries.length >= 2
+                        ? <Spark values={row.ctrSeries} width={80} height={24} domain="auto" tone={decayHigh ? "bad" : "ice"} />
+                        : <span className="text-2xs text-muted">1 day</span>}
                     </td>
                     <td className="p-3 tabular-nums text-ink">{pct(row.hookRate)}</td>
                     <td className="p-3 tabular-nums text-ink">{pct(row.holdRate)}</td>

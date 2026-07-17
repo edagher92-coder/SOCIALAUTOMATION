@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 const CADENCE_PRESETS = [
   { label: "Off (manual only)", v: 0 },
+  { label: "Every 30 minutes", v: 0.5 },
   { label: "Hourly", v: 1 },
   { label: "Every 6 hours", v: 6 },
   { label: "Every 12 hours", v: 12 },
@@ -33,8 +34,8 @@ export default function Settings() {
     }).catch(() => {});
   }, []);
 
-  // Clamp the cadence to a whole number in the supported 0–8760h range (matches the API schema).
-  const cleanHours = Math.min(8760, Math.max(0, Math.round(Number(syncHours) || 0)));
+  // Clamp the cadence to the nearest half-hour in the supported 0–8760h range (matches the API schema).
+  const cleanHours = Math.min(8760, Math.max(0, Math.round((Number(syncHours) || 0) * 2) / 2));
 
   async function save() {
     setBusy(true); setMsg("");
@@ -49,7 +50,7 @@ export default function Settings() {
   }
 
   const h = cleanHours;
-  const cadenceLabel = h <= 0 ? "off (manual only)" : h === 1 ? "every hour" : h < 24 ? `every ${h} hours` : h === 24 ? "daily" : h === 168 ? "weekly" : h % 24 === 0 ? `every ${h / 24} days` : `every ${h} hours`;
+  const cadenceLabel = h <= 0 ? "off (manual only)" : h === 0.5 ? "every 30 minutes" : h === 1 ? "every hour" : h < 24 ? `every ${h} hours` : h === 24 ? "daily" : h === 168 ? "weekly" : h % 24 === 0 ? `every ${h / 24} days` : `every ${h} hours`;
 
   const beCpa = (+avg * +margin) || 0;
   const beRoas = +margin ? 1 / +margin : 0;
@@ -59,7 +60,7 @@ export default function Settings() {
     <div className="max-w-xl">
       <h1 className="text-2xl font-extrabold tracking-tight">Settings</h1>
       <p className="mb-5 mt-1 text-muted">Economics for the current client{name ? ` — ${name}` : ""}. These drive break-even and the scheduled score.</p>
-      <div className="space-y-4 rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="space-y-4 rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <div><label className="mb-1 block text-sm font-bold">Average sale value (AUD)</label>
           <input type="number" value={avg} onChange={(e) => setAvg(+e.target.value)} className="w-full rounded-lg border border-border-subtle p-2.5" /></div>
         <div><label className="mb-1 block text-sm font-bold">Gross margin (0–1)</label>
@@ -101,7 +102,7 @@ export default function Settings() {
               <span className="text-sm text-muted">hours (1–8760)</span>
             </div>
           )}
-          <p className="mt-2 text-xs text-muted">Currently: syncs <b>{cadenceLabel}</b> — applies to connected Meta/TikTok accounts only; CSV imports are unaffected. Sub-daily cadences need Vercel Pro (Hobby runs crons once a day).</p>
+          <p className="mt-2 text-xs text-muted">Currently: syncs <b>{cadenceLabel}</b> — applies to connected Meta/TikTok accounts only; CSV imports are unaffected. The scheduler sweeps every 30 minutes and only pulls once your chosen cadence is due; sub-daily cadences need Vercel Pro (Hobby runs crons once a day).</p>
         </div>
 
         <button onClick={save} disabled={busy} className="rounded-lg bg-brand px-5 py-2.5 font-bold text-white disabled:opacity-50">{busy ? "…" : "Save"}</button>

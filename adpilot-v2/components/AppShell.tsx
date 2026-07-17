@@ -60,7 +60,7 @@ const NAV_HREFS = new Set(NAV_GROUPS.flatMap((g) => g.items.map((i) => i.href)))
 function ModeToggle() {
   const { mode, setMode } = useMode();
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface p-1.5">
+    <div className="rounded-xl border border-cockpit-edge bg-cockpit-raised p-1.5">
       <div className="grid grid-cols-2 gap-1 text-xs font-bold">
         {(["beginner", "advanced"] as const).map((m) => (
           <button
@@ -70,13 +70,13 @@ function ModeToggle() {
             className={`rounded-lg px-2 py-1.5 transition-all duration-150 focus-visible:shadow-ring-brand ${
               mode === m
                 ? "bg-brand text-white shadow-sm"
-                : "text-muted hover:bg-white hover:text-ink hover:shadow-sm"
+                : "text-cockpit-muted hover:bg-white/10 hover:text-cockpit-ink"
             }`}>
             {m === "beginner" ? "Simple" : "Advanced"}
           </button>
         ))}
       </div>
-      <p className="px-1 pt-1.5 text-2xs text-muted">
+      <p className="px-1 pt-1.5 text-2xs text-cockpit-muted">
         {mode === "beginner" ? "Simple view — guided, plain English." : "Advanced — full metrics & controls."}
       </p>
     </div>
@@ -86,21 +86,21 @@ function ModeToggle() {
 function HelpToggle() {
   const { helpTips, setHelpTips } = useHelpTips();
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface p-1.5">
+    <div className="rounded-xl border border-cockpit-edge bg-cockpit-raised p-1.5">
       <button
         type="button"
         onClick={() => setHelpTips(!helpTips)}
         aria-pressed={helpTips}
-        className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs font-bold text-ink transition hover:bg-white hover:shadow-sm focus-visible:shadow-ring-brand">
+        className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs font-bold text-cockpit-ink transition hover:bg-white/10 focus-visible:shadow-ring-brand">
         <span className="flex items-center gap-1.5">
           <span aria-hidden className="grid h-[15px] w-[15px] place-items-center rounded-full border border-current text-[9px] font-bold leading-none">?</span>
           Help tips
         </span>
-        <span className={`relative inline-block h-4 w-7 flex-shrink-0 rounded-full transition-colors ${helpTips ? "bg-brand" : "bg-border-subtle"}`} aria-hidden>
+        <span className={`relative inline-block h-4 w-7 flex-shrink-0 rounded-full transition-colors ${helpTips ? "bg-brand" : "bg-cockpit-edge"}`} aria-hidden>
           <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-all ${helpTips ? "left-[0.875rem]" : "left-0.5"}`} />
         </span>
       </button>
-      <p className="px-1 pt-1.5 text-2xs text-muted">
+      <p className="px-1 pt-1.5 text-2xs text-cockpit-muted">
         {helpTips ? "Plain-English “?” explainers are on." : "Explainers hidden — switch on anytime."}
       </p>
     </div>
@@ -121,10 +121,10 @@ function Sidebar({ email, plan, onNav }: { email?: string; plan: Plan; onNav?: (
   return (
     <div className="flex h-full flex-col gap-3 p-4">
       {/* Logo */}
-      <Link href="/command" className="flex items-center gap-2.5 px-1 py-1 text-base font-extrabold tracking-tight text-ink transition hover:text-brand">
+      <Link href="/command" className="flex items-center gap-2.5 px-1 py-1 text-base font-extrabold tracking-tight text-cockpit-ink transition hover:text-brand">
         <span className="inline-block h-7 w-7 flex-shrink-0 rounded-xl bg-gradient-to-br from-brand to-teal shadow-sm" />
         <span>AdPilot OS</span>
-        <span className="ml-0.5 rounded-full bg-brand-50 px-2 py-0.5 text-2xs font-bold text-brand">V6</span>
+        <span className="ml-0.5 rounded-full bg-brand/15 px-2 py-0.5 text-2xs font-bold text-brand">V7</span>
       </Link>
 
       {/* Org switcher */}
@@ -138,7 +138,7 @@ function Sidebar({ email, plan, onNav }: { email?: string; plan: Plan; onNav?: (
         {groups.map((group, gi) => (
           <div key={gi} className="flex flex-col gap-0.5">
             {group.title && (
-              <div className="px-3 pb-0.5 pt-2 text-2xs font-bold uppercase tracking-widest text-muted/70">{group.title}</div>
+              <div className="px-3 pb-0.5 pt-2 text-2xs font-bold uppercase tracking-widest text-cockpit-muted/80">{group.title}</div>
             )}
             {group.items.map((n) => {
               // Visible-but-locked (Advanced only): route to billing + show the required tier.
@@ -148,10 +148,10 @@ function Sidebar({ email, plan, onNav }: { email?: string; plan: Plan; onNav?: (
                   <Link key={n.href} href="/billing" onClick={onNav}
                     title={`${FEATURE_LABEL[n.feature!]} — included in ${PLAN_LABEL[need]}`}
                     aria-label={`${n.label}, locked — upgrade to ${PLAN_LABEL[need]}`}
-                    className="group flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-muted/80 transition-all duration-150 hover:bg-white/60 hover:text-ink focus-visible:shadow-ring-brand">
+                    className="group flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-cockpit-muted transition-all duration-150 hover:bg-white/10 hover:text-cockpit-ink focus-visible:shadow-ring-brand">
                     <span className="flex-shrink-0 opacity-70" aria-hidden><Icon name={n.icon} /></span>
                     <span className="text-sm font-semibold">{n.label}</span>
-                    <span className="ml-auto flex items-center gap-1 rounded-full bg-brand-50 px-1.5 py-0.5 text-2xs font-bold text-brand" aria-hidden><Icon name="lock" size={10} /> {PLAN_LABEL[need]}</span>
+                    <span className="ml-auto flex items-center gap-1 rounded-full bg-brand/15 px-1.5 py-0.5 text-2xs font-bold text-brand" aria-hidden><Icon name="lock" size={10} /> {PLAN_LABEL[need]}</span>
                   </Link>
                 );
               }
@@ -165,14 +165,14 @@ function Sidebar({ email, plan, onNav }: { email?: string; plan: Plan; onNav?: (
                   className={`group rounded-xl px-3 py-2.5 transition-all duration-150 focus-visible:shadow-ring-brand ${
                     active
                       ? "bg-brand text-white shadow-sm"
-                      : "text-ink hover:bg-white hover:shadow-sm"
+                      : "text-cockpit-ink/90 hover:bg-white/10 hover:text-cockpit-ink"
                   }`}>
                   <div className="flex items-center gap-2.5">
                     <span className="flex-shrink-0" aria-hidden><Icon name={n.icon} /></span>
                     <span className="text-sm font-semibold">{n.label}</span>
                   </div>
                   {advanced && (
-                    <div className={`pl-[1.625rem] text-2xs leading-snug ${active ? "text-white/75" : "text-muted"}`}>
+                    <div className={`pl-[1.625rem] text-2xs leading-snug ${active ? "text-white/75" : "text-cockpit-muted"}`}>
                       {n.desc}
                     </div>
                   )}
@@ -184,15 +184,15 @@ function Sidebar({ email, plan, onNav }: { email?: string; plan: Plan; onNav?: (
       </nav>
 
       {/* Safety notice */}
-      <div className="flex items-start gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-2xs leading-relaxed text-amber-800">
+      <div className="flex items-start gap-1.5 rounded-xl border border-warn/30 bg-warn/10 px-3 py-2.5 text-2xs leading-relaxed text-warn">
         <span className="mt-px flex-shrink-0" aria-hidden><Icon name="lock" size={12} /></span>
         <span><strong>Read-only.</strong> Proposals only — never edits a live ad.</span>
       </div>
 
       {/* Email */}
       {email && (
-        <div className="flex items-center gap-2 truncate rounded-lg px-1 py-0.5 text-2xs text-muted">
-          <span className="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full bg-teal" aria-hidden />
+        <div className="flex items-center gap-2 truncate rounded-lg px-1 py-0.5 text-2xs text-cockpit-muted">
+          <span className="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full bg-good" aria-hidden />
           <span className="truncate">{email}</span>
         </div>
       )}
@@ -206,9 +206,9 @@ export default function AppShell({ children, email, plan = "free" }: { children:
     <ModeProvider>
       <div className="min-h-screen bg-surface md:grid md:grid-cols-[260px_1fr]">
         <ChatPanel plan={plan} />
-        {/* Mobile top bar (sticky so the menu is always reachable) */}
-        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-border-subtle bg-white px-4 py-3 md:hidden print:hidden">
-          <span className="flex items-center gap-2 font-extrabold text-ink">
+        {/* Mobile top bar (sticky so the menu is always reachable) — cockpit dark to match the sidebar */}
+        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-cockpit-edge bg-cockpit px-4 py-3 md:hidden print:hidden">
+          <span className="flex items-center gap-2 font-extrabold text-cockpit-ink">
             <span className="inline-block h-6 w-6 rounded-lg bg-gradient-to-br from-brand to-teal shadow-sm" aria-hidden />
             AdPilot OS
           </span>
@@ -216,7 +216,7 @@ export default function AppShell({ children, email, plan = "free" }: { children:
             onClick={() => setOpen(!open)}
             aria-expanded={open}
             aria-label="Toggle navigation menu"
-            className="rounded-lg border border-border-subtle bg-white px-4 py-2 text-sm font-bold text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:shadow-ring-brand">
+            className="rounded-lg border border-cockpit-edge bg-cockpit-raised px-4 py-2 text-sm font-bold text-cockpit-ink transition hover:border-brand hover:text-brand focus-visible:shadow-ring-brand">
             {open ? "Close" : "Menu"}
           </button>
         </div>
@@ -228,7 +228,7 @@ export default function AppShell({ children, email, plan = "free" }: { children:
 
         {/* Sidebar — overlay drawer on mobile (doesn't push content; scroll-capped), static column on desktop */}
         <aside
-          className={`${open ? "fixed inset-y-0 left-0 z-50 w-[85vw] max-w-[320px] overflow-y-auto shadow-2xl" : "hidden"} border-r border-border-subtle bg-surface md:static md:z-auto md:block md:w-auto md:max-w-none md:overflow-visible md:shadow-none print:hidden`}
+          className={`${open ? "fixed inset-y-0 left-0 z-50 w-[85vw] max-w-[320px] overflow-y-auto shadow-2xl" : "hidden"} border-r border-cockpit-edge bg-cockpit md:static md:z-auto md:block md:w-auto md:max-w-none md:overflow-visible md:shadow-none print:hidden`}
           aria-label="Sidebar">
           <div className="md:sticky md:top-0 md:h-screen md:overflow-y-auto">
             <Sidebar email={email} plan={plan} onNav={() => setOpen(false)} />

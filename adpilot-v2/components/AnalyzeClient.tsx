@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useMode } from "./mode";
 import Tip from "./Tip";
+import { RingGauge, FactorBars, toneForBand } from "./charts";
 import { METRIC_GLOSSARY } from "@/lib/metric-glossary";
 
 const BANDC: Record<string, string> = { Green: "#16a34a", Yellow: "#ca8a04", Orange: "#ea580c", Red: "#dc2626" };
@@ -32,31 +33,15 @@ Example Co,meta,promo,2026-06-13,1800,90000,40000,540,0,0,0,12000,3000,,,,broken
 Example Co,meta,promo2,2026-06-13,1200,60000,28000,360,0,0,0,8000,2000,,,,broken`,
 };
 
-function Gauge({ score, band }: { score: number; band: string }) {
-  const col = BANDC[band] || "#5a6577";
-  const r = 64, cx = 75, cy = 75, circ = 2 * Math.PI * r;
-  const off = circ * (1 - Math.max(0, Math.min(100, score)) / 100);
-  return (
-    <div className="relative h-[150px] w-[150px] flex-shrink-0">
-      <svg width={150} height={150} viewBox="0 0 150 150" aria-hidden>
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#ece7e1" strokeWidth={13} />
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke={col} strokeWidth={13} strokeLinecap="round"
-          strokeDasharray={circ} strokeDashoffset={off} transform={`rotate(-90 ${cx} ${cy})`} />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div className="text-4xl font-extrabold tabular-nums" style={{ color: col }}>{Math.round(score)}</div>
-        <div className="text-xs font-medium text-muted">/ 100</div>
-      </div>
-    </div>
-  );
-}
+// V7: the private Gauge is retired — the shared RingGauge (components/charts) renders the
+// score ring so the gauge language is identical on Ads Health and Mission Control.
 
 const SEVERITY_BG: Record<string, string> = {
-  CRITICAL: "bg-red-100 text-band-red",
-  HIGH:     "bg-orange-100 text-band-orange",
-  MEDIUM:   "bg-yellow-100 text-band-yellow",
-  LOW:      "bg-green-100 text-band-green",
-  INFO:     "bg-gray-100 text-muted",
+  CRITICAL: "bg-bad/15 text-bad",
+  HIGH:     "bg-warn/15 text-warn",
+  MEDIUM:   "bg-warn/15 text-warn",
+  LOW:      "bg-good/15 text-good",
+  INFO:     "bg-muted/15 text-muted",
 };
 
 export default function AnalyzeClient() {
@@ -84,7 +69,7 @@ export default function AnalyzeClient() {
   return (
     <div className="grid gap-5 md:grid-cols-[320px_1fr]">
       {/* ── Input panel ─────────────────────────────────── */}
-      <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <p className="mb-3 text-xs font-bold uppercase tracking-widest text-muted">Load sample</p>
         <div className="mb-4 flex flex-wrap gap-2">
           {(["clean", "fatigued", "broken"] as const).map((k) => (
@@ -142,10 +127,10 @@ export default function AnalyzeClient() {
       </div>
 
       {/* ── Results panel ───────────────────────────────── */}
-      <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         {/* Error */}
         {err && (
-          <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-band-red">
+          <div role="alert" className="mb-4 rounded-xl border border-bad/40 bg-bad/10 px-4 py-3 text-sm font-medium text-bad">
             {err}
           </div>
         )}
@@ -166,7 +151,9 @@ export default function AnalyzeClient() {
           <div className="animate-fade-in space-y-6">
             {/* Hero: score + verdict */}
             <div className="flex flex-wrap items-center gap-5 rounded-2xl border border-border-subtle bg-surface p-5">
-              <Gauge score={res.health.total} band={res.health.band} />
+              <div className="flex-shrink-0" style={{ color: BANDC[res.health.band] || "#5a6577" }}>
+                <RingGauge value={res.health.total} size={150} tone={toneForBand(res.health.band)} track="#ece7e1" label="Campaign Health Score" sub="/ 100" />
+              </div>
               <div className="min-w-0 flex-1">
                 <span className="inline-flex items-center gap-1.5">
                   <span
@@ -225,34 +212,22 @@ export default function AnalyzeClient() {
                 <summary className="cursor-pointer select-none rounded-xl px-4 py-3 text-sm font-bold text-ink transition hover:bg-surface">
                   Why this score? — factor breakdown
                 </summary>
-                <div className="overflow-x-auto px-4 pb-4">
-                  <table className="w-full text-sm" aria-label="Score factor breakdown">
-                    <thead>
-                      <tr className="border-b border-border-subtle text-left">
-                        <th className="py-2 pr-4 text-xs font-bold uppercase tracking-wider text-muted">Factor</th>
-                        <th className="py-2 pr-4 text-xs font-bold uppercase tracking-wider text-muted">Score</th>
-                        <th className="py-2 pr-4 text-xs font-bold uppercase tracking-wider text-muted">Weight</th>
-                        <th className="py-2 text-xs font-bold uppercase tracking-wider text-muted">Contribution</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(res.health.breakdown)
-                        .sort((a: any, b: any) => b[1].weight - a[1].weight)
-                        .map(([k, b]: any) => (
-                          <tr key={k} className="border-b border-border-subtle last:border-0 hover:bg-surface">
-                            <td className="py-2 pr-4 font-medium text-ink">
-                              <span className="inline-flex items-center gap-1">
-                                {FACTORLABEL[k] || k}
-                                {METRIC_GLOSSARY[FACTORLABEL[k]] && <Tip label={FACTORLABEL[k]} term={METRIC_GLOSSARY[FACTORLABEL[k]].term} align="left">{METRIC_GLOSSARY[FACTORLABEL[k]].what}</Tip>}
-                              </span>
-                            </td>
-                            <td className="py-2 pr-4 tabular-nums text-muted">{b.score == null ? "N/A" : Math.round(b.score) + "/100"}</td>
-                            <td className="py-2 pr-4 tabular-nums text-muted">{b.weight}%</td>
-                            <td className="py-2 tabular-nums text-muted">{b.score == null ? "—" : Math.round(b.weighted_points * 10) / 10 + " pts"}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
+                <div className="px-4 pb-4 text-ink">
+                  {/* V7: weighted-contribution bars — the score explains itself visually
+                      (tables told you the numbers; bars show where the points went). */}
+                  <FactorBars
+                    items={Object.entries(res.health.breakdown)
+                      .sort((a: any, b: any) => b[1].weight - a[1].weight)
+                      .map(([k, b]: any) => ({
+                        label: FACTORLABEL[k] || k,
+                        score: b.score == null ? null : Number(b.score),
+                        weightPct: Number(b.weight) || 0,
+                        hint: METRIC_GLOSSARY[FACTORLABEL[k]]
+                          ? <Tip label={FACTORLABEL[k]} term={METRIC_GLOSSARY[FACTORLABEL[k]].term} align="left">{METRIC_GLOSSARY[FACTORLABEL[k]].what}</Tip>
+                          : undefined,
+                      }))}
+                  />
+                  <p className="mt-2 text-2xs text-muted">Bar = factor score (0–100) · wt = its weight in the total. N/A factors carry no weight against you.</p>
                 </div>
               </details>
             )}
@@ -266,7 +241,7 @@ export default function AnalyzeClient() {
                     {res.health.findings.map((fd: any, i: number) => (
                       <tr key={i} className="border-b border-border-subtle last:border-0 hover:bg-surface">
                         <td className="py-3 pl-4 pr-3 align-top">
-                          <span className={`inline-block rounded-md px-2 py-0.5 text-2xs font-bold ${SEVERITY_BG[fd.severity] || "bg-gray-100 text-muted"}`}>
+                          <span className={`inline-block rounded-md px-2 py-0.5 text-2xs font-bold ${SEVERITY_BG[fd.severity] || "bg-muted/15 text-muted"}`}>
                             {fd.severity}
                           </span>
                         </td>
@@ -292,9 +267,9 @@ export default function AnalyzeClient() {
                       <tr key={i} className="border-b border-border-subtle last:border-0 hover:bg-surface">
                         <td className="py-3 pl-4 pr-3 align-top">
                           <span className={`inline-block rounded-md px-2 py-0.5 text-2xs font-bold capitalize ${
-                            d.verdict === "scale" ? "bg-green-100 text-band-green" :
-                            d.verdict === "kill" || d.verdict === "fix-tracking" ? "bg-red-100 text-band-red" :
-                            "bg-gray-100 text-muted"
+                            d.verdict === "scale" ? "bg-good/15 text-good" :
+                            d.verdict === "kill" || d.verdict === "fix-tracking" ? "bg-bad/15 text-bad" :
+                            "bg-muted/15 text-muted"
                           }`}>
                             {d.verdict}
                           </span>

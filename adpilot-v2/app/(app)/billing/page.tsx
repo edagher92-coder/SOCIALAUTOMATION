@@ -28,7 +28,7 @@ export default async function BillingPage() {
         <div className="text-sm text-muted">Current plan</div>
         <div className="text-xl font-extrabold capitalize text-ink">
           {active ? (sub as any).plan : "Free"}
-          {active && <span className="ml-2 rounded-full bg-teal-50 px-2 py-0.5 text-xs font-bold text-teal">active</span>}
+          {active && <span className="ml-2 rounded-full bg-good/15 px-2 py-0.5 text-xs font-bold text-good">active</span>}
         </div>
       </div>
 

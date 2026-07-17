@@ -26,12 +26,12 @@ export default function ClaudeApi() {
       />
 
       <div className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
-        <div className="mb-3 rounded-xl border border-band-yellow/40 bg-amber-50 p-3 text-sm text-amber-800">
+        <div className="mb-3 rounded-xl border border-warn/40 bg-warn/10 p-3 text-sm text-warn">
           🔒 For this browser demo, the key is stored only in <b>your browser</b> (localStorage) and never sent to our servers.
           For production, keys belong on the <b>server</b> (env vars) — never in the browser. Use a key you can rotate.
         </div>
         {saved ? (
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-teal/30 bg-teal-50 p-3">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-good/40 bg-good/10 p-3">
             <div className="text-sm text-ink">Connected: <code className="rounded bg-surface-raised px-1.5 py-0.5">{mask(saved)}</code></div>
             <button onClick={clear} className="rounded-lg border border-band-red px-3 py-1.5 text-sm font-semibold text-band-red transition hover:bg-band-red hover:text-white">Disconnect</button>
           </div>

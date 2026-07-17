@@ -46,7 +46,7 @@ export default function AgentConsole({ agents, enabled }: { agents: PublicAgent[
           const sel = a.id === activeId;
           return (
             <button key={a.id} type="button" onClick={() => select(a.id)} disabled={busy} aria-pressed={sel}
-              className={`rounded-2xl border p-4 text-left shadow-card transition hover:shadow-card-hover disabled:cursor-not-allowed disabled:opacity-60 ${sel ? "border-brand ring-1 ring-brand/30 bg-brand-50" : "border-border-subtle bg-white"}`}>
+              className={`rounded-2xl border p-4 text-left shadow-card transition hover:shadow-card-hover disabled:cursor-not-allowed disabled:opacity-60 ${sel ? "border-brand ring-1 ring-brand/30 bg-brand-50" : "border-border-subtle bg-surface-raised"}`}>
               <div className="mb-1 text-2xl">{a.emoji}</div>
               <h3 className="font-bold text-ink">{a.name}</h3>
               <p className="mt-1 text-sm text-muted">{a.domain}</p>
@@ -55,7 +55,7 @@ export default function AgentConsole({ agents, enabled }: { agents: PublicAgent[
         })}
       </div>
 
-      <div className="mt-5 rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <div className="mt-5 rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <div className="mb-2 text-sm font-bold text-ink">Ask {active?.name ?? "a specialist"}</div>
         {!enabled && (
           <div className="mb-3 rounded-xl bg-brand-50 p-3 text-sm text-muted">

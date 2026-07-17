@@ -6,6 +6,7 @@ import PageHeader from "@/components/PageHeader";
 import RecActions from "@/components/RecActions";
 import Tip from "@/components/Tip";
 import ModeAware from "@/components/ModeAware";
+import { Icon, VERDICT_ICON } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -75,13 +76,15 @@ export default async function Proposals() {
                 <section key={v}>
                   {/* Verdict group header with a count — gives a long queue clear hierarchy. */}
                   <div className="mb-2 flex items-center gap-2">
-                    <span className={`text-sm font-extrabold ${m.cls}`}>{m.emoji} {m.label}</span>
+                    <span className={`flex items-center gap-1.5 text-sm font-extrabold ${m.cls}`}>
+                      <Icon name={(VERDICT_ICON[v] ?? VERDICT_ICON.keep).icon} size={15} /> {m.label}
+                    </span>
                     <span className="rounded-full bg-surface px-2 py-0.5 text-2xs font-bold text-muted">{items.length}</span>
                     {def && <Tip label={m.label} term={def.term} align="left">{def.what}</Tip>}
                   </div>
                   <div className="space-y-3">
                     {items.map((r: any) => (
-                      <div key={r.id} className="rounded-2xl border border-border-subtle bg-white p-4 shadow-card">
+                      <div key={r.id} className="rounded-2xl border border-border-subtle bg-surface-raised p-4 shadow-card">
                         <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
@@ -96,7 +99,7 @@ export default async function Proposals() {
                             </ModeAware>
                             {r.proposal && <p className="mt-1.5 text-sm text-ink"><span className="font-semibold">Proposal:</span> {r.proposal}</p>}
                           </div>
-                          <RecActions id={r.id} />
+                          <RecActions id={r.id} verdict={r.verdict} />
                         </div>
                       </div>
                     ))}

@@ -40,7 +40,7 @@ export default function AudienceClient({ insights, proposals, canPublish }: {
       )}
 
       {/* Snapshot */}
-      <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="font-bold text-ink">{insights.handle} · {PLATFORM_LABEL[insights.platform]}</h2>
           <span className="text-sm text-muted">{insights.followerCount.toLocaleString("en-AU")} followers</span>
@@ -107,7 +107,7 @@ export default function AudienceClient({ insights, proposals, canPublish }: {
       </section>
 
       {/* AI strategist */}
-      <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-bold text-ink">🔵 Ask Mira — audience strategist</h2>
           <button onClick={runStrategist} disabled={aiBusy}
@@ -121,7 +121,7 @@ export default function AudienceClient({ insights, proposals, canPublish }: {
       </section>
 
       {/* 1) Content planner */}
-      <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <h2 className="font-bold text-ink">🎬 Content plan</h2>
         <p className="mt-1 text-xs text-muted">Themes that fit your {proposals.dominant.bracket} core, plus draft posts timed to when they’re online.</p>
         <ul className="mt-3 space-y-2">
@@ -139,7 +139,7 @@ export default function AudienceClient({ insights, proposals, canPublish }: {
       </section>
 
       {/* 2) Ad targeting */}
-      <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <h2 className="font-bold text-ink">🎯 Draft ad audiences</h2>
         <p className="mt-1 text-xs text-muted">Starting points that mirror your followers. Drafts only — review in Ads Manager before any spend.</p>
         <div className="mt-3 space-y-2">
@@ -157,7 +157,7 @@ export default function AudienceClient({ insights, proposals, canPublish }: {
       </section>
 
       {/* 3) Creative briefs */}
-      <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <h2 className="font-bold text-ink">🎨 Creative briefs</h2>
         <p className="mt-1 text-xs text-muted">Per-segment angles that match who follows you.</p>
         <div className="mt-3 space-y-2">
@@ -173,7 +173,7 @@ export default function AudienceClient({ insights, proposals, canPublish }: {
       </section>
 
       {/* 4) Report section */}
-      <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+      <section className="rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-card">
         <h2 className="font-bold text-ink">🗃️ For your client report</h2>
         <p className="mt-1 text-xs text-muted">Plain-English audience summary you can drop into a white-label report.</p>
         <ul className="mt-3 space-y-1 text-sm text-ink">

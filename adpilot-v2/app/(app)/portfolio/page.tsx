@@ -70,7 +70,7 @@ export default async function Portfolio() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-border-subtle bg-white shadow-card">
+      <div className="overflow-hidden rounded-2xl border border-border-subtle bg-surface-raised shadow-card">
         <table className="w-full text-sm">
           <thead className="bg-surface text-left text-xs uppercase tracking-wide text-muted">
             <tr><th className="p-3">Client</th><th className="p-3">Health</th><th className="p-3">MTD spend</th><th className="p-3">ROAS</th><th className="p-3"></th></tr>

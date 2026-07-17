@@ -51,6 +51,29 @@ export async function POST(req: Request) {
       organisation_id: orgId, scope: "account", total: result.health.total, band: result.health.band,
       breakdown: result.health.breakdown, data_confidence: (result.health as any).breakdown?.data_confidence?.score ?? null,
     });
+    // Persist the parsed rows into campaign_snapshots too, so a pasted CSV feeds Mission
+    // Control's health-trend chart and budget guardrails the same way a live sync does
+    // (source: "csv" — never touched by the API-sync refresh in lib/sync/pull.ts).
+    const snaps = rows.map((r: any) => ({
+      organisation_id: orgId, platform: r.platform || platform || "meta",
+      campaign_id: r.campaign_id || null, campaign_name: r.campaign_name || null,
+      adset_id: r.adset_id || null, adset_name: r.adset_name || null,
+      ad_id: r.ad_id || null, ad_name: r.ad_name || null,
+      date: r.date || new Date().toISOString().slice(0, 10),
+      objective: r.objective || null, budget_type: r.budget_type || null,
+      daily_budget: r.daily_budget ?? null,
+      spend: r.spend ?? null, impressions: r.impressions ?? null, reach: r.reach ?? null, frequency: r.frequency ?? null,
+      clicks: r.clicks ?? null, ctr: r.ctr ?? null, cpc: r.cpc ?? null, cpm: r.cpm ?? null,
+      landing_page_views: r.landing_page_views ?? null, leads: r.leads ?? null, purchases: r.purchases ?? null, revenue: r.revenue ?? null,
+      video_views: r.video_views ?? null, three_second_views: r.three_second_views ?? null, thruplays: r.thruplays ?? null,
+      hook_rate: r.hook_rate ?? null, hold_rate: r.hold_rate ?? null,
+      lead_quality_score: r.lead_quality_score ?? null, tracking_status: r.tracking_status || "ok",
+      utm_source: r.utm_source || null, utm_medium: r.utm_medium || null, utm_campaign: r.utm_campaign || null,
+      source: "csv",
+    }));
+    for (let i = 0; i < snaps.length; i += 500) {
+      await admin.from("campaign_snapshots").insert(snaps.slice(i, i + 500));
+    }
     // Refresh the open Proposals queue: actionable verdicts only, platform-aware
     // dedupe, replacing just the 'open' set. Same shared helper the cron uses so a
     // CSV upload and an auto-sync produce an identical queue.

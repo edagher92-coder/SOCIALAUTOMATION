@@ -9,8 +9,8 @@ export const runtime = "nodejs";
 const Body = z.object({
   average_sale_value: z.number().positive().max(1_000_000),
   gross_margin: z.number().min(0.01).max(1),
-  // Auto-sync cadence in hours: 0 = off, 1 = hourly, 24 = daily, 168 = weekly, or custom.
-  sync_interval_hours: z.number().int().min(0).max(8760).optional(),
+  // Auto-sync cadence in hours: 0 = off, 0.5 = every 30 min, 1 = hourly, 24 = daily, 168 = weekly, or custom.
+  sync_interval_hours: z.number().min(0).max(8760).optional(),
   // Optional monthly ad budget (AUD) — powers the budget_pacing health factor. 0/absent = off.
   monthly_budget: z.number().min(0).max(100_000_000).nullable().optional(),
   // Optional lead→sale close rate (0–1) — enables the break-even-CPL read for lead-gen accounts.

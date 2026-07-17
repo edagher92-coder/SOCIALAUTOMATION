@@ -21,7 +21,7 @@ export default function AutoSyncStatus({
 }) {
   const live = cadence !== "manual only";
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-white px-3 py-1 text-xs font-semibold text-muted ${className}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-raised px-3 py-1 text-xs font-semibold text-muted ${className}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${live ? "bg-teal animate-live-pulse" : "bg-muted/40"}`} aria-hidden />
       {live ? <>Auto-sync <b className="text-ink">{cadence}</b> · last pull {ago(lastSyncedAt)}</> : <>Auto-sync off · manual only</>}
     </span>

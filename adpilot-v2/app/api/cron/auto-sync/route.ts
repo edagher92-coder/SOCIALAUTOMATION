@@ -8,10 +8,10 @@ import { can, normalisePlan } from "@/lib/entitlements";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-// Cadence-driven auto-sync. Runs hourly (Vercel cron) and, per org, only pulls when the
-// org's chosen cadence is due — then re-scores + alerts. This is what makes the product
+// Cadence-driven auto-sync. Runs every 30 minutes (Vercel cron) and, per org, only pulls when
+// the org's chosen cadence is due — then re-scores + alerts. This is what makes the product
 // "no prompts once access is given": connect once, pick a cadence, it runs itself.
-//   sync_interval_hours: 0 = off · 1 = hourly · 24 = daily · 168 = weekly · or any custom value.
+//   sync_interval_hours: 0 = off · 0.5 = every 30 min · 1 = hourly · 24 = daily · 168 = weekly · or any custom value.
 const PLATFORMS: Platform[] = ["meta", "tiktok"];
 
 export async function GET(req: Request) {

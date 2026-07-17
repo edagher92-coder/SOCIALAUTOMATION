@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -18,8 +18,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  background-color: #faf7f4;
-  color: #1c1726;
+  background-color: #0e1220;
+  color: #eef1f8;
 }
 
 /* ── Focus-visible ring (keyboard only) ───────────────────────── */
@@ -47,11 +47,11 @@ body {
 }
 /* Soft warm "mesh" backdrop for hero / login / empty states. */
 .bg-mesh {
-  background-color: #faf7f4;
+  background-color: #0e1220;
   background-image:
-    radial-gradient(at 0% 0%, rgba(249, 96, 63, .10) 0, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(255, 178, 36, .12) 0, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(249, 96, 63, .05) 0, transparent 55%);
+    radial-gradient(at 0% 0%, rgba(249, 96, 63, .16) 0, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(255, 178, 36, .14) 0, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(249, 96, 63, .08) 0, transparent 55%);
 }
 
 /* ── Smooth transitions on interactive elements ───────────────── */
@@ -69,11 +69,11 @@ a, button, [role="button"] {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #ded6cc;
+  background: #242b42;
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #c4b9ab;
+  background: #333c5c;
 }
 
 /* ── Sidebar nav scrollbar invisible until hover ──────────────── */
@@ -84,7 +84,7 @@ nav::-webkit-scrollbar-thumb {
   background: transparent;
 }
 nav:hover::-webkit-scrollbar-thumb {
-  background: #d0d7e3;
+  background: #333c5c;
 }
 
 /* ── Table improvements ───────────────────────────────────────── */

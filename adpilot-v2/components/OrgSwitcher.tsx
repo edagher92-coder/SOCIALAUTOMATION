@@ -24,9 +24,9 @@ export default function OrgSwitcher() {
   if (orgs.length === 0) return null;
   return (
     <div>
-      <div className="mb-1 px-1 text-[11px] font-bold uppercase tracking-wide text-muted">Client</div>
+      <div className="mb-1 px-1 text-[11px] font-bold uppercase tracking-wide text-cockpit-muted">Client</div>
       <select value={active} onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-[#e3e8ef] bg-white p-2 text-sm font-semibold">
+        className="w-full rounded-lg border border-cockpit-edge bg-cockpit-raised p-2 text-sm font-semibold text-cockpit-ink">
         {orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
         <option value="__new">➕ Add client…</option>
       </select>
