@@ -37,9 +37,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import ipaddress
 import os
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -49,6 +51,47 @@ API_KEY = os.environ.get("OLLAMA_API_KEY", "").strip()
 # Ollama Cloud — so this works from any machine with a key, incl. cloud sessions.
 _DEFAULT_BASE = "https://ollama.com" if API_KEY else "http://localhost:11434"
 BASE = os.environ.get("CLAUDE_ROUTER_OLLAMA_URL", _DEFAULT_BASE).rstrip("/")
+
+
+def _is_allowed_base(url: str) -> tuple[bool, str]:
+    """SSRF guard — identical policy to router.is_allowed_base. Allow http/https
+    to loopback, RFC1918 private, Tailscale (100.64/10, *.ts.net), single-label
+    LAN, ollama.com, or a host in CLAUDE_ROUTER_OLLAMA_ALLOW_HOSTS. Reject
+    file://, 169.254.169.254 (cloud metadata), and arbitrary public hosts."""
+    try:
+        parsed = urllib.parse.urlparse(url)
+    except ValueError as exc:
+        return False, f"unparseable URL: {exc}"
+    if parsed.scheme not in ("http", "https"):
+        return False, f"scheme '{parsed.scheme}' not allowed (http/https only)"
+    host = (parsed.hostname or "").lower()
+    if not host:
+        return False, "no host in URL"
+    extra = {h.strip().lower() for h in os.environ.get("CLAUDE_ROUTER_OLLAMA_ALLOW_HOSTS", "").split(",") if h.strip()}
+    if host in extra:
+        return True, "allowlisted"
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        ip = None
+    if ip is not None:
+        if ip.is_loopback:
+            return True, "loopback"
+        if ip in ipaddress.ip_network("100.64.0.0/10"):
+            return True, "tailscale"
+        if ip.is_link_local:
+            return False, "link-local/metadata IP blocked (SSRF)"
+        if ip.is_private:
+            return True, "private"
+        return False, f"public IP {host} blocked (SSRF)"
+    if host in ("localhost", "ollama.com") or host.endswith(".ts.net") or "." not in host:
+        return True, "allowed host"
+    return False, f"public host '{host}' blocked (SSRF) — set CLAUDE_ROUTER_OLLAMA_ALLOW_HOSTS to permit it"
+
+
+_base_ok, _base_reason = _is_allowed_base(BASE)
+if not _base_ok:
+    raise SystemExit(f"refusing CLAUDE_ROUTER_OLLAMA_URL={BASE!r}: {_base_reason}")
 
 
 def _headers() -> dict:
