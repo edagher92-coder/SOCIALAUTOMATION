@@ -20,7 +20,7 @@ previous `/quick` or `/deep` override.
 When you need to spawn subagents (Agent tool), use these defaults:
 - **Tier 3 — search, grep, lookups**: `model: "haiku"`, `effort: "low"`
 - **Tier 2 — single-file edit, bug fix, repetitive/everyday work**: `model: "sonnet"`, `effort: "high"`
-- **Tier 1 — multi-file refactor, architecture, security, deep debug**: `model: "opus"`, `effort: "xhigh"`
+- **Tier 1 — multi-file refactor, architecture, security, deep debug**: `model: "opus"`, `effort: "xhigh"` (currently Opus 4.8)
 - Main session stays on Sonnet 5 / high
 
 ## General approach

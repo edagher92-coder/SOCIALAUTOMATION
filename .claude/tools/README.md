@@ -15,7 +15,10 @@ python ~/.claude/tools/ollama_route.py --list          # models the server can s
 ```
 
 Routes: `heavy-code` → `kimi-k2.7-code:cloud`, `heavy-reason` → `gpt-oss:120b-cloud`,
-`trivial` → `gemma4:e4b`, `classify` → `llama3.2:3b`. Stdlib only, no deps.
+`trivial` → `llama3.2:3b`, `classify` → `llama3.2:3b`. Stdlib only, no deps.
+The heavy/mid routes are `:cloud` tags — they bill the flat-rate Ollama plan and
+never load onto a local GPU; the trivial/classify floor is the ONE model a
+workstation hosts locally (see "Workstation hosting" below).
 
 **NUMBERS RULE:** never send customer-facing price/quote/invoice/legal here — those
 stay on Claude (Sonnet/Opus). This tool is for heavy NON-stakes work only.
@@ -59,6 +62,28 @@ command to `python ~/.claude/tools/claude_status_line.py`.
 Fails open like everything else in this kit: any error, missing state file,
 or unreachable Ollama → falls back to just the Claude tier badge, never a
 blank or broken line.
+
+## Workstation hosting: one floor model (local installs)
+
+Model Routing Policy v5.1 already sends the heavy tiers off-box — HEAVY/mid
+work goes to **Ollama Cloud** (the flat-rate plan) or the **Tailscale hub**,
+never a workstation GPU. `bootstrap.ps1` reflects that with two profiles:
+
+- **workstation (default):** hosts exactly ONE local model, `llama3.2:3b` —
+  the floor that serves both the classifier and the `trivial` basic-tasks
+  route — plus runtime caps so nothing stacks (`OLLAMA_MAX_LOADED_MODELS=1`,
+  `OLLAMA_NUM_PARALLEL=1`, `OLLAMA_CONTEXT_LENGTH=8192`,
+  `OLLAMA_FLASH_ATTENTION=1`, `OLLAMA_KV_CACHE_TYPE=q8_0`). That is ~2GB
+  resident at most — about 25% of an 8GB card, against the ~94% the old full
+  local package (VRAM-tiered daily model + classifier + embedder, all
+  resident) measured on the RTX 2080 work PC. Leftover package models get an
+  `ollama rm` hint; nothing is auto-deleted.
+- **dedicated (`-DedicatedGpu`):** the box exists to serve models (the hub),
+  so the full VRAM-tiered package applies and no runtime caps are set.
+
+Changed caps only apply to an already-running Ollama after it restarts (tray →
+Quit Ollama, reopen); the script says so when needed and immediately unloads
+resident models either way, so VRAM is freed on the spot.
 
 ## Main server + Tailscale (multi-PC)
 Both the bridge and the classifier hook read **`CLAUDE_ROUTER_OLLAMA_URL`**
