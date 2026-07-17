@@ -23,8 +23,12 @@ Usage:
 Routes (task class -> default model; tune to your weekly benchmark):
     heavy-code    -> kimi-k2.7-code:cloud     bulk coding / refactors
     heavy-reason  -> gpt-oss:120b-cloud       long non-stakes reasoning / drafting
-    trivial       -> gemma4:e4b               local free floor
+    trivial       -> llama3.2:3b              local floor (same model as the classifier)
     classify      -> llama3.2:3b              the router's own classifier
+
+Hosting note (Model Routing Policy v5.1): workstations host ONLY the floor
+model locally -- the heavy/mid tiers run on Ollama Cloud (the flat-rate
+plan) or the Tailscale hub, so a daily-use PC's GPU stays free for work.
 
 NUMBERS RULE: never send customer-facing price / quote / invoice / legal here.
 Those stay on Claude (Sonnet/Opus). This tool is for heavy NON-stakes grunt work.
@@ -57,7 +61,8 @@ def _headers() -> dict:
 ROUTES = {
     "heavy-code": "kimi-k2.7-code:cloud",
     "heavy-reason": "gpt-oss:120b-cloud",
-    "trivial": "gemma4:e4b",
+    "mid-tier": "glm-5.2:cloud",     # GLM 5.2: bulk reasoning between Sonnet and Opus
+    "trivial": "llama3.2:3b",        # the workstation floor -- the one locally hosted model
     "classify": "llama3.2:3b",
 }
 
