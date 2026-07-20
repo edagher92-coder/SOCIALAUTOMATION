@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decrypt } from "@/lib/crypto";
+import { META_GRAPH_BASE } from "@/lib/meta/graph-version";
 import type { AudienceInsights } from "./types";
 import { metaGenderAgeToRows, shareMapToNamed, onlineToHourly } from "./parse";
 
@@ -10,7 +11,7 @@ import { metaGenderAgeToRows, shareMapToNamed, onlineToHourly } from "./parse";
 // connection, scope, or unexpected payload makes getLiveAudience return null so the caller
 // falls back to the clearly-labelled sample — we never pass partial/empty data off as real.
 
-const GRAPH = "https://graph.facebook.com/v21.0";
+const GRAPH = META_GRAPH_BASE;
 const TT = "https://business-api.tiktok.com/open_api/v1.3";
 
 // Pull a named metric's latest value object out of a Graph /insights response.

@@ -13,6 +13,12 @@ _Last updated: 2026-06-15._
 - Optional for **Messenger automation** (Expert): a Meta app with a verify token + app secret (see §8).
 
 ## 1. Supabase (database + auth)
+> **Release baseline:** apply every migration in numeric order through
+> `0031_access_hardening.sql` (prefer `supabase db push`). The earlier list in
+> this runbook is historical; stopping at `0011` leaves production without data
+> deletion, alerting, ingestion observability, AI-usage controls, and access
+> hardening.
+
 1. Create a new Supabase project. Note the **Project URL**, **anon key**, **service_role key** (Settings → API).
 2. SQL Editor → run the migrations in order from `adpilot-v2/supabase/migrations/`:
    `0001_init.sql` → `0002_phase3.sql` → `0003_phase4.sql` → `0004_hardening.sql` → `0005_auto_sync.sql`

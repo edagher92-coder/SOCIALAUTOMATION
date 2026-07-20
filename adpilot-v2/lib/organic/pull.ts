@@ -1,4 +1,5 @@
 import "server-only";
+import { META_GRAPH_VERSION } from "@/lib/meta/graph-version";
 import type { OrganicPostInput } from "./types";
 import { replaceSyncedPosts } from "./store";
 
@@ -14,7 +15,7 @@ import { replaceSyncedPosts } from "./store";
 // wrappers add the network call. Scopes needed when going live: pages_read_engagement (Page) and
 // instagram_manage_insights (IG) — hence "scaffold" until App Review grants them.
 
-const V = process.env.META_GRAPH_API_VERSION || "v21.0";
+const V = META_GRAPH_VERSION;
 
 export interface MetaOrganicConfig {
   pageToken?: string;

@@ -72,7 +72,7 @@ const FEATURES = [
   {
     eyebrow: "Read-only by design",
     headline: "It proposes. You approve. Nothing changes without a typed YES.",
-    body: "AdPilot OS never edits, pauses, creates or spends on a live ad without an explicit typed confirmation — and even then only on Expert with ADS_WRITE_ENABLED active. The product is a decision-support system, not an autopilot.",
+    body: "AdPilot OS never changes a live ad without an explicit typed confirmation. Approved changes are available only to Expert workspace managers with a separate write credential, execution controls enabled, and hard budget guardrails. The product is a decision-support system, not an autopilot.",
     detail: "Safe by architecture, not just policy.",
   },
 ];

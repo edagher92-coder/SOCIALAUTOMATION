@@ -86,10 +86,17 @@ adpilot-v2/supabase/migrations/0001 … 0027
 > (with `NEXT_PUBLIC_SUPPORT_EMAIL` accepted as a fallback). If neither is set, the endpoint
 > falls back to a placeholder — not acceptable for a live privacy contact.
 
-### 2e. Launch kill-switch
+### 2e. Approved-execution controls
 
-- `ADS_WRITE_ENABLED` — **leave UNSET (OFF)** for launch (board recommendation; strictly read-only).
-  Even when set to `1`, every live action still requires a typed-YES confirmation.
+- `ADS_WRITE_ENABLED` is a legacy variable and has no effect.
+- Leave `AD_WRITE_EXECUTION_ENABLED` **unset** for a read-only launch. To enable
+  controlled live Meta changes, set it to `1` only after the checks below pass.
+- Set `AD_WRITE_MAX_DAILY_BUDGET` to a positive account-level ceiling and
+  `AD_WRITE_MAX_BUDGET_CHANGE_PCT` no higher than `0.50` (the default is `0.20`).
+- Each workspace must be on Expert, the acting user must be an owner or admin,
+  and the user must add a separate Meta System User token with `ads_management`.
+  AdPilot stages a proposal, captures current state, requires a typed confirmation,
+  and records the approval before it changes an eligible campaign or ad set.
 
 ## 3. Crons (already declared in `adpilot-v2/vercel.json`)
 
@@ -156,7 +163,9 @@ CI runs this on every push/PR touching `adpilot-v2/**`. Do not merge to `main` r
 
 ## 6. Launch posture
 
-- **Read-only**: the product audits and proposes; it never edits/pauses/spends on a live ad without a
-  typed-YES, and `ADS_WRITE_ENABLED` stays OFF.
+- **Controlled by default**: the product audits and proposes. Live Meta changes
+  remain off until the dedicated execution control is enabled, and then require
+  Expert-manager approval, a separate write token, a typed confirmation, and
+  account-level budget guardrails.
 - **Resale-clean**: no private business data in the shippable tree (CI grep guard — pattern defined in `.github/workflows/adpilot-v2-ci.yml`).
 - **AU defaults**: Australian English, AUD; anti-hype (no guarantees / earnings / financial-legal-tax advice).

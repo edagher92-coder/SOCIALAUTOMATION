@@ -42,6 +42,7 @@ export async function POST(req: Request) {
 
   const i = parsed.data;
   const stella = getAgent("stella");
+  const paige = getAgent("paige");
   const userMsg = `${grounding}
 Create an ORGANIC ${i.platform} ${i.platform === "tiktok" ? "video/reel" : "post"} (not a paid ad).
 Topic/product: ${i.topic || "(use the business context)"}. Offer: ${i.offer || "n/a"}. Audience: ${i.audience || "(broad)"}.
@@ -50,7 +51,19 @@ Return, clearly labelled: 3 scroll-stopping hooks; a ready-to-post caption (plat
   try {
     // Organic content drafting is light, templated creative → Haiku tier.
     const text = await callClaude({ system: stella?.system, user: userMsg, maxTokens: 1100, model: modelFor("light") });
-    return NextResponse.json({ text });
+    // Creative is never represented as publish-ready merely because it was generated.
+    // Run Paige's concise preflight so the editor can see any claim/policy issues before
+    // saving or approving the human-owned draft.
+    const policyReview = await callClaude({
+      system: paige?.system,
+      user: `Review this organic ${i.platform} draft before a human considers publishing it.\n\n${text}\n\nReturn a concise preflight headed either "READY FOR HUMAN REVIEW" or "CHANGES NEEDED". Name risky claims and give exact compliant replacements. This is a review only; never say that content is automatically approved or published.`,
+      maxTokens: 700,
+      model: modelFor("light"),
+    });
+    return NextResponse.json({
+      text,
+      policy: { agent: paige?.name || "Paige", status: "reviewed", review: policyReview },
+    });
   } catch (e: any) {
     if (e instanceof NoKeyError)
       return NextResponse.json({ error: "AI isn't configured yet. Add ANTHROPIC_API_KEY on the server to enable the Studio.", code: "NO_KEY" }, { status: 503 });

@@ -1,5 +1,6 @@
 import "server-only";
 import { hashEmail, hashPhone } from "@/lib/pii";
+import { META_GRAPH_BASE } from "@/lib/meta/graph-version";
 
 // Direct Meta Lead Ads ingestion → the lead-quality loop. READ-ONLY: we only READ lead-gen
 // leads from the Graph API and upsert hashed rows into lead_events; we never edit an ad.
@@ -8,7 +9,7 @@ import { hashEmail, hashPhone } from "@/lib/pii";
 // Note: reading lead-gen leads needs a Page access token with `leads_retrieval` (Meta App
 // Review) — separate from the ads_read insights token. Activation is documented in .env/runbook.
 
-const GRAPH = "https://graph.facebook.com/v21.0";
+const GRAPH = META_GRAPH_BASE;
 
 export type MetaLeadField = { name?: string; values?: string[] };
 export type MetaLead = { id: string; created_time?: string; campaign_name?: string; ad_name?: string; field_data?: MetaLeadField[] };

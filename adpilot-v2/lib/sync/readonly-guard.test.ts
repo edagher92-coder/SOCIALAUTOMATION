@@ -93,17 +93,17 @@ describe("(b) write-disabled invariant — executeAction() refuses when kill-swi
     else process.env.ADS_WRITE_ENABLED = prev;
   });
 
-  it("throws WriteDisabledError when ADS_WRITE_ENABLED is not set", async () => {
+  it("throws WriteDisabledError when the legacy setting is absent", async () => {
     delete process.env.ADS_WRITE_ENABLED;
     await expect(executeAction("tok", base)).rejects.toBeInstanceOf(WriteDisabledError);
   });
 
-  it("throws WriteDisabledError when ADS_WRITE_ENABLED is '0'", async () => {
+  it("throws WriteDisabledError when the legacy setting is '0'", async () => {
     process.env.ADS_WRITE_ENABLED = "0";
     await expect(executeAction("tok", base)).rejects.toBeInstanceOf(WriteDisabledError);
   });
 
-  it("throws WriteDisabledError when ADS_WRITE_ENABLED is empty string", async () => {
+  it("throws WriteDisabledError when the legacy setting is empty", async () => {
     process.env.ADS_WRITE_ENABLED = "";
     await expect(executeAction("tok", base)).rejects.toBeInstanceOf(WriteDisabledError);
   });
@@ -113,7 +113,7 @@ describe("(b) write-disabled invariant — executeAction() refuses when kill-swi
     const err = await executeAction("tok", base).catch((e) => e);
     expect(err).toBeInstanceOf(WriteDisabledError);
     expect(err.name).toBe("WriteDisabledError");
-    expect(err.message).toMatch(/ADS_WRITE_ENABLED/);
+    expect(err.message).toMatch(/execution is disabled/i);
   });
 });
 

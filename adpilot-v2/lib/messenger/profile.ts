@@ -1,4 +1,5 @@
 import "server-only";
+import { META_GRAPH_VERSION } from "@/lib/meta/graph-version";
 
 // No-prompt Messenger setup via the Graph API messenger_profile endpoint — TS port of
 // meta_messaging_setup.py. Sets the customer-facing chat entry experience (greeting,
@@ -9,7 +10,7 @@ import "server-only";
 // NOTE: true keyword-triggered auto-REPLIES are NOT in the public API — they need a
 // Messenger webhook bot + app review. Ice breakers + persistent menu cover most of that.
 
-const V = "v21.0";
+const V = META_GRAPH_VERSION;
 
 export type IceBreaker = { question: string; payload: string };
 export type MenuItem =

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Page = { external_page_id: string; display_name?: string; channel?: string; ai_enabled?: boolean; ai_facts?: string | null; ai_voice?: string | null };
 type RuleRow = { id: string; external_page_id: string; trigger_type: string; trigger?: string | null; reply: string; priority: number };
@@ -34,16 +34,19 @@ export default function MessengerBot({ webhookUrl, verifyConfigured, appSecretCo
   const [aiMsg, setAiMsg] = useState("");
   const activePage = pages.find((p) => p.external_page_id === active);
 
-  async function loadPages() {
+  const loadPages = useCallback(async () => {
     const r = await fetch("/api/messenger/pages"); const j = await r.json();
-    if (r.ok) { setPages(j.pages || []); if (!active && j.pages?.[0]) setActive(j.pages[0].external_page_id); }
-  }
+    if (r.ok) {
+      setPages(j.pages || []);
+      setActive((current) => current || j.pages?.[0]?.external_page_id || "");
+    }
+  }, []);
   async function loadRules(page: string) {
     if (!page) return setRules([]);
     const r = await fetch(`/api/messenger/rules?page=${encodeURIComponent(page)}`); const j = await r.json();
     if (r.ok) setRules(j.rules || []);
   }
-  useEffect(() => { loadPages(); }, []);
+  useEffect(() => { void loadPages(); }, [loadPages]);
   useEffect(() => { loadRules(active); }, [active]);
   // Hydrate the AI editor from the active page whenever the selection or page data changes.
   useEffect(() => {

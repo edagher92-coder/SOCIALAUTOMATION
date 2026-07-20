@@ -25,6 +25,8 @@ vi.mock("@/lib/supabase/admin", () => ({
 }));
 vi.mock("@/lib/org", () => ({
   getActiveOrgId: async () => "org-1",
+  getActiveOrgMembership: async () => ({ orgId: "org-1", role: "owner" }),
+  isOrgManagerRole: (role: string) => role === "owner" || role === "admin",
   planForOrg: async () => CURRENT_PLAN,
 }));
 vi.mock("@/lib/crypto", () => ({

@@ -2,22 +2,22 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getActiveOrgId, planForOrg } from "@/lib/org";
+import { getActiveOrgMembership, isOrgManagerRole, planForOrg } from "@/lib/org";
 import { can } from "@/lib/entitlements";
+import { writeEnabled } from "@/lib/actions/execute";
 
 export const runtime = "nodejs";
 
-// Guarded live ad changes. Expert-gated; execution additionally requires ADS_WRITE_ENABLED
+// Guarded live ad changes. Expert manager approval and dedicated execution controls are required.
 // + a typed-YES confirmation (see /api/actions/[id]). This route only proposes + lists.
 async function gate(): Promise<{ res?: NextResponse; orgId?: string; userId?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { res: NextResponse.json({ error: "Unauthorised" }, { status: 401 }) };
-  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
-  if (!can(await planForOrg(orgId), "ad_write")) {
-    return { res: NextResponse.json({ error: "Guarded ad changes are an Expert feature.", upgrade: true }, { status: 402 }) };
-  }
-  return { orgId, userId: user.id };
+  const membership = await getActiveOrgMembership(user.id, user.email ?? undefined);
+  if (!isOrgManagerRole(membership.role)) return { res: NextResponse.json({ error: "Only workspace owners and admins can manage approved live-ad actions." }, { status: 403 }) };
+  if (!can(await planForOrg(membership.orgId), "ad_write")) return { res: NextResponse.json({ error: "Approved live-ad actions are an Expert feature.", upgrade: true }, { status: 402 }) };
+  return { orgId: membership.orgId, userId: user.id };
 }
 
 const Body = z.object({
@@ -41,7 +41,7 @@ export async function GET() {
   const { data } = await supabase.from("ad_actions")
     .select("id,platform,entity_level,external_entity_id,entity_name,action,params,status,confirm_phrase,result,error,created_at,executed_at,reverted_at")
     .eq("organisation_id", g.orgId!).order("created_at", { ascending: false }).limit(100);
-  return NextResponse.json({ actions: data || [], writeEnabled: process.env.ADS_WRITE_ENABLED === "1" });
+  return NextResponse.json({ actions: data || [], writeEnabled: writeEnabled() });
 }
 
 export async function POST(req: Request) {

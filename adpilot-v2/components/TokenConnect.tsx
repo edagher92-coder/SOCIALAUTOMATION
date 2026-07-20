@@ -2,9 +2,9 @@
 import { useState } from "react";
 import RunFirstAudit from "@/components/RunFirstAudit";
 
-// Dev-link connect: paste a read-only access token to connect Meta/TikTok without OAuth
-// app review. On success the server pulls data immediately (automation-first) and we offer
-// a one-click "Run my first audit" so the user reaches their Campaign Health Score right away.
+// Advanced connection: a workspace administrator can supply a read-only System User token
+// when normal OAuth is unavailable. On success the server pulls data immediately and offers
+// a one-click first audit.
 export default function TokenConnect() {
   const [platform, setPlatform] = useState<"meta" | "tiktok">("meta");
   const [token, setToken] = useState("");
@@ -48,11 +48,10 @@ export default function TokenConnect() {
 
   return (
     <div className="mt-4 rounded-2xl border border-[#e3e8ef] bg-white p-5 shadow-card">
-      <h3 className="font-bold">Advanced — connect with an access token (dev link)</h3>
+      <h3 className="font-bold">Connect with an administrator token</h3>
       <p className="mb-3 mt-1 text-sm text-muted">
-        Paste a read-only token to connect now without OAuth app review. Meta: a token with
-        <code className="mx-1">ads_read</code> from the Graph API Explorer or a Business System User.
-        TikTok: a long-lived token plus the advertiser id.
+        Paste a read-only token supplied by your Meta or TikTok administrator. Meta needs
+        <code className="mx-1">ads_read</code>; TikTok needs a long-lived token and advertiser ID.
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="text-sm">
@@ -78,8 +77,8 @@ export default function TokenConnect() {
         </label>
       </div>
       <label className="mt-3 block text-sm">
-        <span className="mb-1 block font-semibold">Access token</span>
-        <input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Paste read-only token"
+        <span className="mb-1 block font-semibold">Read-only access token</span>
+        <input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Paste the token your administrator supplied"
           className="w-full rounded-lg border border-[#e3e8ef] p-2.5 font-mono" autoComplete="off" />
       </label>
       <div className="mt-3 flex flex-wrap items-center gap-3">

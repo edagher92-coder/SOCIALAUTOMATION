@@ -34,6 +34,7 @@ afterEach(() => {
   delete process.env.META_PAGE_ID;
   delete process.env.IG_USER_ID;
   delete process.env.TIKTOK_PUBLISH_TOKEN;
+  delete process.env.CONTENT_PUBLISH_ORG_ID;
 });
 
 describe("not-configured behaviour (env absent → NotConfiguredError, no API call)", () => {
@@ -101,10 +102,13 @@ describe("platform dispatch (configured → calls the right endpoint)", () => {
   });
 
   it("routes TikTok to the publish init endpoint and returns publish_id", async () => {
-    fetchMock.mockResolvedValue(ok({ data: { publish_id: "pub_1" }, error: { code: "ok" } }));
+    fetchMock
+      .mockResolvedValueOnce(ok({ data: { privacy_level_options: ["SELF_ONLY"] }, error: { code: "ok" } }))
+      .mockResolvedValueOnce(ok({ data: { publish_id: "pub_1" }, error: { code: "ok" } }));
     const res = await publishPost({ platform: "tiktok", caption: "c", media_url: "https://cdn/v.mp4", media_type: "video" });
     expect(res.externalId).toBe("pub_1");
-    expect(fetchMock.mock.calls[0][0]).toContain("open.tiktokapis.com");
+    expect(fetchMock.mock.calls[0][0]).toContain("creator_info/query");
+    expect(fetchMock.mock.calls[1][0]).toContain("/video/init/");
   });
 
   it("rejects an unknown platform", async () => {
@@ -139,12 +143,21 @@ describe("API-error paths (HTTP failure → throws platform message, NOT NotConf
 
   it("TikTok does NOT report a silent success when HTTP fails", async () => {
     // r.ok=false but body has no error.code — must still throw, never return undefined id.
-    fetchMock.mockResolvedValue(fail(500, {}));
+    fetchMock.mockResolvedValueOnce(ok({ data: { privacy_level_options: ["SELF_ONLY"] }, error: { code: "ok" } }))
+      .mockResolvedValueOnce(fail(500, {}));
     await expect(publishPost({ platform: "tiktok", media_url: "https://cdn/v.mp4", media_type: "video" })).rejects.toThrow(/TikTok publish failed/);
   });
 
   it("TikTok throws when the API returns a non-ok error code", async () => {
-    fetchMock.mockResolvedValue(ok({ error: { code: "spam_risk_too_many_posts", message: "rate limited" } }));
+    fetchMock.mockResolvedValueOnce(ok({ data: { privacy_level_options: ["SELF_ONLY"] }, error: { code: "ok" } }))
+      .mockResolvedValueOnce(ok({ error: { code: "spam_risk_too_many_posts", message: "rate limited" } }));
     await expect(publishPost({ platform: "tiktok", media_url: "https://cdn/v.mp4", media_type: "video" })).rejects.toThrow(/rate limited/);
+  });
+
+  it("refuses to send a tenant's post through a different tenant's deployment credentials", async () => {
+    process.env.CONTENT_PUBLISH_ORG_ID = "org-a";
+    await expect(publishPost({ organisation_id: "org-b", platform: "facebook", caption: "c" }))
+      .rejects.toThrow(/not configured for this workspace/i);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
