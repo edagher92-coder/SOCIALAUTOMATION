@@ -196,7 +196,7 @@ The generic policy `"org members rw" ... for all using (is_org_member(organisati
 ### 5.3 Connect, dev-token & idempotent sync
 - **Page:** `/connect` (`app/(app)/connect/page.tsx`), components `components/TokenConnect.tsx`, `components/SyncButton.tsx`.
 - **Dev-token connect:** `POST /api/connect/token` (`api_connect`, Pro+). Body `{ platform: 'meta'|'tiktok', token, accountId? }`. Validates the token against the platform (Meta: `me/adaccounts`; TikTok requires an explicit `advertiser_id`), encrypts it (`lib/crypto`), inserts `platform_tokens` + `connected_ad_accounts`, then **pulls immediately** so numbers appear with no extra prompt. This bypasses platform App Review (paste a `ads_read` token from Graph API Explorer / a Business System User).
-- **OAuth:** `GET /api/oauth/[platform]/start` and `.../callback` (`app/api/oauth/[platform]/*`). `start` sets an httpOnly `oauth_state` cookie and redirects to the provider; `callback` verifies state, exchanges the code, stores the encrypted token + accounts, and pulls immediately. Config in `lib/oauth/config.ts` (Meta `ads_read,read_insights`; TikTok `ads.read`; Graph `v21.0`). `configured` flips on presence of `META_APP_ID/SECRET` / `TIKTOK_APP_ID/SECRET`.
+- **OAuth:** `GET /api/oauth/[platform]/start` and `.../callback` (`app/api/oauth/[platform]/*`). `start` sets an httpOnly, single-use state cookie and redirects to the provider; `callback` verifies state, exchanges the code, stores the encrypted token + accounts, and pulls immediately. Config in `lib/oauth/config.ts` (Meta `ads_read,read_insights`; TikTok `ads.read`; Graph version comes from `META_GRAPH_API_VERSION`, release default `v23.0`). `configured` flips on presence of `META_APP_ID/SECRET` / `TIKTOK_APP_ID/SECRET`.
 - **Manual sync:** `POST /api/sync/[platform]` (`app/api/sync/[platform]/route.ts`, `api_connect` gate) → same idempotent puller.
 - **The puller** (`lib/sync/pull.ts`, `syncOrgPlatform(admin, orgId, platform)`): decrypts the latest token, pulls a rolling **30-day** window for every connected account (`metaPull` campaign insights `last_30d`/`time_increment=1`; `tiktokPull` `BASIC`/`AUCTION_CAMPAIGN` report). **Idempotent:** before insert it deletes API-sourced rows (`source = '<platform>_api'`) in the window so repeated syncs never double-count; CSV rows (`source='csv'`) are never touched. Throws on missing token/account/API error; callers decide whether to swallow. (Meta `ctr`/TikTok `ctr` are divided by 100 to normalise to a fraction.)
 
@@ -311,7 +311,7 @@ Because the network call is async, the AI branch must move into the webhook's `r
 | `/api/cron/weekly-digest` | `0 23 * * 5` (Fri 23:00 UTC) | Weekly email digest |
 | `/api/cron/refresh-knowledge` | `0 8 * * 1` (Mon 08:00 UTC) | Web-research knowledge refresh |
 
-All cron routes are `GET`, **fail closed** (503 if `CRON_SECRET` unset), and accept either `Authorization: Bearer <CRON_SECRET>` or `?key=<CRON_SECRET>`.
+All cron routes are `GET`, **fail closed** (503 if `CRON_SECRET` unset), and accept only `Authorization: Bearer <CRON_SECRET>`. URL-carried secrets are rejected.
 
 ### Required / used environment variables
 
@@ -360,16 +360,14 @@ All cron routes are `GET`, **fail closed** (503 if `CRON_SECRET` unset), and acc
 - **Token encryption at rest** (`lib/crypto.ts`): AES-256-GCM. `encrypt()` returns `{ciphertext, iv(12B), authTag}` (base64); `decrypt()` verifies the auth tag. Key from `TOKEN_ENCRYPTION_KEY` (must be 32 bytes or it throws). Ad tokens (`platform_tokens`) and Messenger Page tokens (`messenger_pages`) are stored encrypted; **never selected to the browser** (read only via the admin client server-side). Stored `scopes` are read-only for ads.
 - **Webhook security:** `GET` verifies `MESSENGER_VERIFY_TOKEN`; `POST` verifies the `x-hub-signature-256` HMAC over the raw body against `META_APP_SECRET` (constant-time compare). Invalid signature → 403. The route always returns 200 on processing errors to avoid Meta retry storms.
 - **Stripe webhook** (`app/api/stripe/webhook/route.ts`): verifies the signature with `STRIPE_WEBHOOK_SECRET`; upserts `billing_subscriptions` keyed on `stripe_subscription_id` (idempotent via the unique index). Checkout (`app/api/stripe/checkout/route.ts`) only allows configured price IDs (no arbitrary price injection) and maps price → plan.
-- **Cron fail-closed:** every cron route returns 503 if `CRON_SECRET` is unset and 401 unless the bearer/key matches. No unauthenticated sweep can run.
+- **Cron fail-closed:** every cron route returns 503 if `CRON_SECRET` is unset and 401 unless the `Authorization: Bearer` secret matches. URL query-string credentials are rejected.
 - **Org scoping / RLS:** RLS isolates every org's data (`is_org_member`); the service role is used only server-side and mutations are explicitly `.eq("organisation_id", orgId)`-scoped. `audit_logs` is append-only; `knowledge_docs` and `messenger_threads` are service-role-only.
 - **OAuth state:** `oauth_state` is an httpOnly, secure, sameSite cookie (10-min max-age) validated in the callback.
 
 ### Known follow-ups (security/correctness)
 
-1. **`publishNow` should require an approved status.** `PATCH /api/content/[id]` with `publishNow: true` currently publishes any found post regardless of `status` (it reads `status` but does not require `'approved'`). Tighten to require `status === 'approved'` (the scheduled-publish cron already enforces `status='scheduled'`, which implies a human approval step — the manual path should match).
-2. **Drop the `?key=` cron URL fallback.** All cron routes accept `?key=<CRON_SECRET>` in the URL in addition to the `Authorization: Bearer` header. URLs leak (logs, referrers). Prefer the `Authorization` header exclusively.
-3. **Per-channel media / domain notes.** Send/Cloud API replies are text-only and length-capped (Messenger 2000, WhatsApp 4096); WhatsApp free-form text only inside the 24h customer-service window; Instagram organic publish requires a `media_url`; TikTok publishes `SELF_ONLY` until the app is approved for content posting. Document allowed media domains per provider where relevant.
-4. **Messenger rules POST enum vs `away`.** `POST /api/messenger/rules` does not list `'away'` in its Zod enum although the DB constraint (0009), the bot's `decide()`, and the UI (`MessengerBot.tsx`) all support it — align the POST schema to include `'away'`.
+1. **Per-channel media / domain notes.** Send/Cloud API replies are text-only and length-capped (Messenger 2000, WhatsApp 4096); WhatsApp free-form text only inside the 24h customer-service window; Instagram organic publish requires a `media_url`; TikTok publishes `SELF_ONLY` until the app is approved for content posting. Document allowed media domains per provider where relevant.
+2. **Messenger rules POST enum vs `away`.** `POST /api/messenger/rules` does not list `'away'` in its Zod enum although the DB constraint (0009), the bot's `decide()`, and the UI (`MessengerBot.tsx`) all support it — align the POST schema to include `'away'`.
 
 ---
 
@@ -392,14 +390,14 @@ All cron routes are `GET`, **fail closed** (503 if `CRON_SECRET` unset), and acc
 - Cadence auto-sync cron + daily scoring + weekly digest + critical-alert emails.
 - Proposals queue with human-in-the-loop status (approve/dismiss/done), never edits ads.
 - AI specialist team (12 personas) grounded in saved analysis + dated knowledge baseline; weekly web-search knowledge refresh into `knowledge_docs`.
-- Content Studio: upload/approve/schedule/publish organic FB/IG/TikTok content; AI Creative Studio drafting (Stella); scheduled-publish cron.
+- Content Studio: upload/approve/schedule/publish organic FB/IG/TikTok content; AI drafting by Stella includes a Paige policy preflight before human review; scheduled-publish cron.
 - Messenger automation (Expert): no-prompt entry setup; multi-channel webhook bot (Messenger/Instagram DM/WhatsApp) with keyword/payload/welcome/away/default rules, business-hours awareness, and a 6h greeting cooldown.
 - Stripe billing (Starter/Pro/Expert) with idempotent webhooks; entitlement gating throughout.
 - Security headers (`next.config.mjs`), AES-256-GCM token encryption, webhook HMAC, fail-closed crons.
 
 ### Next
 - **PLANNED §6:** LLM-grounded Messenger auto-replies (per-page `ai_enabled`/`ai_facts`/`ai_voice`, `claude-haiku-4-5`, strict no-hallucination prompt).
-- Security follow-ups (§8): require approved status for `publishNow`; drop the `?key=` cron fallback; align the rules POST enum with `away`; document per-channel media/domain constraints.
+- Security follow-ups (§8): align the rules POST enum with `away`; document per-channel media/domain constraints.
 - Broaden sync beyond campaign-level (adset/ad granularity already in the `campaign_snapshots` schema but not populated by the API pullers).
 - Meta app review completion for the messaging scopes to take the webhook bot fully public.
 ```

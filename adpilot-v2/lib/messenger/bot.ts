@@ -1,12 +1,13 @@
 import "server-only";
 import crypto from "crypto";
 import { callClaude, NoKeyError, MODELS } from "@/lib/ai/claude";
+import { META_GRAPH_VERSION } from "@/lib/meta/graph-version";
 
 // Multi-channel Messenger/Instagram/WhatsApp bot core: signature verification, hours-aware
 // reply decisioning, and the Send APIs. Ported from the meta-messaging-bot skill's reply
 // brain. Messenger + Instagram DM share the Page token + Send API; WhatsApp uses the Cloud API.
 
-const V = process.env.META_GRAPH_API_VERSION ?? "v21.0";
+const V = META_GRAPH_VERSION;
 
 // WhatsApp Cloud API only allows a free-form text reply inside the 24h customer-service window
 // (after the user's last inbound message). Outside it, Meta rejects with error 131026, so we

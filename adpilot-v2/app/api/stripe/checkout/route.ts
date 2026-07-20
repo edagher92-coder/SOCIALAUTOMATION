@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
 import type { Plan } from "@/lib/entitlements";
+import { getActiveOrgMembership, isOrgManagerRole } from "@/lib/org";
 
 export const runtime = "nodejs";
 
@@ -9,6 +10,10 @@ export async function POST(req: Request) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  const membership = await getActiveOrgMembership(user.id, user.email ?? undefined);
+  if (!isOrgManagerRole(membership.role)) {
+    return NextResponse.json({ error: "Only workspace owners and admins can change billing." }, { status: 403 });
+  }
 
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) return NextResponse.json({ error: "Billing isn't configured yet (set STRIPE_SECRET_KEY)." }, { status: 503 });
@@ -43,7 +48,9 @@ export async function POST(req: Request) {
       cancel_url: `${base}/billing?status=cancelled`,
       customer_email: user.email ?? undefined,
       consent_collection: { terms_of_service: "required" },
-      metadata: { user_id: user.id, plan },
+      // Persist the selected workspace in Stripe so the webhook never applies a
+      // paid plan to an arbitrary first workspace for multi-client users.
+      metadata: { user_id: user.id, organisation_id: membership.orgId, plan },
     });
     return NextResponse.json({ url: session.url });
   } catch (e: any) {

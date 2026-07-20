@@ -52,7 +52,7 @@ import { GET } from "./route";
 
 const SECRET = "cron-secret-xyz";
 function req(key = SECRET) {
-  return new Request(`https://x/api/cron/publish?key=${key}`);
+  return new Request("https://x/api/cron/publish", { headers: { authorization: `Bearer ${key}` } });
 }
 const proSub = (org: string) => ({ organisation_id: org, plan: "pro", status: "active" });
 

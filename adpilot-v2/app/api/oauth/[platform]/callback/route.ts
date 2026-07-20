@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getActiveOrgId } from "@/lib/org";
+import { isOrgManagerRole, getActiveOrgMembership } from "@/lib/org";
 import { oauthConfig, type Platform } from "@/lib/oauth/config";
 import { encrypt } from "@/lib/crypto";
 import { syncOrgPlatform } from "@/lib/sync/pull";
@@ -24,14 +24,17 @@ export async function GET(req: Request, props: { params: Promise<{ platform: str
 
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
-  const cookieState = (await cookies()).get("oauth_state")?.value;
+  const cookieStore = await cookies();
+  const cookieState = cookieStore.get("oauth_state")?.value;
+  const oauthOrgId = cookieStore.get("oauth_org")?.value;
+  // The state token is single-use after a callback attempt. This prevents a valid
+  // provider redirect from being replayed later in the same browser session.
+  cookieStore.delete("oauth_state");
+  cookieStore.delete("oauth_org");
   if (!code) return redirect(`error=${platform}_no_code`);
-  if (!state || state !== cookieState) return redirect(`error=${platform}_bad_state`);
-  // Bind the flow to the signed-in user: the state encodes the user id; reject a mismatch so a
-  // captured callback can't be replayed against a different session (the cookie is httpOnly+lax).
-  let stateUser = "";
-  try { stateUser = JSON.parse(Buffer.from(state, "base64url").toString())?.u || ""; } catch { /* malformed state */ }
-  if (stateUser !== user.id) return redirect(`error=${platform}_bad_state`);
+  if (!state || state !== cookieState || !oauthOrgId) return redirect(`error=${platform}_bad_state`);
+  const membership = await getActiveOrgMembership(user.id, user.email ?? undefined);
+  if (membership.orgId !== oauthOrgId || !isOrgManagerRole(membership.role)) return redirect(`error=${platform}_manager_role_required`);
 
   const cfg = oauthConfig(platform, url.origin);
   if (!cfg.configured) return redirect(`error=${platform}_not_configured`);
@@ -61,7 +64,7 @@ export async function GET(req: Request, props: { params: Promise<{ platform: str
       accounts = (data.advertiser_ids || []).map((id: string) => ({ id, name: `Advertiser ${id}` }));
     }
 
-    const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+    const orgId = oauthOrgId;
     const admin = createAdminClient();
     const enc = encrypt(accessToken);
     await admin.from("platform_tokens").insert({

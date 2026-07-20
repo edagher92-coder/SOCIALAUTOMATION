@@ -26,8 +26,26 @@ export async function POST(req: Request) {
       const s = event.data.object as Stripe.Checkout.Session;
       const userId = s.metadata?.user_id;
       if (userId) {
-        const orgId = await ensureOrg(userId, s.customer_details?.email ?? undefined);
         const admin = createAdminClient();
+        // New checkouts carry the intended workspace. Validate that the paying
+        // user is still an owner/admin before granting access. Retain the legacy
+        // first-workspace fallback solely for already-created checkout sessions.
+        const requestedOrgId = String(s.metadata?.organisation_id || "").trim();
+        let orgId: string;
+        if (requestedOrgId) {
+          const { data: membership } = await admin.from("memberships")
+            .select("role")
+            .eq("organisation_id", requestedOrgId)
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (!membership || !["owner", "admin"].includes(String((membership as any).role))) {
+            console.error(`Stripe webhook: user ${userId} is not a manager of requested org ${requestedOrgId}; not writing a subscription.`);
+            return NextResponse.json({ received: true, warning: "invalid_organisation" });
+          }
+          orgId = requestedOrgId;
+        } else {
+          orgId = await ensureOrg(userId, s.customer_details?.email ?? undefined);
+        }
         // Normalise the plan from the checkout metadata so a missing/garbled value records a
         // known tier ("free") rather than silently granting an unintended paid plan. The
         // checkout route already validated the price→plan mapping before setting this.

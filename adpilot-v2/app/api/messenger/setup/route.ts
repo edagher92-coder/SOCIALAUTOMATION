@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { getActiveOrgId, planForOrg } from "@/lib/org";
+import { getActiveOrgMembership, isOrgManagerRole, planForOrg } from "@/lib/org";
 import { can } from "@/lib/entitlements";
 import { applyMessengerProfile, getMessengerProfile, type MessengerConfig } from "@/lib/messenger/profile";
 
@@ -23,7 +23,11 @@ async function gate(): Promise<NextResponse | null> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
-  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const membership = await getActiveOrgMembership(user.id, user.email ?? undefined);
+  if (!isOrgManagerRole(membership.role)) {
+    return NextResponse.json({ error: "Only workspace owners and admins can configure customer messaging." }, { status: 403 });
+  }
+  const orgId = membership.orgId;
   if (!can(await planForOrg(orgId), "messenger_automation")) {
     return NextResponse.json({ error: "Messenger automation is a Premium (Expert) feature. Upgrade on Billing.", upgrade: true }, { status: 402 });
   }

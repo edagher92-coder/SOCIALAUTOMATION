@@ -16,7 +16,7 @@
 | **Stripe price IDs** | Create the 3 recurring AUD products (Step 3) → paste the `price_…` IDs into Vercel env |
 | **Non‑expiring Meta token** | A System User token (`ads_read`,`read_insights`) — see `/connect/guide` in‑app + `docs/SETUP-CONNECT-PLATFORMS.md` |
 | **Legal sign‑off** | Admitted‑solicitor review of the DRAFT Terms/Privacy (`CPWORK/.../legal/`) before public launch |
-| **`ADS_WRITE_ENABLED`** | Leave **UNSET** — keeps the product strictly read‑only (board‑recommended for launch) |
+| **Approved execution** | Leave `AD_WRITE_EXECUTION_ENABLED` unset for a read-only launch. Expert live changes also require a separate `ads_management` token, manager approval, and budget guardrails. |
 | **Vercel plan** | The hourly + 15‑min crons (Step 5) require **Vercel Pro** (Hobby = daily‑only) |
 
 ---
@@ -34,7 +34,7 @@
    - **Starter** — $49/mo · **Pro** — $149/mo · **Expert** — $399/mo. (Add annual prices later if wanted.)
 2. Copy each price's `price_…` id → `NEXT_PUBLIC_STRIPE_PRICE_STARTER` / `_PRO` / `_EXPERT`.
 3. **Developers → API keys** → `STRIPE_SECRET_KEY` (use a **live** key for production).
-4. **Developers → Webhooks** → add endpoint `https://<your-domain>/api/webhooks/stripe` (subscribe to `checkout.session.completed`, `customer.subscription.*`) → copy the signing secret → `STRIPE_WEBHOOK_SECRET`.
+4. **Developers → Webhooks** → add endpoint `https://<your-domain>/api/stripe/webhook` (subscribe to `checkout.session.completed`, `customer.subscription.*`) → copy the signing secret → `STRIPE_WEBHOOK_SECRET`.
 
 ## 4. Step 3 — Generate the server secrets
 ```bash
@@ -56,7 +56,7 @@ In **Vercel → Project → Settings → Environment Variables**, add to **Produ
 
 **For the AI Creative Studio:** `GEMINI_API_KEY` (recommended, verified) — or `FIREFLY_CLIENT_ID` + `FIREFLY_CLIENT_SECRET`.
 
-**Optional / feature‑gated (safe to leave unset):** `RESEND_API_KEY` + `EMAIL_FROM` (email digests/alerts) · `CRM_WEBHOOK_SECRET` (lead loop) · publishing set `META_PAGE_ACCESS_TOKEN`/`META_PAGE_ID`/`IG_USER_ID`/`TIKTOK_PUBLISH_TOKEN`/`MESSENGER_VERIFY_TOKEN` · `INGEST_API_KEY` · `ADPILOT_CONTEXT_PACK_JSON` (leave UNSET for the clean build) · `ANTHROPIC_MODEL` / `GEMINI_IMAGE_MODEL` / `GEMINI_EDIT_MODEL` (defaults are fine) · **`ADS_WRITE_ENABLED` — leave UNSET**.
+**Optional / feature‑gated (safe to leave unset):** `RESEND_API_KEY` + `EMAIL_FROM` (email digests/alerts) · `CRM_WEBHOOK_SECRET` (lead loop) · publishing set `META_PAGE_ACCESS_TOKEN`/`META_PAGE_ID`/`IG_USER_ID`/`TIKTOK_PUBLISH_TOKEN`/`MESSENGER_VERIFY_TOKEN` · `INGEST_API_KEY` · `ADPILOT_CONTEXT_PACK_JSON` (leave UNSET for the clean build) · `ANTHROPIC_MODEL` / `GEMINI_IMAGE_MODEL` / `GEMINI_EDIT_MODEL` (defaults are fine) · approved execution: `AD_WRITE_EXECUTION_ENABLED`, `AD_WRITE_MAX_DAILY_BUDGET`, and `AD_WRITE_MAX_BUDGET_CHANGE_PCT`.
 
 > Full per‑variable documentation lives in `adpilot-v2/.env.example`.
 
@@ -88,4 +88,4 @@ In **Vercel → Project → Settings → Environment Variables**, add to **Produ
 ### Quick reference
 - Env docs: `adpilot-v2/.env.example` · Platform‑connect help: `docs/SETUP-CONNECT-PLATFORMS.md` + in‑app `/connect/guide`
 - Migrations: `supabase/migrations/0001…0023` · Crons: `vercel.json` · CI: `.github/workflows/adpilot-v2-ci.yml`
-- Invariant: **read‑only — AdPilot proposes, the human approves.** Keep `ADS_WRITE_ENABLED` unset for launch.
+- Invariant: **controlled by default — AdPilot proposes and the human approves.** Keep `AD_WRITE_EXECUTION_ENABLED` unset for launch; enabling it requires Expert-manager approval, a separate write token, typed confirmation, and budget guardrails.

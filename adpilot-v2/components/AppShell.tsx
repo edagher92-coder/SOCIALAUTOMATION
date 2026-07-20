@@ -21,7 +21,7 @@ const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
     { href: "/dashboard", label: "Ads Health", icon: "gauge", desc: "Score a CSV export" },
     { href: "/connect", label: "Connect & Sync", icon: "link", desc: "Meta & TikTok + auto-sync" },
     { href: "/utm-builder", label: "UTM Builder", icon: "tag", desc: "Consistent names & tagged URLs", advanced: true },
-    { href: "/actions", label: "Ad Actions", icon: "wrench", desc: "Guarded live changes (Expert)", advanced: true, feature: "ad_write" },
+    { href: "/actions", label: "Approved Actions", icon: "wrench", desc: "Owner-approved, bounded Meta changes", advanced: true, feature: "ad_write" },
   ] },
   { title: "Social", items: [
     { href: "/audience", label: "Audience", icon: "target", desc: "Who follows you + AI suggestions", advanced: true, feature: "ai_team" },
@@ -30,7 +30,6 @@ const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
     { href: "/content/calendar", label: "Content Calendar", icon: "calendar", desc: "Scheduled posts at a glance", advanced: true, feature: "content_publish" },
     { href: "/creative", label: "Creative Library", icon: "image", desc: "Link or upload audio/video/photo", advanced: true, feature: "creative_studio" },
     { href: "/creative-scorecard", label: "Creative Scorecard", icon: "scorecard", desc: "Hook rate, CTR decay & fatigue per ad", advanced: true, feature: "creative_studio" },
-    { href: "/canva-creator", label: "Canva Creator", icon: "palette", desc: "On-brand creative briefs & prompts", advanced: true, feature: "creative_studio" },
     { href: "/messenger", label: "Messenger", icon: "chat", desc: "Auto-replies, greeting & menu", advanced: true, feature: "messenger_automation" },
     { href: "/portfolio", label: "Clients", icon: "users", desc: "All your clients at a glance", advanced: true, feature: "multi_client" },
     { href: "/reports", label: "Reports", icon: "file-text", desc: "Client-ready reports & PDFs", feature: "reports" },
@@ -39,16 +38,11 @@ const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
   { title: "AI Team", items: [
     { href: "/ai-specialists", label: "AI Specialists", icon: "compass", desc: "Agents grounded in your numbers", feature: "ai_team" },
     { href: "/policy-check", label: "Policy Check", icon: "shield", desc: "Paige checks copy for policy risk", advanced: true, feature: "ai_team" },
-    { href: "/bobby-business-assistant", label: "Bobby — Business", icon: "briefcase", desc: "Plain-English business help", advanced: true, feature: "ai_team" },
-    { href: "/aria-course-creator", label: "Aria — Courses", icon: "graduation-cap", desc: "Turn expertise into a course", advanced: true, feature: "ai_team" },
-    { href: "/crm-maintenance", label: "CRM Maintenance", icon: "sparkle", desc: "Keep your pipeline clean", advanced: true },
-    { href: "/build-dashboard", label: "Build a Dashboard", icon: "blocks", desc: "Sheets / Looker / Notion specs", advanced: true },
   ] },
   { title: "Account", items: [
     { href: "/billing", label: "Billing", icon: "credit-card", desc: "Plan & subscription" },
     { href: "/settings", label: "Settings", icon: "gear", desc: "Economics & auto-sync" },
     { href: "/notifications", label: "Notifications", icon: "bell", desc: "Weekly digest & alerts", advanced: true },
-    { href: "/claude-api", label: "Claude API", icon: "plug", desc: "Connect AI generation", advanced: true },
     { href: "/manual", label: "User Manual", icon: "book", desc: "How-to + download PDF", advanced: true },
   ] },
 ];

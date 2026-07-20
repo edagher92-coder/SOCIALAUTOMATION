@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getActiveOrgId } from "@/lib/org";
+import { getActiveOrgMembership, isOrgManagerRole } from "@/lib/org";
 
 export const runtime = "nodejs";
 
@@ -29,7 +29,11 @@ export async function POST(req: Request) {
   const { platform, externalAccountId } = parsed.data;
 
   try {
-    const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+    const membership = await getActiveOrgMembership(user.id, user.email ?? undefined);
+    if (!isOrgManagerRole(membership.role)) {
+      return NextResponse.json({ error: "Only workspace owners and admins can remove an advertising account." }, { status: 403 });
+    }
+    const orgId = membership.orgId;
     const admin = createAdminClient();
 
     // Delete only the matching row in the caller's org. `.select()` returns the removed rows so

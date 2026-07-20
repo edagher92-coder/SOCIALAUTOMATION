@@ -40,6 +40,7 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
   const [mediaType, setMediaType] = useState("reel");
   const [brief, setBrief] = useState({ topic: "", offer: "", audience: "" });
   const [ai, setAi] = useState("");
+  const [policyReview, setPolicyReview] = useState("");
   const [imgPrompt, setImgPrompt] = useState("");
   const [imgAspect, setImgAspect] = useState("1:1");
   const [imgN, setImgN] = useState(1);
@@ -68,12 +69,12 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
   const nothingToSave = !caption.trim() && !trimmedMedia;
 
   async function draftAI() {
-    setBusy("ai"); setMsg(""); setErr(""); setAi("");
+    setBusy("ai"); setMsg(""); setErr(""); setAi(""); setPolicyReview("");
     try {
       const r = await fetch("/api/content/draft", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ platform, ...brief }) });
       const j = await r.json();
       if (!r.ok) { setErr(j.error || "AI error"); return; }
-      setAi(j.text); if (!caption) setCaption(j.text);
+      setAi(j.text); setPolicyReview(j.policy?.review || ""); if (!caption) setCaption(j.text);
     } catch (e: any) { setErr(e?.message || "AI error"); } finally { setBusy(""); }
   }
 
@@ -108,7 +109,7 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
       const r = await fetch("/api/content", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const j = await r.json();
       if (!r.ok) { setErr(j.error || "Couldn't save"); return; }
-      setCaption(""); setMediaUrl(""); setAi(""); setMsg("Saved as draft ✅");
+      setCaption(""); setMediaUrl(""); setAi(""); setPolicyReview(""); setMsg("Saved as draft ✅");
       load();
     } catch (e: any) { setErr(e?.message || "Couldn't save"); } finally { setBusy(""); }
   }
@@ -174,7 +175,13 @@ export default function ContentStudio({ canStudio }: { canStudio: boolean }) {
               <button onClick={draftAI} disabled={busy === "ai"} className="mt-2 rounded-lg border border-brand px-3 py-1.5 text-sm font-bold text-brand disabled:opacity-50">
                 {busy === "ai" ? "Drafting…" : "Draft caption, hooks & shotlist"}
               </button>
-              {ai && <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap rounded-lg border border-border-subtle bg-surface p-3 text-xs">{ai}</pre>}
+               {ai && <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap rounded-lg border border-border-subtle bg-surface p-3 text-xs">{ai}</pre>}
+               {policyReview && (
+                 <div className="mt-2 rounded-lg border border-teal/30 bg-teal/5 p-3 text-xs text-ink" role="status">
+                   <div className="font-bold text-teal">Paige policy preflight · human review still required</div>
+                   <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap font-sans text-muted">{policyReview}</pre>
+                 </div>
+               )}
               <p className="mt-1.5 text-2xs text-muted">Grounded in your analysis · then design in <a className="underline" href="https://www.canva.com/create/" target="_blank" rel="noreferrer">Canva</a> / Adobe Express and paste the media URL above.</p>
 
               {/* Firefly image generation */}

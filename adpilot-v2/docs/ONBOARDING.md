@@ -16,7 +16,7 @@ checkout needs the matching **price IDs**. Until these are set, checkout fails c
    - `NEXT_PUBLIC_STRIPE_PRICE_PRO`
    - `NEXT_PUBLIC_STRIPE_PRICE_EXPERT`
 4. Use a **live** secret key for production: `STRIPE_SECRET_KEY` (`sk_live_…`).
-5. **Developers → Webhooks** → add endpoint `https://<your-domain>/api/webhooks/stripe`
+5. **Developers → Webhooks** → add endpoint `https://<your-domain>/api/stripe/webhook`
    (events `checkout.session.completed`, `customer.subscription.*`) → copy the signing secret →
    `STRIPE_WEBHOOK_SECRET`.
 
@@ -40,6 +40,8 @@ the durable option.
 
 > Set `META_GRAPH_API_VERSION` (default `v21.0`) once; bump it centrally when Meta increments.
 
+> **Current release default:** `v23.0`. All Meta surfaces now share this single setting; validate it with a real-account smoke test before changing it.
+
 ## 3. Required env (minimum viable launch)
 Set in Vercel **Production** (full per-variable docs in `.env.example`):
 
@@ -53,6 +55,10 @@ Feature-gated (optional): `GEMINI_API_KEY` / Firefly (Creative Studio) · `RESEN
 Keep **`ADS_WRITE_ENABLED` unset** for launch (read-only).
 
 ## 4. First-deploy verification
+> **Release baseline:** run every migration in numeric order through
+> `0031_access_hardening.sql`; the `0001…0025` line below is a pre-release
+> checklist and is no longer sufficient.
+
 1. Run migrations `0001…0025` on the prod Supabase (`supabase db push`, or paste in order).
 2. `curl https://<your-domain>/api/health` → presence booleans look right.
 3. Cron auth: `curl -H "Authorization: Bearer $CRON_SECRET" https://<domain>/api/cron/auto-sync`

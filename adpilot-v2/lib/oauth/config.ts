@@ -1,4 +1,5 @@
 import "server-only";
+import { META_GRAPH_VERSION } from "@/lib/meta/graph-version";
 
 // Read-only OAuth provider config. Live values come from env; absent => not configured.
 export type Platform = "meta" | "tiktok";
@@ -11,8 +12,8 @@ export function oauthConfig(platform: Platform, origin: string) {
       clientId: process.env.META_APP_ID || "",
       clientSecret: process.env.META_APP_SECRET || "",
       redirectUri: `${redirectBase}/api/oauth/meta/callback`,
-      authorizeUrl: "https://www.facebook.com/v21.0/dialog/oauth",
-      tokenUrl: "https://graph.facebook.com/v21.0/oauth/access_token",
+      authorizeUrl: `https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`,
+      tokenUrl: `https://graph.facebook.com/${META_GRAPH_VERSION}/oauth/access_token`,
       scope: "ads_read,read_insights",
     };
   }

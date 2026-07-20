@@ -49,10 +49,10 @@ import { NoKeyError } from "@/lib/ai/claude";
 
 const SECRET = "cron-secret-xyz";
 function req(opts: { auth?: string; key?: string } = {}) {
-  const url = opts.key ? `https://x/api/cron/refresh-knowledge?key=${opts.key}` : "https://x/api/cron/refresh-knowledge";
   const headers: Record<string, string> = {};
-  if (opts.auth) headers["authorization"] = opts.auth;
-  return new Request(url, { headers });
+  if (opts.auth) headers.authorization = opts.auth;
+  if (opts.key) headers.authorization = `Bearer ${opts.key}`;
+  return new Request("https://x/api/cron/refresh-knowledge", { headers });
 }
 
 // A valid-looking doc body (the handler requires >= 40 chars of real content).

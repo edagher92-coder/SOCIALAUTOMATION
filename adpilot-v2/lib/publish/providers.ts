@@ -1,4 +1,5 @@
 import "server-only";
+import { META_GRAPH_VERSION } from "@/lib/meta/graph-version";
 
 // Organic content publishing (Facebook Page / Instagram / TikTok). Uses WRITE-scope
 // credentials set per platform in env — deliberately SEPARATE from the read-only ad
@@ -7,6 +8,7 @@ import "server-only";
 // it never touches ad campaigns.
 
 export type PublishablePost = {
+  organisation_id?: string;
   platform: "facebook" | "instagram" | "tiktok";
   caption?: string | null;
   media_url?: string | null;
@@ -22,9 +24,23 @@ export class NotConfiguredError extends Error {
 }
 export const isNotConfigured = (e: any) => e?.name === "NotConfiguredError";
 
+// Publishing credentials are deployment-level environment variables. Binding
+// them to one explicit workspace prevents a post from one tenant being sent to
+// another tenant's configured social account.
+function assertPublishingTarget(post: PublishablePost): void {
+  if (!post.organisation_id) return;
+  const targetOrg = (process.env.CONTENT_PUBLISH_ORG_ID || "").trim();
+  if (!targetOrg) {
+    throw new NotConfiguredError("Content publishing target (set CONTENT_PUBLISH_ORG_ID)");
+  }
+  if (targetOrg !== post.organisation_id) {
+    throw new Error("Publishing is not configured for this workspace.");
+  }
+}
+
 // Single source for the Meta Graph API version — bump META_GRAPH_API_VERSION in env when Meta
 // increments, rather than editing call sites. (TikTok uses its own versioned host, below.)
-const GRAPH_API_VERSION = process.env.META_GRAPH_API_VERSION ?? "v21.0";
+const GRAPH_API_VERSION = META_GRAPH_VERSION;
 
 // Instagram video/Reels containers process ASYNCHRONOUSLY. Calling media_publish before the
 // container is FINISHED fails with media_container_in_progress, so poll status_code first
@@ -115,10 +131,27 @@ async function publishTikTok(post: PublishablePost): Promise<PublishResult> {
   // --- not-configured check first ---
   const token = process.env.TIKTOK_PUBLISH_TOKEN;
   if (!token) throw new NotConfiguredError("TikTok");
+  if (post.media_type && post.media_type !== "video" && post.media_type !== "reel") {
+    throw new Error("TikTok Direct Post currently requires a video or reel media_type.");
+  }
   // TikTok is video-only and pulls the file from a public https URL.
   const url = requireHttpsMedia(post);
   // Content Posting API (Direct Post, PULL_FROM_URL). Defaults to SELF_ONLY — unaudited
   // apps can't post public; flip privacy once the app is approved for content posting.
+  // Query the creator immediately before Direct Post. TikTok requires the app to
+  // honour the account's current privacy options; this release remains private
+  // only until the TikTok client has completed its product audit.
+  const creator = await fetch("https://open.tiktokapis.com/v2/post/publish/creator_info/query/", {
+    method: "POST", headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
+  });
+  const creatorJson: any = await creator.json().catch(() => ({}));
+  if (!creator.ok || (creatorJson?.error?.code && creatorJson.error.code !== "ok")) {
+    throw new Error(creatorJson?.error?.message || `TikTok creator information failed (HTTP ${creator.status})`);
+  }
+  const privacyOptions = creatorJson?.data?.privacy_level_options;
+  if (!Array.isArray(privacyOptions) || !privacyOptions.includes("SELF_ONLY")) {
+    throw new Error("TikTok did not allow private-only publishing for this creator. Review the creator's allowed privacy options before publishing.");
+  }
   const r = await fetch("https://open.tiktokapis.com/v2/post/publish/video/init/", {
     method: "POST", headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
     body: JSON.stringify({
@@ -137,6 +170,7 @@ async function publishTikTok(post: PublishablePost): Promise<PublishResult> {
 }
 
 export async function publishPost(post: PublishablePost): Promise<PublishResult> {
+  assertPublishingTarget(post);
   switch (post.platform) {
     case "facebook": return publishFacebook(post);
     case "instagram": return publishInstagram(post);

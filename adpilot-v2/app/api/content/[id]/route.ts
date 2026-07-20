@@ -46,7 +46,7 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
       return NextResponse.json({ error: `Daily publish limit reached for ${(post as any).platform} (${cap.used}/${cap.cap} in the last 24h). Schedule it instead — this protects the account from platform restrictions.`, rateLimited: true }, { status: 429 });
     }
     try {
-      const res = await publishPost(post as any);
+      const res = await publishPost({ ...(post as any), organisation_id: orgId });
       await admin.from("content_posts").update({ status: "published", published_at: new Date().toISOString(), external_id: res.externalId ?? null, error: null, updated_at: new Date().toISOString() }).eq("id", params.id).eq("organisation_id", orgId);
       return NextResponse.json({ ok: true, status: "published", externalId: res.externalId });
     } catch (e: any) {

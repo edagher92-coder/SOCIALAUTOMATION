@@ -61,7 +61,7 @@ export default function ActionsConsole({ writeEnabled }: { writeEnabled: boolean
         ⚠ <b>This makes REAL changes to live ad campaigns</b> (pause / resume / budget). It's the one place AdPilot writes to an ad account.
         {writeEnabled
           ? <> Execution is <b>ON</b> for this deployment. Every change still needs the exact typed confirmation, captures prior state, and is reversible + audited.</>
-          : <> Execution is <b>OFF</b> (set <code>ADS_WRITE_ENABLED=1</code> + connect an <code>ads_management</code> write-scope account, which needs Meta App Review). You can stage actions now; they won't fire.</>}
+          : <> Execution is <b>OFF</b> until a production operator sets <code>AD_WRITE_EXECUTION_ENABLED=1</code>, configures the budget guardrails, and an owner attaches a dedicated <code>ads_management</code> credential. You can stage actions now; they will not fire.</>}
       </div>
 
       {/* Stage an action */}

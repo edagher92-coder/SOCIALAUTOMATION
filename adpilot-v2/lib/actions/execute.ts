@@ -1,4 +1,5 @@
 import "server-only";
+import { META_GRAPH_VERSION } from "@/lib/meta/graph-version";
 
 // Guarded executor for live ad changes. Multiple independent gates protect it:
 //  1. ADS_WRITE_ENABLED env kill-switch (off by default — even for Expert orgs).
@@ -7,10 +8,10 @@ import "server-only";
 // Prior state is captured for revert. Meta is supported now; TikTok is intentionally not yet
 // wired (throws) rather than shipping a half-correct writer.
 
-const V = "v21.0";
+const V = META_GRAPH_VERSION;
 
 export class WriteDisabledError extends Error {
-  constructor() { super("Ad-write is disabled. Set ADS_WRITE_ENABLED=1 on the server to allow live changes."); this.name = "WriteDisabledError"; }
+  constructor() { super("Live ad execution is disabled. An owner must enable the dedicated AD_WRITE_EXECUTION_ENABLED production control first."); this.name = "WriteDisabledError"; }
 }
 export const isWriteDisabled = (e: any) => e?.name === "WriteDisabledError";
 
@@ -23,7 +24,23 @@ export type AdAction = {
 };
 
 export function writeEnabled(): boolean {
-  return process.env.ADS_WRITE_ENABLED === "1";
+  // Deliberately separate from the legacy ADS_WRITE_ENABLED variable. A production
+  // operator must opt in to this exact control after the app review and runbook.
+  return process.env.AD_WRITE_EXECUTION_ENABLED === "1";
+}
+
+function budgetGuard(action: AdAction, prior?: any) {
+  if (action.action !== "set_budget") return;
+  if (action.entity_level === "ad") throw new Error("Budgets can only be changed at campaign or ad-set level.");
+  const requested = Number(action.params?.daily_budget);
+  const previous = Number(prior?.daily_budget) / 100;
+  const configuredCap = Number(process.env.AD_WRITE_MAX_DAILY_BUDGET);
+  const configuredDelta = Number(process.env.AD_WRITE_MAX_BUDGET_CHANGE_PCT || "0.20");
+  if (!Number.isFinite(previous) || previous <= 0) throw new Error("Current daily budget could not be verified. No change was made.");
+  if (!Number.isFinite(configuredCap) || configuredCap <= 0) throw new Error("A positive AD_WRITE_MAX_DAILY_BUDGET must be configured before changing budgets.");
+  if (!Number.isFinite(configuredDelta) || configuredDelta <= 0 || configuredDelta > 0.5) throw new Error("AD_WRITE_MAX_BUDGET_CHANGE_PCT must be greater than 0 and no more than 0.50.");
+  if (requested > configuredCap) throw new Error(`Requested daily budget exceeds the configured execution cap (${configuredCap}).`);
+  if (Math.abs(requested - previous) / previous > configuredDelta) throw new Error(`Budget changes are limited to ${(configuredDelta * 100).toFixed(0)}% per approved action.`);
 }
 
 async function metaGet(token: string, id: string, fields: string) {
@@ -61,9 +78,10 @@ function metaBodyFor(action: AdAction): Record<string, any> {
   throw new Error("Unknown action");
 }
 
-export async function executeAction(token: string, action: AdAction): Promise<string> {
+export async function executeAction(token: string, action: AdAction, prior?: any): Promise<string> {
   if (!writeEnabled()) throw new WriteDisabledError();
   if (action.platform !== "meta") throw new Error("Only Meta ad-write is supported currently (TikTok ad-write is not yet enabled).");
+  budgetGuard(action, prior);
   const body = metaBodyFor(action);
   await metaPost(token, action.external_entity_id, body);
   return JSON.stringify(body);

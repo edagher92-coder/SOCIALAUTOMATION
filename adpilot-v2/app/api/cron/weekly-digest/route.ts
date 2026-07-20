@@ -6,13 +6,12 @@ import { buildReportPdf } from "@/lib/reports/pdf";
 
 export const runtime = "nodejs";
 
-// Weekly digest. Secured by CRON_SECRET (Vercel Cron sends it as a Bearer token,
-// or pass ?key=... ). Emails each org with weekly_digest on + an email set.
+// Weekly digest. Secured by CRON_SECRET in Vercel's Bearer header. Emails each
+// org with weekly_digest on + an email set.
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
   // Fail closed: never send digests from an unauthenticated trigger.
   if (!secret) return NextResponse.json({ error: "Cron not configured (set CRON_SECRET)." }, { status: 503 });
-  const url = new URL(req.url);
   const ok = cronAuthorized(req, secret);
   if (!ok) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 

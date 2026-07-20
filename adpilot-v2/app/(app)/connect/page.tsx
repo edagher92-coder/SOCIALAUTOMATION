@@ -44,20 +44,20 @@ export default async function Connect(props: { searchParams: Promise<{ connected
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-extrabold tracking-tight">Connect ad accounts</h1>
-      <p className="mb-4 mt-1 text-muted">Connect read-only so AdPilot can pull your numbers automatically. We never edit, pause, or create ads.</p>
+      <h1 className="text-2xl font-extrabold tracking-tight">Bring in your ad data</h1>
+      <p className="mb-4 mt-1 text-muted">Start with one account. AdPilot reads your numbers, explains what needs attention, and leaves every live ad untouched.</p>
 
       {/* How it works — 3 steps, makes the flow obvious and the safety explicit. */}
       <div className="mb-5 grid gap-2 rounded-2xl border border-border-subtle bg-surface-raised p-4 text-sm shadow-card sm:grid-cols-3">
-        <div><span className="font-bold text-brand">1 · Connect</span><div className="text-muted">One click (read-only) — or paste a token.</div></div>
-        <div><span className="font-bold text-brand">2 · Auto-sync</span><div className="text-muted">We pull your numbers on your schedule.</div></div>
-        <div><span className="font-bold text-brand">3 · Score &amp; propose</span><div className="text-muted">Health score + safe fixes. Never edits an ad.</div></div>
+        <div><span className="font-bold text-brand">1 · Sign in</span><div className="text-muted">Use the normal Meta or TikTok sign-in below.</div></div>
+        <div><span className="font-bold text-brand">2 · We check</span><div className="text-muted">Your numbers sync on the schedule you choose.</div></div>
+        <div><span className="font-bold text-brand">3 · You decide</span><div className="text-muted">Get plain-English proposals; make platform changes yourself.</div></div>
       </div>
       <div className="mb-3 -mt-2 flex flex-wrap items-center gap-2">
         <ReadOnlyBadge />
         {apiEnabled && <AutoSyncStatus cadence={cadence} lastSyncedAt={org?.last_synced_at} />}
       </div>
-      <p className="mb-5 text-xs text-muted">🔒 Tokens are encrypted at rest (AES-256-GCM) and never sent back to your browser.</p>
+      <p className="mb-5 text-xs text-muted">🔒 Connection credentials are encrypted before storage, never shown back to you, and used only to read the account data you authorise.</p>
 
       {msg && <div className="mb-4 rounded-xl border border-border-subtle bg-white p-3 text-sm shadow-card">{msg}</div>}
       {accounts?.some((a: any) => a.status === "disconnected" || a.status === "error") && (
@@ -100,24 +100,27 @@ export default async function Connect(props: { searchParams: Promise<{ connected
         </div>
       ) : (
         <>
-          <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-muted">Easiest — one click, read-only</h2>
+          <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-muted">Recommended — sign in normally</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
               <div className="mb-2 text-2xl">🔵</div>
               <h3 className="font-bold">Meta (Facebook / Instagram)</h3>
-              <p className="mb-3 mt-1 text-sm text-muted">Scope: ads_read, read_insights (read-only).</p>
-              <a href="/api/oauth/meta/start" className="inline-block rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white">Connect Meta</a>
+              <p className="mb-3 mt-1 text-sm text-muted">Sign in with the Meta account that can view your ads. AdPilot asks only for read access.</p>
+              <a href="/api/oauth/meta/start" className="inline-block rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white">Sign in to Meta</a>
             </div>
             <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
               <div className="mb-2 text-2xl">⚫</div>
               <h3 className="font-bold">TikTok Ads</h3>
-              <p className="mb-3 mt-1 text-sm text-muted">Scope: ads.read (read-only).</p>
-              <a href="/api/oauth/tiktok/start" className="inline-block rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white">Connect TikTok</a>
+              <p className="mb-3 mt-1 text-sm text-muted">Sign in with the TikTok Ads account you want to review. AdPilot asks only for read access.</p>
+              <a href="/api/oauth/tiktok/start" className="inline-block rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white">Sign in to TikTok</a>
             </div>
           </div>
 
-          <h2 className="mb-2 mt-6 text-sm font-bold uppercase tracking-wide text-muted">Or paste an access token — works without app review</h2>
-          <TokenConnect />
+          <details className="mt-6 rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+            <summary className="cursor-pointer font-bold text-ink">I have a Meta or TikTok System User token <span className="ml-1 text-xs font-normal text-muted">(advanced setup)</span></summary>
+            <p className="mt-2 text-sm text-muted">Use this only if your administrator gave you a read-only token or normal sign-in is unavailable.</p>
+            <TokenConnect />
+          </details>
 
           <p className="mt-4 rounded-xl bg-surface p-3 text-sm text-muted">
             ⚙️ <b>Automated:</b> once connected, AdPilot pulls fresh data on your schedule (set it in <a className="font-semibold text-brand" href="/settings">Settings → Auto-sync</a>: hourly, daily, weekly, or custom), then scores and alerts you — no manual steps.

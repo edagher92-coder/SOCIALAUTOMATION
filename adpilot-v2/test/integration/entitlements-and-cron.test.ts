@@ -48,10 +48,10 @@ import { GET as publishCronGET } from "@/app/api/cron/publish/route";
 const CRON_SECRET = "test-cron-secret";
 
 function cronReq(opts: { auth?: string; key?: string } = {}) {
-  const url = opts.key ? `https://x/api/cron/publish?key=${opts.key}` : "https://x/api/cron/publish";
   const headers: Record<string, string> = {};
-  if (opts.auth) headers["authorization"] = opts.auth;
-  return new Request(url, { headers });
+  if (opts.auth) headers.authorization = opts.auth;
+  if (opts.key) headers.authorization = `Bearer ${opts.key}`;
+  return new Request("https://x/api/cron/publish", { headers });
 }
 
 beforeEach(() => {

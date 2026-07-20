@@ -4,6 +4,14 @@ import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalisePlan, type Plan } from "@/lib/entitlements";
 
+export type OrgRole = "owner" | "admin" | "member" | "viewer";
+
+// Owners and admins are the only roles that can attach credentials, change
+// billing, or configure a customer-facing automation. Members remain operators;
+// viewers are read-only.
+export const isOrgManagerRole = (role: string | null | undefined): role is "owner" | "admin" =>
+  role === "owner" || role === "admin";
+
 // Active subscription plan for an org (defaults to "free" when none/inactive).
 // Wrapped in React.cache so the layout + the page it renders share one lookup
 // per request instead of each re-querying billing on every navigation.
@@ -46,6 +54,22 @@ export const getActiveOrgId = cache(async (userId: string, email?: string): Prom
   const want = (await cookies()).get("active_org")?.value;
   return want && ids.includes(want) ? want : ids[0];
 });
+
+// Resolve the active workspace and role together before a server route performs
+// a privileged operation. This deliberately uses the service client after
+// determining the active org, so a stale/forged cookie cannot grant a role.
+export async function getActiveOrgMembership(userId: string, email?: string): Promise<{ orgId: string; role: OrgRole }> {
+  const orgId = await getActiveOrgId(userId, email);
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("memberships")
+    .select("role")
+    .eq("organisation_id", orgId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error || !data) throw new Error("Active workspace membership was not found.");
+  return { orgId, role: data.role as OrgRole };
+}
 
 // List the orgs a user belongs to (id, name, role) + the active one.
 export async function listOrgs(userId: string): Promise<{ orgs: { id: string; name: string; role: string }[]; activeId: string }> {

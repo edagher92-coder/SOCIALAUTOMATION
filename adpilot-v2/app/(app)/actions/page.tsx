@@ -1,34 +1,34 @@
 import { createClient } from "@/lib/supabase/server";
-import { getActiveOrgId, planForOrg } from "@/lib/org";
+import { getActiveOrgMembership, isOrgManagerRole, planForOrg } from "@/lib/org";
 import { can, PLAN_LABEL } from "@/lib/entitlements";
+import { writeEnabled } from "@/lib/actions/execute";
 import PageHeader from "@/components/PageHeader";
 import ActionsConsole from "@/components/ActionsConsole";
+import WriteAccessSetup from "@/components/WriteAccessSetup";
 
 export const dynamic = "force-dynamic";
 
 export default async function ActionsPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const orgId = user ? await getActiveOrgId(user.id, user.email ?? undefined) : "";
-  const plan = orgId ? await planForOrg(orgId) : "free";
-  const enabled = can(plan, "ad_write");
-  const writeEnabled = process.env.ADS_WRITE_ENABLED === "1";
+  if (!user) return null;
+  const membership = await getActiveOrgMembership(user.id, user.email ?? undefined);
+  const plan = await planForOrg(membership.orgId);
+  const allowed = isOrgManagerRole(membership.role) && can(plan, "ad_write");
 
   return (
     <div className="max-w-3xl">
-      <PageHeader
-        eyebrow="Expert · guarded"
-        title="Ad Actions"
-        subtitle="Apply safe, reversible changes to live campaigns — pause, resume, or adjust budget — with a typed confirmation and one-click revert. This is the only place AdPilot writes to an ad account."
-      />
-      {enabled ? (
-        <ActionsConsole writeEnabled={writeEnabled} />
-      ) : (
+      <PageHeader eyebrow="Expert · owner-approved" title="Approved ad actions" subtitle="Stage a bounded Meta change, review the exact effect, then type the approval phrase. Nothing runs automatically and every completed change is recorded." />
+      {!allowed ? (
         <div className="rounded-2xl border border-border-subtle bg-gradient-to-br from-brand-50 to-surface-raised p-6 shadow-card">
-          <div className="mb-1 text-2xl">🔒</div>
-          <h3 className="font-bold">Guarded ad changes are an Expert feature</h3>
-          <p className="mb-3 mt-1 text-sm text-muted">Your plan ({PLAN_LABEL[plan]}) is read-only by design. Expert unlocks staging live pause/resume/budget changes — each one typed-confirmed, reversible, and audited.</p>
-          <a href="/billing" className="inline-block rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white">Upgrade</a>
+          <h2 className="font-bold">Expert owners and admins only</h2>
+          <p className="mt-1 text-sm text-muted">Your plan is {PLAN_LABEL[plan]}. Approved live-ad actions require Expert and a workspace owner or admin because they can change a real campaign.</p>
+          {!can(plan, "ad_write") && <a href="/billing" className="mt-3 inline-block rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white">View Expert plan</a>}
+        </div>
+      ) : (
+        <div className="space-y-5">
+          <WriteAccessSetup executionEnabled={writeEnabled()} />
+          <ActionsConsole writeEnabled={writeEnabled()} />
         </div>
       )}
     </div>

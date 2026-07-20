@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getActiveOrgId, planForOrg } from "@/lib/org";
+import { getActiveOrgMembership, isOrgManagerRole, planForOrg } from "@/lib/org";
 import { encrypt } from "@/lib/crypto";
 import { syncOrgPlatform } from "@/lib/sync/pull";
 import { META_GRAPH_BASE } from "@/lib/meta/graph-version";
@@ -72,7 +72,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+    const membership = await getActiveOrgMembership(user.id, user.email ?? undefined);
+    if (!isOrgManagerRole(membership.role)) {
+      return NextResponse.json({ error: "Only workspace owners and admins can connect an advertising account." }, { status: 403 });
+    }
+    const orgId = membership.orgId;
     if (!can(await planForOrg(orgId), "api_connect")) {
       return NextResponse.json({ error: "API / dev-link connect is a Pro & Expert feature. Upgrade on Billing to enable it.", upgrade: true }, { status: 402 });
     }
