@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { parseCsvText, analyse } from "@/lib/engine";
-import { getActiveOrgId } from "@/lib/org";
+import { getActiveOrgId, planForOrg } from "@/lib/org";
+import { can, requiredPlan, PLAN_LABEL } from "@/lib/entitlements";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { refreshOpenRecommendations } from "@/lib/proposals";
 
@@ -41,28 +42,41 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Could not analyse this data — check the CSV columns. " + (e?.message ?? "") }, { status: 422 });
   }
 
-  // Best-effort persistence (saved report + score + recommendations). If the DB
-  // isn't configured, analysis still returns — we just don't save.
+  // Best-effort persistence. The free tier can always score a CSV, but saved reports
+  // and the durable proposals queue are a paid feature. This prevents a quiet paywall
+  // bypass while preserving the core free value: a transient score returned in this response.
   let reportId: string | null = null;
+  let saved = false;
+  let saveLocked = false;
+  let saveLockedMessage: string | null = null;
   try {
     const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+    const plan = await planForOrg(orgId);
     const admin = createAdminClient();
     await admin.from("health_scores").insert({
       organisation_id: orgId, scope: "account", total: result.health.total, band: result.health.band,
       breakdown: result.health.breakdown, data_confidence: (result.health as any).breakdown?.data_confidence?.score ?? null,
     });
-    // Refresh the open Proposals queue: actionable verdicts only, platform-aware
-    // dedupe, replacing just the 'open' set. Same shared helper the cron uses so a
-    // CSV upload and an auto-sync produce an identical queue.
-    await refreshOpenRecommendations(admin, orgId, result.decisions as any[]);
-    const { data: rep } = await admin.from("reports").insert({
-      organisation_id: orgId, title: `${business || "Analysis"} — health ${Math.round(result.health.total)}`,
-      period: new Date().toISOString().slice(0, 10), payload: result, created_by: user.id,
-    }).select("id").single();
-    reportId = (rep?.id as string) ?? null;
+
+    if (can(plan, "reports")) {
+      // Refresh the open Proposals queue: actionable verdicts only, platform-aware
+      // dedupe, replacing just the 'open' set. Same shared helper the cron uses so a
+      // CSV upload and an auto-sync produce an identical queue.
+      await refreshOpenRecommendations(admin, orgId, result.decisions as any[]);
+      const { data: rep } = await admin.from("reports").insert({
+        organisation_id: orgId, title: `${business || "Analysis"} — health ${Math.round(result.health.total)}`,
+        period: new Date().toISOString().slice(0, 10), payload: result, created_by: user.id,
+      }).select("id").single();
+      reportId = (rep?.id as string) ?? null;
+      saved = !!reportId;
+    } else {
+      const min = requiredPlan("reports");
+      saveLocked = true;
+      saveLockedMessage = `Score returned, but saved reports and proposals are a ${PLAN_LABEL[min]} feature.`;
+    }
   } catch {
-    // persistence is best-effort
+    // persistence is best-effort; the score itself still returns.
   }
 
-  return NextResponse.json({ ...result, capped, rows: rows.length, reportId, saved: !!reportId });
+  return NextResponse.json({ ...result, capped, rows: rows.length, reportId, saved, saveLocked, saveLockedMessage });
 }

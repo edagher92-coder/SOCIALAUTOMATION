@@ -3,7 +3,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
-import { can } from "@/lib/entitlements";
+import { can, requiredPlan, PLAN_LABEL } from "@/lib/entitlements";
 import { callClaudeMultiTurn, NoKeyError, modelFor } from "@/lib/ai/claude";
 import { getAgent } from "@/lib/agents/registry";
 import { knowledgeForAgent } from "@/lib/agents/knowledge";
@@ -36,37 +36,45 @@ export async function POST(req: Request) {
   const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
   const plan = await planForOrg(orgId);
   const hasAiTeam = can(plan, "ai_team");
+  if (!hasAiTeam) {
+    const min = requiredPlan("ai_team");
+    return NextResponse.json(
+      {
+        error: `AI specialist chat is a ${PLAN_LABEL[min]} feature. Upgrade to use grounded AI analysis of your live numbers.`,
+        upgrade: true,
+        requiredPlan: min,
+        currentPlan: plan,
+        code: "FEATURE_LOCKED",
+      },
+      { status: 402 },
+    );
+  }
 
   const admin = createAdminClient();
   const kb = await knowledgeForAgent(admin, agent.id).catch(() => "");
   const pack = contextPackGrounding(agent.id);
 
   let grounding = "";
-  if (hasAiTeam) {
-    const [repRes, recsRes] = await Promise.allSettled([
-      admin.from("reports").select("payload")
-        .eq("organisation_id", orgId)
-        .order("created_at", { ascending: false })
-        .limit(1).maybeSingle(),
-      admin.from("recommendations")
-        .select("verdict,entity_name,platform,reason")
-        .eq("organisation_id", orgId).eq("status", "open").limit(20),
-    ]);
-    const payload = repRes.status === "fulfilled" ? (repRes.value as any)?.data?.payload : null;
-    const recs = recsRes.status === "fulfilled" ? ((recsRes.value as any)?.data as any[]) : null;
-    grounding = buildGrounding(payload, recs || []);
-    const GROUNDING_CHAR_CAP = 12000;
-    if (grounding.length > GROUNDING_CHAR_CAP)
-      grounding = grounding.slice(0, GROUNDING_CHAR_CAP) + "\n…[grounding truncated]";
-  }
+  const [repRes, recsRes] = await Promise.allSettled([
+    admin.from("reports").select("payload")
+      .eq("organisation_id", orgId)
+      .order("created_at", { ascending: false })
+      .limit(1).maybeSingle(),
+    admin.from("recommendations")
+      .select("verdict,entity_name,platform,reason")
+      .eq("organisation_id", orgId).eq("status", "open").limit(20),
+  ]);
+  const payload = repRes.status === "fulfilled" ? (repRes.value as any)?.data?.payload : null;
+  const recs = recsRes.status === "fulfilled" ? ((recsRes.value as any)?.data as any[]) : null;
+  grounding = buildGrounding(payload, recs || []);
+  const GROUNDING_CHAR_CAP = 12000;
+  if (grounding.length > GROUNDING_CHAR_CAP)
+    grounding = grounding.slice(0, GROUNDING_CHAR_CAP) + "\n…[grounding truncated]";
 
   const systemPrompt = [
     agent.system,
     kb ? `\n\nREFERENCE KNOWLEDGE (current best practice — guidance only; cite ranges, not false precision):\n${kb}` : "",
     pack ? `\n\nACTIVE BUSINESS CONTEXT (private — these rules tighten the guardrails, never loosen them):\n${pack}` : "",
-    !hasAiTeam
-      ? `\n\nNOTE: This user is on the ${plan} plan without live account data access. Provide expert general guidance based on best practice. When account-specific context would materially change your answer, note that upgrading to Pro unlocks grounded analysis of their actual numbers.`
-      : "",
   ].join("");
 
   // Inject grounding into the final user message only (earlier turns are already context).
