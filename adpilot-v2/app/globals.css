@@ -5,6 +5,38 @@
 :root {
   color-scheme: light;
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-brand: 201 63 40;
+  --color-brand-50: 255 243 239;
+  --color-brand-100: 255 228 219;
+  --color-brand-200: 255 198 182;
+  --color-brand-600: 183 54 32;
+  --color-brand-700: 148 42 25;
+  --color-ink: 28 23 38;
+  --color-muted: 107 100 120;
+  --color-surface: 250 247 244;
+  --color-surface-raised: 255 255 255;
+  --color-border-subtle: 236 231 225;
+  --shadow-card: 0 1px 3px rgba(28,23,38,.05), 0 8px 24px rgba(28,23,38,.06);
+  --shadow-card-hover: 0 1px 3px rgba(28,23,38,.07), 0 14px 34px rgba(28,23,38,.12);
+  --shadow-inner: inset 0 1px 2px rgba(28,23,38,.06);
+}
+
+html.dark {
+  color-scheme: dark;
+  --color-brand: 240 106 82;
+  --color-brand-50: 52 28 31;
+  --color-brand-100: 76 37 37;
+  --color-brand-200: 244 157 139;
+  --color-brand-600: 225 79 53;
+  --color-brand-700: 250 177 161;
+  --color-ink: 238 241 248;
+  --color-muted: 155 164 185;
+  --color-surface: 12 15 26;
+  --color-surface-raised: 22 27 46;
+  --color-border-subtle: 43 51 75;
+  --shadow-card: 0 1px 2px rgba(0,0,0,.25), 0 12px 28px rgba(0,0,0,.24);
+  --shadow-card-hover: 0 1px 2px rgba(0,0,0,.3), 0 18px 38px rgba(0,0,0,.32);
+  --shadow-inner: inset 0 1px 2px rgba(0,0,0,.28);
 }
 
 html {
@@ -16,8 +48,8 @@ html {
 body {
   min-width: 320px;
   overflow-x: clip;
-  background: #faf7f4;
-  color: #1c1726;
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-ink));
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -42,8 +74,8 @@ button:not(:disabled),
 }
 
 ::selection {
-  background: #ffe4db;
-  color: #c2391c;
+  background: rgb(var(--color-brand-100));
+  color: rgb(var(--color-brand-700));
 }
 
 .bg-brand-gradient {
@@ -58,11 +90,35 @@ button:not(:disabled),
 }
 
 .bg-mesh {
-  background-color: #faf7f4;
+  background-color: rgb(var(--color-surface));
   background-image:
     radial-gradient(at 0% 0%, rgba(201, 63, 40, 0.1) 0, transparent 50%),
     radial-gradient(at 100% 0%, rgba(255, 178, 36, 0.12) 0, transparent 50%),
     radial-gradient(at 50% 100%, rgba(201, 63, 40, 0.05) 0, transparent 55%);
+}
+
+html.dark .bg-mesh {
+  background-image:
+    radial-gradient(at 0% 0%, rgba(240, 106, 82, 0.16) 0, transparent 46%),
+    radial-gradient(at 100% 0%, rgba(255, 178, 36, 0.12) 0, transparent 44%),
+    radial-gradient(at 50% 100%, rgba(86, 197, 255, 0.06) 0, transparent 55%);
+}
+
+/* Legacy cards used Tailwind's literal white utility. Keep them semantic in dark
+   mode while preserving intentional white text and cockpit overlays. */
+html.dark .bg-white { background-color: rgb(var(--color-surface-raised)); }
+html.dark .bg-white\/95 { background-color: rgb(var(--color-surface-raised) / .95); }
+html.dark .bg-white\/90 { background-color: rgb(var(--color-surface-raised) / .90); }
+html.dark .bg-white\/80 { background-color: rgb(var(--color-surface-raised) / .80); }
+html.dark .bg-white\/70 { background-color: rgb(var(--color-surface-raised) / .70); }
+html.dark .bg-white\/60 { background-color: rgb(var(--color-surface-raised) / .60); }
+html.dark .focus\:bg-white:focus { background-color: rgb(var(--color-surface-raised)); }
+html.dark .hover\:bg-white:hover { background-color: rgb(var(--color-surface-raised)); }
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+  color-scheme: dark;
 }
 
 a,
@@ -82,12 +138,12 @@ button,
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #ded6cc;
+  background: rgb(var(--color-border-subtle));
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #c4b9ab;
+  background: rgb(var(--color-muted));
 }
 
 nav::-webkit-scrollbar {
@@ -99,7 +155,7 @@ nav::-webkit-scrollbar-thumb {
 }
 
 nav:hover::-webkit-scrollbar-thumb {
-  background: #ded6cc;
+  background: rgb(var(--color-border-subtle));
 }
 
 table {

@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { connection } from "next/server";
+import { cookies } from "next/headers";
 import { AuthFragmentBridge } from "@/components/auth-fragment-bridge";
 
 export const metadata: Metadata = {
@@ -16,11 +17,13 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "AdPilot OS", description: "Know what changed, why it matters and what to do next." },
 };
 
-export const viewport: Viewport = { themeColor: "#0e1220", colorScheme: "light" };
+export const viewport: Viewport = { themeColor: "#0c0f1a", colorScheme: "dark light" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // A fresh CSP nonce is generated for every request. Next can only attach that
   // nonce to its framework and hydration scripts during dynamic rendering.
   await connection();
-  return <html lang="en-AU"><body className="bg-surface font-sans text-ink antialiased"><AuthFragmentBridge />{children}</body></html>;
+  const cookieStore = await cookies();
+  const theme = cookieStore.get("adpilot_theme")?.value === "light" ? "light" : "dark";
+  return <html lang="en-AU" className={theme === "dark" ? "dark" : undefined} suppressHydrationWarning><body className="bg-surface font-sans text-ink antialiased"><AuthFragmentBridge />{children}</body></html>;
 }

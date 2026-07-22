@@ -16,7 +16,9 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
   const cookieStore = await cookies();
   const savedMode = cookieStore.get("adpilot_mode")?.value;
-  const initialMode: Mode = savedMode === "advanced" ? "advanced" : "beginner";
+  // Advanced is the default workspace experience. An explicit Simple choice is
+  // still respected and persists across devices through this cookie.
+  const initialMode: Mode = savedMode === "beginner" ? "beginner" : "advanced";
 
   // One lightweight snapshot powers the global status bar and control drawer.
   const [plan, orgRes, fixesRes, accountsRes] = await Promise.all([
