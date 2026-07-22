@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { connection } from "next/server";
+import { AuthFragmentBridge } from "@/components/auth-fragment-bridge";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
@@ -21,5 +22,5 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // A fresh CSP nonce is generated for every request. Next can only attach that
   // nonce to its framework and hydration scripts during dynamic rendering.
   await connection();
-  return <html lang="en-AU"><body className="bg-surface font-sans text-ink antialiased">{children}</body></html>;
+  return <html lang="en-AU"><body className="bg-surface font-sans text-ink antialiased"><AuthFragmentBridge />{children}</body></html>;
 }
