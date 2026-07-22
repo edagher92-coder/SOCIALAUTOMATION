@@ -28,6 +28,13 @@ describe("GET /auth/confirm", () => {
     expect(response.headers.get("location")).toBe("https://app.example/update-password");
   });
 
+  it("blocks encoded URL-parser redirect bypasses", async () => {
+    for (const next of ["%2F%5C%5Cattacker.example", "%2F%09%2F%2Fattacker.example"]) {
+      const response = await GET(request(`/auth/confirm?token_hash=hash-123&type=recovery&next=${next}`));
+      expect(response.headers.get("location")).toBe("https://app.example/update-password");
+    }
+  });
+
   it("rejects missing, invalid and failed tokens", async () => {
     let response = await GET(request("/auth/confirm?type=recovery"));
     expect(response.headers.get("location")).toBe("https://app.example/login?notice=recovery-expired");
