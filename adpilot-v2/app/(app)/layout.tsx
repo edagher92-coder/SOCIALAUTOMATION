@@ -18,9 +18,14 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   // Founder access is a complimentary entitlement recorded in the same plan
   // ledger as paid subscriptions; it never creates or modifies a Stripe charge.
   await ensureFounderExpertPlan({ userId: user.id, email: user.email, orgId });
-  // This user explicitly asked for an interactive demo. The loader only writes
-  // to a completely empty founder workspace; existing real data is untouched.
-  await ensureFounderDemoData({ userId: user.id, email: user.email, orgId });
+  // This user explicitly asked for an interactive demo. It is deliberately
+  // best-effort: a database mismatch must never prevent the workspace itself
+  // from loading. Existing real data is still untouched by the loader.
+  try {
+    await ensureFounderDemoData({ userId: user.id, email: user.email, orgId });
+  } catch (error) {
+    console.error("Interactive demo seed deferred", error);
+  }
   const cookieStore = await cookies();
   const savedMode = cookieStore.get("adpilot_mode")?.value;
   // Advanced is the default workspace experience. An explicit Simple choice is
