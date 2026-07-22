@@ -4,14 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { createEmailLinkClient } from "@/lib/supabase/email-link-client";
 import { Icon } from "@/components/icons";
 
 const LEGAL_VERSION = "v4-draft";
 const LEGAL_HASH = "placeholder-v4-draft";
 type Mode = "signin" | "signup" | "forgot";
 
-function authCallback(next: string): string {
-  return `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
+function emailLinkReturn(next: string): string {
+  return `${window.location.origin}/auth/complete?next=${encodeURIComponent(next)}`;
 }
 
 export default function Login() {
@@ -32,6 +33,9 @@ export default function Login() {
     if (notice === "confirmed") {
       setSuccess(true);
       setMsg("Email confirmed. Sign in to open your workspace.");
+    } else if (notice === "password-updated") {
+      setSuccess(true);
+      setMsg("Password updated. Sign in with your new password.");
     } else if (notice === "recovery-expired") {
       setSuccess(false);
       setMsg("That reset link is invalid or has expired. Send a new one below.");
@@ -61,11 +65,14 @@ export default function Login() {
     setSuccess(false);
 
     if (mode === "forgot") {
-      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, { redirectTo: authCallback("/update-password") });
+      // Email recovery must survive a laptop-to-phone handoff. The normal SSR
+      // client uses PKCE, whose verifier only exists in the requesting browser.
+      const emailClient = createEmailLinkClient();
+      const { error } = await emailClient.auth.resetPasswordForEmail(cleanEmail, { redirectTo: emailLinkReturn("/update-password") });
       setBusy(false);
       if (error) { setMsg(error.message); return; }
       setSuccess(true);
-      setMsg("Reset link sent. Use the newest email; older links stop working after another request.");
+      setMsg("Reset link sent. Open the newest email on this phone or any other device.");
       return;
     }
 
@@ -81,16 +88,23 @@ export default function Login() {
       return;
     }
 
-    const { data, error } = await supabase.auth.signUp({
+    // Confirmation emails use the same cross-device-safe link handoff as recovery.
+    const emailClient = createEmailLinkClient();
+    const { data, error } = await emailClient.auth.signUp({
       email: cleanEmail,
       password,
-      options: { emailRedirectTo: authCallback("/command"), data: { legal_version: LEGAL_VERSION, legal_hash: LEGAL_HASH } },
+      options: { emailRedirectTo: emailLinkReturn("/command"), data: { legal_version: LEGAL_VERSION, legal_hash: LEGAL_HASH } },
     });
     if (error) { setBusy(false); setMsg(error.message); return; }
     if (data.user?.identities && data.user.identities.length === 0) {
       setBusy(false); setSuccess(true); setMsg("This email may already have an account. Sign in or reset the password."); return;
     }
     if (data.session) {
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
+      if (sessionError) { setBusy(false); setMsg("Your account was created, but the secure session could not be opened. Please sign in."); return; }
       await recordLegalAcceptance();
       setBusy(false);
       router.push("/command");
@@ -164,7 +178,7 @@ export default function Login() {
 
           {msg && <div role="alert" className={`mt-4 flex items-start gap-2 rounded-xl border px-4 py-3 text-sm font-semibold ${success ? "border-good/30 bg-good/10 text-green-800" : "border-bad/30 bg-bad/10 text-bad"}`}><span className="mt-0.5"><Icon name={success ? "check-circle" : "alert-triangle"} size={16} /></span><span>{msg}</span></div>}
 
-          {mode === "forgot" && <div className="mt-5 space-y-3 border-t border-border-subtle pt-5"><button type="button" onClick={() => changeMode("signin")} className="w-full text-sm font-bold text-brand">Back to sign in</button><p className="text-center text-xs leading-relaxed text-muted">If you request more than one email, use the newest link. It opens on this exact AdPilot website.</p></div>}
+          {mode === "forgot" && <div className="mt-5 space-y-3 border-t border-border-subtle pt-5"><button type="button" onClick={() => changeMode("signin")} className="w-full text-sm font-bold text-brand">Back to sign in</button><p className="text-center text-xs leading-relaxed text-muted">If you request more than one email, use the newest link. You can safely open it on your phone, tablet, or computer.</p></div>}
 
           <p className="mt-7 text-center text-xs text-muted">Need help getting started? <Link href="/how-it-works" className="font-bold text-ink underline">See how AdPilot works</Link></p>
         </div>
