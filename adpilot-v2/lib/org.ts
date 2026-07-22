@@ -5,12 +5,16 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { normalisePlan, type Plan } from "@/lib/entitlements";
 
 export type OrgRole = "owner" | "admin" | "member" | "viewer";
+export type OrgAccessRequirement = "editor" | "manager";
 
 // Owners and admins are the only roles that can attach credentials, change
 // billing, or configure a customer-facing automation. Members remain operators;
 // viewers are read-only.
 export const isOrgManagerRole = (role: string | null | undefined): role is "owner" | "admin" =>
   role === "owner" || role === "admin";
+
+export const hasOrgAccess = (role: string | null | undefined, requirement: OrgAccessRequirement): boolean =>
+  requirement === "manager" ? isOrgManagerRole(role) : role === "owner" || role === "admin" || role === "member";
 
 // Active subscription plan for an org (defaults to "free" when none/inactive).
 // Wrapped in React.cache so the layout + the page it renders share one lookup
@@ -46,13 +50,18 @@ export async function ensureOrg(userId: string, email?: string): Promise<string>
 
 // Returns the user's ACTIVE org id (from the `active_org` cookie if they're a
 // member of it), else their first org, else bootstraps one. Drives multi-client.
-export const getActiveOrgId = cache(async (userId: string, email?: string): Promise<string> => {
+export const getActiveOrgId = cache(async (userId: string, email?: string, require?: OrgAccessRequirement): Promise<string> => {
   const admin = createAdminClient();
   const { data: mems } = await admin.from("memberships").select("organisation_id").eq("user_id", userId);
   const ids = (mems || []).map((m: any) => m.organisation_id as string);
   if (ids.length === 0) return ensureOrg(userId, email);
   const want = (await cookies()).get("active_org")?.value;
-  return want && ids.includes(want) ? want : ids[0];
+  const activeId = want && ids.includes(want) ? want : ids[0];
+  if (require) {
+    const { data } = await admin.from("memberships").select("role").eq("organisation_id", activeId).eq("user_id", userId).maybeSingle();
+    if (!hasOrgAccess(data?.role, require)) return "";
+  }
+  return activeId;
 });
 
 // Resolve the active workspace and role together before a server route performs

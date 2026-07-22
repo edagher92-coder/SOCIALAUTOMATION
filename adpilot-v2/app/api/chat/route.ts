@@ -33,7 +33,8 @@ export async function POST(req: Request) {
   const { messages, agentId = "command" } = parsed.data;
   const agent = getAgent(agentId) ?? getAgent("command")!;
 
-  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined, "editor");
+  if (!orgId) return NextResponse.json({ error: "You have read-only access to this workspace." }, { status: 403 });
   const plan = await planForOrg(orgId);
   const hasAiTeam = can(plan, "ai_team");
 

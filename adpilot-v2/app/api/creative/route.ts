@@ -33,7 +33,8 @@ export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "A valid URL and kind are required" }, { status: 400 });
 
-  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined, "editor");
+  if (!orgId) return NextResponse.json({ error: "You have read-only access to this workspace." }, { status: 403 });
   const admin = createAdminClient();
   const { data, error } = await admin.from("creative_assets")
     .insert({ organisation_id: orgId, created_by: user.id, ...parsed.data }).select("id").single();

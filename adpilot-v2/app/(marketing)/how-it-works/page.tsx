@@ -71,8 +71,8 @@ const FEATURES = [
   },
   {
     eyebrow: "Read-only by design",
-    headline: "It proposes. You approve. Nothing changes without a typed YES.",
-    body: "AdPilot OS never changes a live ad without an explicit typed confirmation. Approved changes are available only to Expert workspace managers with a separate write credential, execution controls enabled, and hard budget guardrails. The product is a decision-support system, not an autopilot.",
+    headline: "It proposes. You decide. Paid-ad changes stay in the platform.",
+    body: "AdPilot OS V7 does not contain a live paid-ad writer. Expert workspace managers can prepare approval-ready change drafts, review the evidence, and apply an accepted change manually in the advertising platform. The product is a decision-support system, not an autopilot.",
     detail: "Safe by architecture, not just policy.",
   },
 ];

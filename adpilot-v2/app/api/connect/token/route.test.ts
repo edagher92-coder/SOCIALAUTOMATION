@@ -159,6 +159,21 @@ describe("meta connect flow", () => {
     // never reached the adaccounts call once the scope check failed
   });
 
+  it("rejects a Meta token carrying unnecessary live-ad write access", async () => {
+    fetchMock.mockImplementation(metaFetch({ perms: {
+      ok: true,
+      status: 200,
+      json: async () => ({ data: [
+        { permission: "ads_management", status: "granted" },
+        { permission: "read_insights", status: "granted" },
+      ] }),
+    } }));
+    const r = await POST(post({ platform: "meta", token: "tok-1234567890" }));
+    expect(r.status).toBe(502);
+    expect((await r.json()).error).toMatch(/write access|read-only/i);
+    expect(insertedRows).toHaveLength(0);
+  });
+
   it("reports syncError but still 200 when the immediate pull fails", async () => {
     fetchMock.mockImplementation(metaFetch());
     syncOrgPlatform.mockRejectedValue(new Error("rate limited"));

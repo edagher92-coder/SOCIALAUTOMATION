@@ -36,7 +36,7 @@ export function decide(row: Row, cfg: Cfg, ctrPeak?: number | null, health?: num
   if (cpa != null) {
     if (cpa <= be) {
       if (health != null && health >= 70 && tracking === "ok" && sig === "above")
-        return out("scale", `CPA ${M.fmt(cpa)} ≤ break-even ${M.fmt(be)}, health ${Math.round(health)} ≥ 70, and the win is statistically significant.`, "Propose ≤20% budget increase (needs typed YES) AND duplicate the winning angle.");
+        return out("scale", `CPA ${M.fmt(cpa)} ≤ break-even ${M.fmt(be)}, health ${Math.round(health)} ≥ 70, and the win is statistically significant.`, "Prepare a ≤20% budget-increase proposal for human review in Ads Manager, and duplicate the winning angle as a paused draft.");
       const why = sig !== "above" ? "the win isn't yet statistically significant" : "health/tracking aren't clear-to-scale";
       return out("keep", `CPA ${M.fmt(cpa)} ≤ break-even ${M.fmt(be)} but ${why}.`, "Keep running; duplicate the angle; let the sample build (and clean tracking) before scaling.");
     }

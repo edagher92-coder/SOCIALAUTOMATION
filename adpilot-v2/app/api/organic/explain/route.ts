@@ -21,7 +21,8 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
-  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined, "editor");
+  if (!orgId) return NextResponse.json({ error: "You have read-only access to this workspace." }, { status: 403 });
   if (!can(await planForOrg(orgId), "ai_team")) {
     return NextResponse.json({ error: "The AI specialist team is a Pro & Expert feature. Upgrade on Billing.", upgrade: true }, { status: 402 });
   }

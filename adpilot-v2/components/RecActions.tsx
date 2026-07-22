@@ -1,38 +1,24 @@
 "use client";
+
 import { useState } from "react";
+import { Icon } from "./icons";
 
-// Approve / dismiss a proposal. Read-only product: "approve" records intent only —
-// it never edits a live ad. The PATCH is idempotent server-side, so an "undo" back
-// to "open" is always safe to retry.
-//
-// V7: approval is a TWO-STEP confirm-in-place. The product's promise is that actions carry
-// ceremony proportional to their weight — a kill proposal should not be one accidental tap.
-// Step 1 arms the button; step 2 (now labelled with the verdict + "proposal only") commits.
-
-const VERB: Record<string, string> = {
-  kill: "kill", reduce: "reduce", refresh: "refresh", scale: "scale", "fix-tracking": "fix",
-};
-
+// Approval records the user's plan inside AdPilot. It never writes to a paid-ad account.
 export default function RecActions({ id, verdict }: { id: string; verdict?: string }) {
   const [status, setStatus] = useState("open");
   const [busy, setBusy] = useState("");
   const [armed, setArmed] = useState(false);
-  const [err, setErr] = useState(false);
+  const [error, setError] = useState(false);
 
-  async function set(s: string) {
-    if (busy) return; // guard against double-clicks
-    setBusy(s);
-    setErr(false);
+  async function update(next: string) {
+    if (busy) return;
+    setBusy(next); setError(false);
     try {
-      const r = await fetch(`/api/recommendations/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: s }),
-      });
-      if (r.ok) { setStatus(s); setArmed(false); }
-      else setErr(true);
+      const response = await fetch(`/api/recommendations/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: next }) });
+      if (response.ok) { setStatus(next); setArmed(false); }
+      else setError(true);
     } catch {
-      setErr(true);
+      setError(true);
     } finally {
       setBusy("");
     }
@@ -40,48 +26,34 @@ export default function RecActions({ id, verdict }: { id: string; verdict?: stri
 
   if (status !== "open") {
     return (
-      <span className="flex-shrink-0 text-xs font-bold">
-        <span className={status === "approved" ? "text-good" : status === "done" ? "text-good" : "text-muted"}>
-          {status === "approved" ? "✓ Approved" : status === "done" ? "✓ Done" : "✕ Dismissed"}
+      <div className="flex flex-shrink-0 items-center gap-2 text-xs font-bold">
+        <span className={`inline-flex items-center gap-1.5 ${status === "approved" || status === "done" ? "text-green-700" : "text-muted"}`}>
+          <Icon name={status === "dismissed" ? "x" : "check-circle"} size={14} />
+          {status === "approved" ? "Saved to worklist" : status === "done" ? "Completed" : "Not now"}
         </span>
-        <button onClick={() => set("open")} disabled={!!busy} className="ml-2 font-normal text-muted underline disabled:opacity-50">
-          {busy === "open" ? "…" : "undo"}
-        </button>
-      </span>
+        <button onClick={() => update("open")} disabled={Boolean(busy)} className="font-semibold text-muted underline disabled:opacity-50">Undo</button>
+      </div>
     );
   }
 
-  const verb = VERB[verdict ?? ""] ?? "approve";
-
+  const highImpact = verdict === "kill" || verdict === "reduce" || verdict === "scale";
   return (
-    <div className="flex w-full flex-shrink-0 flex-col items-stretch gap-1 sm:w-auto sm:items-end">
-      <div className="flex items-center gap-2">
-        {armed ? (
-          <>
-            <button onClick={() => set("approved")} disabled={!!busy}
-              className="flex-1 rounded-lg bg-bad px-3 py-2 text-xs font-bold text-white transition disabled:opacity-50 sm:flex-none">
-              {busy === "approved" ? "…" : `Confirm ${verb}`}
-            </button>
-            <button onClick={() => setArmed(false)} disabled={!!busy}
-              className="rounded-lg px-2 py-2 text-xs font-semibold text-muted underline disabled:opacity-50">
-              cancel
-            </button>
-          </>
-        ) : (
-          <>
-            <button onClick={() => setArmed(true)} disabled={!!busy}
-              className="flex-1 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white transition hover:bg-brand-600 disabled:opacity-50 sm:flex-none">
-              Approve
-            </button>
-            <button onClick={() => set("dismissed")} disabled={!!busy}
-              className="flex-1 rounded-lg border border-border-subtle px-3 py-2 text-xs font-semibold text-muted transition hover:bg-white/10 disabled:opacity-50 sm:flex-none">
-              {busy === "dismissed" ? "…" : "Dismiss"}
-            </button>
-          </>
-        )}
-      </div>
-      {armed && <span className="text-2xs text-muted">Proposal only — you execute the change in Ads Manager.</span>}
-      {err && <span className="text-2xs font-semibold text-bad">Couldn’t save — try again.</span>}
+    <div className="flex w-full flex-shrink-0 flex-col items-stretch gap-1.5 sm:w-auto sm:items-end">
+      {armed ? (
+        <div className="rounded-xl border border-warn/30 bg-warn/10 p-2.5">
+          <p className="mb-2 max-w-[250px] text-2xs font-semibold leading-relaxed text-amber-900">Save this as planned? This only updates your AdPilot worklist. It does not change the live ad.</p>
+          <div className="flex gap-2">
+            <button onClick={() => update("approved")} disabled={Boolean(busy)} className={`flex-1 rounded-lg px-3 py-2 text-xs font-bold text-white disabled:opacity-50 ${highImpact ? "bg-ink" : "bg-brand"}`}>{busy === "approved" ? "Saving..." : "Confirm plan"}</button>
+            <button onClick={() => setArmed(false)} disabled={Boolean(busy)} className="rounded-lg px-2 py-2 text-xs font-bold text-muted underline">Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <button onClick={() => setArmed(true)} disabled={Boolean(busy)} className="flex-1 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white hover:bg-brand-600 disabled:opacity-50 sm:flex-none">Save as planned</button>
+          <button onClick={() => update("dismissed")} disabled={Boolean(busy)} className="flex-1 rounded-lg border border-border-subtle px-3 py-2 text-xs font-semibold text-muted hover:bg-surface disabled:opacity-50 sm:flex-none">{busy === "dismissed" ? "Saving..." : "Not now"}</button>
+        </div>
+      )}
+      {error && <span className="text-2xs font-semibold text-bad">Could not save. Try again.</span>}
     </div>
   );
 }

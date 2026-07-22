@@ -61,7 +61,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined, "editor");
+  if (!orgId) return NextResponse.json({ error: "You have read-only access to this workspace." }, { status: 403 });
   if (!can(await planForOrg(orgId), "content_publish")) {
     return NextResponse.json(LOCKED, { status: 402 });
   }

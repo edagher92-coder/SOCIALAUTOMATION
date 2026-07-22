@@ -30,6 +30,7 @@ vi.mock("@/lib/supabase/admin", () => ({
       const api: any = {
         select() { return api; },
         eq() { return api; },
+        neq() { return api; },
         maybeSingle: async () => ({ data: api.__mode === "update" ? { id: "post-1", status: api.__patch?.status } : POST_ROW, error: null }),
         update(values: any) { api.__mode = "update"; api.__patch = values; updates.push({ values }); return api; },
       };
@@ -42,7 +43,7 @@ vi.mock("@/lib/org", () => ({
   planForOrg: async () => CURRENT_PLAN,
 }));
 
-import { PATCH } from "./route";
+import { DELETE, PATCH } from "./route";
 
 function patch(body: any) {
   const req = new Request("https://x/api/content/post-1", {
@@ -51,6 +52,11 @@ function patch(body: any) {
     body: JSON.stringify(body),
   });
   return PATCH(req, { params: Promise.resolve({ id: "post-1" }) });
+}
+
+function archive() {
+  const req = new Request("https://x/api/content/post-1", { method: "DELETE" });
+  return DELETE(req, { params: Promise.resolve({ id: "post-1" }) });
 }
 
 beforeEach(() => {
@@ -158,5 +164,15 @@ describe("scheduled_at future guard", () => {
     const r = await patch({ status: "scheduled", scheduled_at: future });
     expect(r.status).toBe(200);
     expect(updates.at(-1)?.values).toMatchObject({ status: "scheduled", scheduled_at: future });
+  });
+});
+
+describe("archive", () => {
+  it("preserves an unpublished item as archived instead of deleting it", async () => {
+    const r = await archive();
+    expect(r.status).toBe(200);
+    expect(await r.json()).toMatchObject({ ok: true, archived: true });
+    expect(updates.at(-1)?.values).toMatchObject({ status: "archived", scheduled_at: null });
+    expect(updates.at(-1)?.values.archived_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 });

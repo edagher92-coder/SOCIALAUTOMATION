@@ -47,7 +47,8 @@ export async function POST(req: Request) {
   const { task, inputs } = parsed.data;
 
   // Tier gate (server-side truth — the nav hides these, but the API is the real boundary).
-  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined, "editor");
+  if (!orgId) return NextResponse.json({ error: "You have read-only access to this workspace." }, { status: 403 });
   const plan = await planForOrg(orgId);
   if (!can(plan, TASK_FEATURE[task]))
     return NextResponse.json({ error: "This AI tool is included in a paid plan. Upgrade to use it.", code: "UPGRADE" }, { status: 403 });

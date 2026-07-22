@@ -1,90 +1,45 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveOrgMembership, isOrgManagerRole, planForOrg } from "@/lib/org";
 import { can } from "@/lib/entitlements";
-import { decrypt } from "@/lib/crypto";
-import { captureState, executeAction, revertAction, isWriteDisabled, writeEnabled, type AdAction } from "@/lib/actions/execute";
 
 export const runtime = "nodejs";
 
-const Body = z.object({ confirm: z.string().optional(), revert: z.boolean().optional() });
-
-async function gate(): Promise<{ res?: NextResponse; orgId?: string; userId?: string }> {
+async function gate(): Promise<{ res?: NextResponse; orgId?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { res: NextResponse.json({ error: "Unauthorised" }, { status: 401 }) };
   const membership = await getActiveOrgMembership(user.id, user.email ?? undefined);
-  if (!isOrgManagerRole(membership.role)) return { res: NextResponse.json({ error: "Only workspace owners and admins can approve or run live-ad actions." }, { status: 403 }) };
-  if (!can(await planForOrg(membership.orgId), "ad_write")) return { res: NextResponse.json({ error: "Approved live-ad actions are an Expert feature.", upgrade: true }, { status: 402 }) };
-  return { orgId: membership.orgId, userId: user.id };
+  if (!isOrgManagerRole(membership.role)) {
+    return { res: NextResponse.json({ error: "Only workspace owners and admins can manage change drafts." }, { status: 403 }) };
+  }
+  if (!can(await planForOrg(membership.orgId), "ad_write")) {
+    return { res: NextResponse.json({ error: "Approval-ready change drafts are an Expert feature.", upgrade: true }, { status: 402 }) };
+  }
+  return { orgId: membership.orgId };
 }
 
-async function writeToken(admin: any, orgId: string, platform: string): Promise<string | null> {
-  const { data } = await admin.from("platform_tokens")
-    .select("ciphertext,iv,auth_tag,scopes").eq("organisation_id", orgId).eq("platform", platform)
-    .order("created_at", { ascending: false }).limit(1).maybeSingle();
-  if (!data?.ciphertext || !Array.isArray(data.scopes) || !data.scopes.includes("ads_management")) return null;
-  try { return decrypt({ ciphertext: data.ciphertext, iv: data.iv, authTag: data.auth_tag }); } catch { return null; }
+// Compatibility endpoint for older clients. V7 has no paid-ad mutation path.
+export async function PATCH() {
+  const access = await gate();
+  if (access.res) return access.res;
+  return NextResponse.json({
+      error: "Live paid-ad execution is disabled and not available in this release. Review the draft, then apply it in the advertising platform.",
+    writeDisabled: true,
+  }, { status: 409 });
 }
 
-export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }) {
+export async function DELETE(_req: Request, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const g = await gate();if (g.res) return g.res;
-  const parsed = Body.safeParse(await req.json().catch(() => ({})));
-  if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
-
+  const access = await gate();
+  if (access.res) return access.res;
   const admin = createAdminClient();
-  const { data: row } = await admin.from("ad_actions").select("*").eq("id", params.id).eq("organisation_id", g.orgId!).maybeSingle();
-  if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const action: AdAction = { platform: row.platform, entity_level: row.entity_level, external_entity_id: row.external_entity_id, action: row.action, params: row.params };
-
-  if (!writeEnabled()) return NextResponse.json({ error: "Live ad execution is disabled for this deployment.", writeDisabled: true }, { status: 503 });
-
-  // ---- Revert a previously-executed change ----
-  if (parsed.data.revert) {
-    if (row.status !== "done") return NextResponse.json({ error: "Only a completed action can be reverted." }, { status: 400 });
-    const token = await writeToken(admin, g.orgId!, row.platform);
-    if (!token) return NextResponse.json({ error: "No write-scope token on file for this platform." }, { status: 400 });
-    try {
-      const detail = await revertAction(token, action, row.prior_state);
-      await admin.from("ad_actions").update({ status: "reverted", reverted_at: new Date().toISOString(), result: `reverted: ${detail}` }).eq("id", row.id).eq("organisation_id", g.orgId!);
-      return NextResponse.json({ ok: true, status: "reverted" });
-    } catch (e: any) {
-      return NextResponse.json({ error: e?.message || "Revert failed", writeDisabled: isWriteDisabled(e) }, { status: isWriteDisabled(e) ? 503 : 502 });
-    }
-  }
-
-  // ---- Execute: requires the exact typed-YES confirmation ----
-  if (row.status !== "proposed") return NextResponse.json({ error: `Action is already ${row.status}.` }, { status: 400 });
-  if ((parsed.data.confirm || "").trim() !== row.confirm_phrase) {
-    return NextResponse.json({ error: "Confirmation text does not match. Type the exact phrase to authorise this live change." }, { status: 400 });
-  }
-  const token = await writeToken(admin, g.orgId!, row.platform);
-  if (!token) return NextResponse.json({ error: "No write-scope (ads_management) token on file. Connect a write-capable account first." }, { status: 400 });
-
-  try {
-    // Snapshot prior state before any mutation. If it cannot be verified, fail closed.
-    let prior: any;
-    try { prior = await captureState(token, action); }
-    catch { return NextResponse.json({ error: "Could not verify the current platform state. No change was made." }, { status: 502 }); }
-    const result = await executeAction(token, action, prior);
-    await admin.from("ad_actions").update({
-      status: "done", executed_at: new Date().toISOString(), approved_by: g.userId!, prior_state: prior, result, error: null,
-    }).eq("id", row.id).eq("organisation_id", g.orgId!);
-    return NextResponse.json({ ok: true, status: "done", result });
-  } catch (e: any) {
-    const msg = e?.message || "Execution failed";
-    await admin.from("ad_actions").update({ status: "failed", error: msg }).eq("id", row.id).eq("organisation_id", g.orgId!);
-    return NextResponse.json({ error: msg, writeDisabled: isWriteDisabled(e) }, { status: isWriteDisabled(e) ? 503 : 502 });
-  }
-}
-
-export async function DELETE(req: Request, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
-  const g = await gate();if (g.res) return g.res;
-  const admin = createAdminClient();
-  await admin.from("ad_actions").delete().eq("id", params.id).eq("organisation_id", g.orgId!).eq("status", "proposed");
-  return NextResponse.json({ ok: true });
+  const { data, error } = await admin.from("ad_actions")
+    .update({ status: "cancelled" })
+    .eq("id", params.id).eq("organisation_id", access.orgId!).eq("status", "proposed")
+    .select("id").maybeSingle();
+  if (error) return NextResponse.json({ error: "The draft could not be archived." }, { status: 502 });
+  if (!data) return NextResponse.json({ error: "Draft not found or already closed." }, { status: 404 });
+  return NextResponse.json({ ok: true, archived: true });
 }

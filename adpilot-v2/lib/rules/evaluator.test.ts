@@ -42,6 +42,19 @@ describe("absolute operators", () => {
     expect(below).toHaveLength(0);
     expect(above[0]?.severity).toBe("critical");
   });
+
+  it("separates same-named campaigns by platform and keeps the strongest threshold", () => {
+    const rows = [
+      ...series(1, () => ({ frequency: 7 })),
+      ...series(1, () => ({ platform: "tiktok", frequency: 7 })),
+    ];
+    const hits = evaluateRules([rule("ALT-001"), rule("ALT-002")], rows);
+    expect(hits).toHaveLength(2);
+    expect(hits.every((hit) => hit.severity === "critical")).toBe(true);
+    expect(hits.map((hit) => hit.entity).sort()).toEqual(["Meta · C", "TikTok · C"]);
+    expect(hits[0].message).toContain("across 1 data day");
+    expect(hits[0].message).toContain("AdPilot did not change a live paid ad");
+  });
 });
 
 describe("rolling-baseline operators (z-score / WoW) — always volume-gated", () => {

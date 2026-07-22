@@ -6,17 +6,14 @@ ticket.
 
 ## Before deployment
 
-- [ ] Apply `0001_init.sql` through `0031_access_hardening.sql` in order with
+- [ ] Apply `0001_init.sql` through `0032_content_archiving.sql` in order with
   `supabase db push` (or the Supabase SQL editor) and confirm no migration errors.
 - [ ] Set production-only secrets in Vercel. `SUPABASE_SERVICE_ROLE_KEY`,
   `TOKEN_ENCRYPTION_KEY`, `CRON_SECRET`, Stripe secrets, provider tokens, and AI
   keys must never be `NEXT_PUBLIC_*` values or committed files.
-- [ ] Confirm the approved-execution posture for this release. `ADS_WRITE_ENABLED`
-  is legacy and ignored. Leave `AD_WRITE_EXECUTION_ENABLED` unset for a
-  read-only launch. If enabling Expert approved changes, first verify a dedicated
-  `ads_management` System User token, `AD_WRITE_MAX_DAILY_BUDGET`, and a budget
-  change cap of at most 50%; every change must still be staged and typed-approved
-  by an Expert workspace manager.
+- [ ] Confirm that no live paid-ad mutation controls or write credentials are exposed.
+  Expert can prepare approval-ready change drafts, but accepted changes are applied
+  manually in the advertising platform.
 - [ ] Set `META_GRAPH_API_VERSION` and run one real read-only Meta connection,
   one organic publish, and one Messenger send in the release environment. All
   Meta paths must use the same validated version.

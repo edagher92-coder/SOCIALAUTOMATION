@@ -94,8 +94,8 @@ export default async function MissionControl() {
   const apiEnabled = can(plan, "api_connect");
   const since = daysAgoIso(14);
 
-  const [orgRes, scoreRes, openRecsRes, accountsRes, reportsRes, trendRes, latestReportRes, snapshotsRes, ingestionRes] = await Promise.all([
-    supabase.from("organisations").select("name,last_synced_at,sync_interval_hours,monthly_budget").eq("id", orgId).maybeSingle(),
+  const [orgRes, scoreRes, openRecsRes, accountsRes, reportsRes, trendRes, latestReportRes, snapshotsRes, ingestionRes, rulesRes] = await Promise.all([
+    supabase.from("organisations").select("name,last_synced_at,sync_interval_hours,monthly_budget,average_sale_value,gross_margin").eq("id", orgId).maybeSingle(),
     supabase.from("health_scores").select("total,band,created_at").eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("recommendations").select("id,verdict,entity_name,platform,proposal,reason").eq("organisation_id", orgId).eq("status", "open").order("created_at", { ascending: false }).limit(100),
     supabase.from("connected_ad_accounts").select("platform,display_name,status").eq("organisation_id", orgId),
@@ -107,6 +107,7 @@ export default async function MissionControl() {
     apiEnabled
       ? supabase.from("ingestion_runs").select("platform,status,rows_written,window_days,started_at").eq("organisation_id", orgId).order("started_at", { ascending: false }).limit(5)
       : Promise.resolve({ data: [], error: null }),
+    supabase.from("alert_rules").select("id", { count: "exact", head: true }).eq("organisation_id", orgId).eq("enabled", true),
   ]);
 
   const loadError = orgRes.error || scoreRes.error || openRecsRes.error || accountsRes.error || reportsRes.error;
@@ -116,6 +117,7 @@ export default async function MissionControl() {
   const accts = ((accountsRes.data || []) as any[]);
   const reports = ((reportsRes.data || []) as any[]);
   const runs = (((ingestionRes as any)?.data) || []) as any[];
+  const activeRules = rulesRes.count ?? 0;
 
   const total = score?.total != null ? Math.round(score.total) : null;
   const band = (score?.band as string) || null;
@@ -155,9 +157,28 @@ export default async function MissionControl() {
   const cadence = cadenceText(org?.sync_interval_hours);
   const name = org?.name || "your workspace";
   const healthDef = metricDef("Campaign Health Score");
+  const healthyAccounts = accts.filter((account) => account.status !== "error" && account.status !== "disconnected").length;
+  const hasImportedData = total != null || decisions.length > 0;
+  const setupSteps = [
+    { label: "Bring in ad data", detail: healthyAccounts ? `${healthyAccounts} account${healthyAccounts === 1 ? "" : "s"} connected` : hasImportedData ? "CSV data imported" : "Connect Meta or TikTok, or import a CSV", done: healthyAccounts > 0 || hasImportedData, href: "/connect" },
+    { label: "Run the first audit", detail: total != null ? `Health score ${total}/100` : "Turn raw numbers into a health score", done: total != null, href: "/dashboard" },
+    { label: "Confirm business economics", detail: beCpa != null ? `Break-even CPA ${mny(beCpa)}` : "Add sale value, margin and monthly budget", done: beCpa != null, href: "/settings" },
+    { label: "Switch on watch rules", detail: activeRules ? `${activeRules} active rule${activeRules === 1 ? "" : "s"}` : "Preview alerts against your history", done: activeRules > 0, href: "/automate" },
+  ];
+  const completedSetup = setupSteps.filter((step) => step.done).length;
+  const firstOpenStep = setupSteps.find((step) => !step.done) || setupSteps[setupSteps.length - 1];
+  const topFix = attention[0] as any;
+  const criticalCount = recs.filter((rec) => ["kill", "fix-tracking"].includes(rec.verdict)).length;
+  const simpleHeadline = total == null
+    ? "Let’s get your first useful answer"
+    : criticalCount > 0
+      ? `${criticalCount} important ${criticalCount === 1 ? "fix needs" : "fixes need"} your review`
+      : attention.length > 0
+        ? `${attention.length} ${attention.length === 1 ? "improvement is" : "improvements are"} ready to review`
+        : "Your latest audit has no urgent fixes";
 
   return (
-    <div className="animate-fade-in -m-5 min-h-screen bg-cockpit p-5 text-cockpit-ink md:-m-8 md:p-8">
+    <div className="animate-fade-in -m-4 min-h-screen bg-cockpit p-4 text-cockpit-ink md:-m-6 md:p-6">
       {loadError && (
         <div className="mb-4 rounded-2xl border border-bad/40 bg-bad/10 p-3 text-sm font-semibold" style={{ color: TONE.bad }}>
           Some live data couldn’t load right now. Showing what we have — refresh to retry.
@@ -166,7 +187,7 @@ export default async function MissionControl() {
 
       {/* ── Status strip ─────────────────────────────────────── */}
       <div className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="flex items-center gap-2 text-brand"><Icon name="radar" size={20} /><span className="text-xs font-bold uppercase tracking-widest text-cockpit-muted">Mission Control</span></span>
+            <span className="flex items-center gap-2 text-brand-200"><Icon name="radar" size={20} /><span className="text-xs font-bold uppercase tracking-widest text-cockpit-muted">Today</span></span>
         <h1 className="text-xl font-extrabold tracking-tight md:text-2xl">{name}</h1>
         <span className="text-xs text-cockpit-muted">
           {apiEnabled
@@ -176,7 +197,57 @@ export default async function MissionControl() {
         <span className="ml-auto"><ReadOnlyBadge /></span>
       </div>
 
+      <ModeAware only="simple">
+        <section className="mb-4 overflow-hidden rounded-3xl border border-cockpit-edge bg-cockpit-raised">
+          <div className="grid gap-5 p-5 md:grid-cols-[minmax(0,1.35fr)_minmax(260px,.65fr)] md:p-6">
+            <div>
+              <div className="flex items-center gap-2 text-2xs font-bold uppercase tracking-[0.18em] text-cockpit-muted">
+                <span className={`h-2 w-2 rounded-full ${criticalCount > 0 ? "bg-bad" : total == null ? "bg-warn" : "bg-good"}`} />
+                Your daily brief
+              </div>
+              <h2 className="mt-3 max-w-2xl text-2xl font-extrabold leading-tight md:text-3xl">{simpleHeadline}</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-cockpit-muted">
+                {total == null
+                  ? "Start with one data source. AdPilot will check tracking, spend, creative and conversion quality, then tell you what to do next in plain English."
+                  : topFix
+                    ? `${topFix.entity_name}: ${topFix.proposal || topFix.reason || "Review the evidence and choose the next step."}`
+                    : `Your latest Campaign Health Score is ${total}/100. Keep monitoring; no spending change is being made.`}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {topFix
+                  ? <Link href="/proposals" className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-white shadow-glow"><Icon name="check-circle" size={16} /> Review the evidence</Link>
+                  : <Link href={firstOpenStep.href} className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-white shadow-glow"><Icon name="chevron-right" size={16} /> {firstOpenStep.label}</Link>}
+                <Link href="/connect" className="inline-flex items-center gap-2 rounded-xl border border-cockpit-edge bg-white/5 px-4 py-2.5 text-sm font-bold text-cockpit-ink hover:bg-white/10"><Icon name="link" size={16} /> Check data</Link>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-cockpit-edge bg-black/10 p-4">
+              <div className="flex items-center justify-between"><h3 className="text-sm font-bold">Set-up readiness</h3><span className="text-xs font-extrabold tabular-nums text-good">{completedSetup}/4</span></div>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-cockpit-edge"><div className="h-full rounded-full bg-good" style={{ width: `${(completedSetup / setupSteps.length) * 100}%` }} /></div>
+              <ol className="mt-3 space-y-1.5">
+                {setupSteps.map((step) => (
+                  <li key={step.label} title={step.detail}>
+                    <Link href={step.href} className="flex items-center gap-2 rounded-lg px-1 py-1.5 text-xs hover:bg-white/5">
+                      <span className={step.done ? "text-good" : "text-cockpit-muted"}><Icon name={step.done ? "check-circle" : "hourglass"} size={14} /></span>
+                      <span className={`flex-1 ${step.done ? "text-cockpit-muted line-through decoration-cockpit-muted/40" : "font-semibold text-cockpit-ink"}`}>{step.label}</span>
+                      {!step.done && <Icon name="chevron-right" size={13} className="text-cockpit-muted" />}
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+
+          <div className="grid border-t border-cockpit-edge sm:grid-cols-3 sm:divide-x sm:divide-cockpit-edge">
+            <div className="p-4"><div className="text-2xs font-bold uppercase tracking-widest text-cockpit-muted">Health</div><div className="mt-1 text-2xl font-extrabold tabular-nums" style={{ color: TONE[bandTone] }}>{total == null ? "Not scored" : `${total}/100`}</div><p className="mt-1 text-xs text-cockpit-muted">{band || "Run an audit to establish a baseline"}</p></div>
+            <div className="border-t border-cockpit-edge p-4 sm:border-t-0"><div className="text-2xs font-bold uppercase tracking-widest text-cockpit-muted">Needs you</div><div className="mt-1 text-2xl font-extrabold tabular-nums">{recs.length}</div><p className="mt-1 text-xs text-cockpit-muted">Evidence-backed fixes waiting for review</p></div>
+            <div className="border-t border-cockpit-edge p-4 sm:border-t-0"><div className="text-2xs font-bold uppercase tracking-widest text-cockpit-muted">Data freshness</div><div className="mt-1 text-lg font-extrabold">{fmtAgo(org?.last_synced_at)}</div><p className="mt-1 text-xs text-cockpit-muted">{apiEnabled ? `Automatic ${cadence}` : "CSV mode"}</p></div>
+          </div>
+        </section>
+      </ModeAware>
+
       {/* ── Hero row: health + trend + the full picture ─────── */}
+      <ModeAware only="advanced">
       <div className="grid gap-4 lg:grid-cols-[auto_1fr]">
         <Panel className="flex items-center gap-5">
           <div style={{ color: TONE[bandTone] }}><RingGauge value={total} tone={bandTone} label="Campaign Health Score" sub={band ?? "no score"} /></div>
@@ -269,6 +340,8 @@ export default async function MissionControl() {
       </div>
 
       {/* ── Guardrails panel (Advanced) ──────────────────────── */}
+      </ModeAware>
+
       <ModeAware only="advanced">
         <Panel className="mt-4">
           <div className="flex flex-wrap items-center justify-between gap-2">

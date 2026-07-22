@@ -8,15 +8,15 @@ import { writeEnabled } from "@/lib/actions/execute";
 
 export const runtime = "nodejs";
 
-// Guarded live ad changes. Expert manager approval and dedicated execution controls are required.
-// + a typed-YES confirmation (see /api/actions/[id]). This route only proposes + lists.
+// Approval-ready change drafts for Expert workspaces. They are inert records for
+// review and manual application in Ads Manager; V7 has no live-ad execution path.
 async function gate(): Promise<{ res?: NextResponse; orgId?: string; userId?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { res: NextResponse.json({ error: "Unauthorised" }, { status: 401 }) };
   const membership = await getActiveOrgMembership(user.id, user.email ?? undefined);
-  if (!isOrgManagerRole(membership.role)) return { res: NextResponse.json({ error: "Only workspace owners and admins can manage approved live-ad actions." }, { status: 403 }) };
-  if (!can(await planForOrg(membership.orgId), "ad_write")) return { res: NextResponse.json({ error: "Approved live-ad actions are an Expert feature.", upgrade: true }, { status: 402 }) };
+  if (!isOrgManagerRole(membership.role)) return { res: NextResponse.json({ error: "Only workspace owners and admins can manage change drafts." }, { status: 403 }) };
+  if (!can(await planForOrg(membership.orgId), "ad_write")) return { res: NextResponse.json({ error: "Approval-ready change drafts are an Expert feature.", upgrade: true }, { status: 402 }) };
   return { orgId: membership.orgId, userId: user.id };
 }
 

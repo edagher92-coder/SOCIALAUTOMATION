@@ -86,7 +86,7 @@ export function recommendTests(payload: any, opts: { max?: number } = {}): TestI
       primaryMetric: t.primaryMetric,
       requiredBudgetAud,
       readoutDays: t.readoutDays,
-      setup: "Set up as a PAUSED DUPLICATE — the original keeps running untouched; publish manually after your typed YES.",
+      setup: "Set up as a PAUSED DUPLICATE — the original keeps running untouched; publish manually after human review.",
       source,
       ice: { impact: t.impact, confidence, ease: t.ease, score: t.impact * confidence * t.ease },
     });

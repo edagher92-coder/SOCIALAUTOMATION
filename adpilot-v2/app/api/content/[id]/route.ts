@@ -25,7 +25,8 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
-  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined, "editor");
+  if (!orgId) return NextResponse.json({ error: "You have read-only access to this workspace." }, { status: 403 });
   if (!can(await planForOrg(orgId), "content_publish")) {
     return NextResponse.json({ error: "Content publishing is a paid feature. Upgrade on Billing.", upgrade: true }, { status: 402 });
   }
@@ -88,9 +89,14 @@ export async function DELETE(req: Request, props: { params: Promise<{ id: string
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
-  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined, "editor");
+  if (!orgId) return NextResponse.json({ error: "You have read-only access to this workspace." }, { status: 403 });
   const admin = createAdminClient();
-  const { error } = await admin.from("content_posts").delete().eq("id", params.id).eq("organisation_id", orgId);
+  const { data, error } = await admin.from("content_posts")
+    .update({ status: "archived", archived_at: new Date().toISOString(), scheduled_at: null, updated_at: new Date().toISOString() })
+    .eq("id", params.id).eq("organisation_id", orgId).neq("status", "published")
+    .select("id").maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 502 });
-  return NextResponse.json({ ok: true });
+  if (!data) return NextResponse.json({ error: "Only unpublished content can be archived." }, { status: 409 });
+  return NextResponse.json({ ok: true, archived: true });
 }

@@ -18,7 +18,7 @@ export const REPORT_SECTIONS: Record<ReportKind, string[]> = {
 
 // Lifted verbatim from the templates' guardrail blocks — every emitted report carries these.
 export const SAFETY_FOOTER =
-  "Guardrails: this is a read-only analysis — no live ad was changed. All recommendations are proposals only; any budget or monetary change is flagged for your approval (typed YES) and never executed automatically. No ad deletions; every proposed change is reversible (the original is untouched).";
+  "Guardrails: this is a read-only analysis — no live ad was changed. All recommendations are proposals only; any budget or monetary change is reviewed and applied manually in the advertising platform. No ad deletions; every proposed change preserves the original.";
 
 export const SAFETY_HEADER =
   "Read-only report — AdPilot proposes, you approve. Nothing here has been applied to a live ad.";

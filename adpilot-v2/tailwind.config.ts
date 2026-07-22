@@ -7,13 +7,13 @@ const config: Config = {
       colors: {
         // Warm coral primary — creator energy, friendly for small businesses.
         brand: {
-          DEFAULT: "#f9603f",
+          DEFAULT: "#c93f28",
           50:  "#fff3ef",
           100: "#ffe4db",
           200: "#ffc6b6",
-          500: "#f9603f",
-          600: "#ea4a27",
-          700: "#c2391c",
+          500: "#c93f28",
+          600: "#b73620",
+          700: "#942a19",
         },
         // Amber/gold accent for the signature warm gradient lives on the `teal` token
         // below (kept that name so existing gradient/accent classes warm up). Tailwind's
@@ -32,7 +32,7 @@ const config: Config = {
         surface: "#faf7f4",   // warm off-white (was cool #f7f9fc)
         "surface-raised": "#ffffff",
         "border-subtle": "#ece7e1",
-        "border-focus": "#f9603f",
+        "border-focus": "#c93f28",
         band: {
           green:  "#16a34a",
           yellow: "#ca8a04",
@@ -63,8 +63,8 @@ const config: Config = {
       boxShadow: {
         card:  "0 1px 3px rgba(28,23,38,.05), 0 8px 24px rgba(28,23,38,.06)",
         "card-hover": "0 1px 3px rgba(28,23,38,.07), 0 14px 34px rgba(28,23,38,.12)",
-        "ring-brand": "0 0 0 3px rgba(249,96,63,.20)",
-        glow: "0 12px 40px -8px rgba(249,96,63,.38)",   // warm coral glow for hero CTAs
+        "ring-brand": "0 0 0 3px rgba(201,63,40,.20)",
+        glow: "0 12px 40px -8px rgba(201,63,40,.32)",   // warm coral glow for hero CTAs
         "inner-sm": "inset 0 1px 2px rgba(28,23,38,.06)",
       },
       transitionDuration: {

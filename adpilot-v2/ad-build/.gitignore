@@ -11,3 +11,5 @@ frames-tut/
 preview-tut/
 frame-tut.png
 out/
+qa/
+*.log

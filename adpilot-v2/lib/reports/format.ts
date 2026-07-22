@@ -184,6 +184,6 @@ export function buildRileyReportInstruction(payload: ReportPayload, opts: Report
     `Write a ${opts.kind} report for ${opts.periodLabel} as plain-English prose ONLY.`,
     `Follow this section order: ${sections}.`,
     "Do NOT restate metric tables (they are rendered separately) — interpret them: cite the specific metric and window behind every claim.",
-    "Keep it numbers-first, anti-hype, Australian English; frame any change as a proposal needing a typed YES; never imply a live ad was edited.",
+    "Keep it numbers-first, anti-hype, Australian English; frame any paid-ad change as a proposal for manual platform review; never imply a live ad was edited.",
   ].join(" ");
 }

@@ -33,7 +33,8 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
-  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined, "manager");
+  if (!orgId) return NextResponse.json({ error: "Only workspace owners and admins can change business settings." }, { status: 403 });
   const admin = createAdminClient();
   await admin.from("organisations").update(parsed.data).eq("id", orgId);
   return NextResponse.json({ ok: true });
