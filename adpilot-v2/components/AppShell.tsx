@@ -12,6 +12,7 @@ import CommandPalette from "./CommandPalette";
 import OperationsDrawer, { type WorkspaceSummary } from "./OperationsDrawer";
 import { ACCOUNT_NAV, ADVANCED_GROUPS, PRIMARY_NAV, navItemIsActive, type AppNavItem } from "./app-navigation";
 import { Icon } from "./icons";
+import { ThemeToggle } from "./theme-toggle";
 
 function ModeToggle() {
   const { mode, setMode } = useMode();
@@ -84,6 +85,7 @@ function Sidebar({ email, plan, onSelect, onSearch }: { email?: string; plan: Pl
       </button>
 
       <div className="mt-3"><ModeToggle /></div>
+      <div className="mt-2"><ThemeToggle /></div>
 
       <nav className="mt-3 flex-1 overflow-y-auto" aria-label="Main navigation">
         <div className="space-y-0.5">
@@ -208,7 +210,7 @@ function Shell({ children, email, plan, initialMode, summary }: { children: Reac
   );
 }
 
-export default function AppShell({ children, email, plan = "free", initialMode = "beginner", summary }: { children: React.ReactNode; email?: string; plan?: Plan; initialMode?: Mode; summary?: Partial<WorkspaceSummary> }) {
+export default function AppShell({ children, email, plan = "free", initialMode = "advanced", summary }: { children: React.ReactNode; email?: string; plan?: Plan; initialMode?: Mode; summary?: Partial<WorkspaceSummary> }) {
   const safeSummary: WorkspaceSummary = {
     name: summary?.name,
     lastSyncedAt: summary?.lastSyncedAt ?? null,

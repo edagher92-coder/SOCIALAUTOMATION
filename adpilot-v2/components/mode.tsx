@@ -6,15 +6,21 @@ type ModeCtx = {
   mode: Mode; setMode: (m: Mode) => void;
   helpTips: boolean; setHelpTips: (v: boolean) => void;
 };
-const Ctx = createContext<ModeCtx>({ mode: "beginner", setMode: () => {}, helpTips: true, setHelpTips: () => {} });
+const Ctx = createContext<ModeCtx>({ mode: "advanced", setMode: () => {}, helpTips: true, setHelpTips: () => {} });
 
-export function ModeProvider({ children, initialMode = "beginner" }: { children: React.ReactNode; initialMode?: Mode }) {
+export function ModeProvider({ children, initialMode = "advanced" }: { children: React.ReactNode; initialMode?: Mode }) {
   const [mode, setModeState] = useState<Mode>(initialMode);
   // Plain-English "?" help tips. On by default (beginner-friendly); persisted so power users can hide them.
   const [helpTips, setHelpTips] = useState<boolean>(true);
   useEffect(() => {
-    const m = (typeof localStorage !== "undefined" && localStorage.getItem("adpilot_mode")) as Mode | null;
-    if (m === "beginner" || m === "advanced") setModeState(m);
+    const requestedMode = new URLSearchParams(window.location.search).get("mode");
+    const storedMode = (typeof localStorage !== "undefined" && localStorage.getItem("adpilot_mode")) as Mode | null;
+    const nextMode = requestedMode === "beginner" || requestedMode === "advanced" ? requestedMode : storedMode;
+    if (nextMode === "beginner" || nextMode === "advanced") {
+      setModeState(nextMode);
+      localStorage.setItem("adpilot_mode", nextMode);
+      document.cookie = `adpilot_mode=${nextMode}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    }
     const h = typeof localStorage !== "undefined" ? localStorage.getItem("adpilot_help") : null;
     if (h === "off") setHelpTips(false);
   }, []);

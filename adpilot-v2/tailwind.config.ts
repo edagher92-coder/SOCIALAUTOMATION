@@ -7,13 +7,13 @@ const config: Config = {
       colors: {
         // Warm coral primary — creator energy, friendly for small businesses.
         brand: {
-          DEFAULT: "#c93f28",
-          50:  "#fff3ef",
-          100: "#ffe4db",
-          200: "#ffc6b6",
-          500: "#c93f28",
-          600: "#b73620",
-          700: "#942a19",
+          DEFAULT: "rgb(var(--color-brand) / <alpha-value>)",
+          50:  "rgb(var(--color-brand-50) / <alpha-value>)",
+          100: "rgb(var(--color-brand-100) / <alpha-value>)",
+          200: "rgb(var(--color-brand-200) / <alpha-value>)",
+          500: "rgb(var(--color-brand) / <alpha-value>)",
+          600: "rgb(var(--color-brand-600) / <alpha-value>)",
+          700: "rgb(var(--color-brand-700) / <alpha-value>)",
         },
         // Amber/gold accent for the signature warm gradient lives on the `teal` token
         // below (kept that name so existing gradient/accent classes warm up). Tailwind's
@@ -27,12 +27,12 @@ const config: Config = {
           50:  "#fff8ea",
           100: "#ffedc7",
         },
-        ink: "#1c1726",       // warm near-black text
-        muted: "#6b6478",     // warm grey
-        surface: "#faf7f4",   // warm off-white (was cool #f7f9fc)
-        "surface-raised": "#ffffff",
-        "border-subtle": "#ece7e1",
-        "border-focus": "#c93f28",
+        ink: "rgb(var(--color-ink) / <alpha-value>)",
+        muted: "rgb(var(--color-muted) / <alpha-value>)",
+        surface: "rgb(var(--color-surface) / <alpha-value>)",
+        "surface-raised": "rgb(var(--color-surface-raised) / <alpha-value>)",
+        "border-subtle": "rgb(var(--color-border-subtle) / <alpha-value>)",
+        "border-focus": "rgb(var(--color-brand) / <alpha-value>)",
         band: {
           green:  "#16a34a",
           yellow: "#ca8a04",
@@ -61,11 +61,11 @@ const config: Config = {
         "2xs": ["0.625rem", { lineHeight: "0.875rem" }],
       },
       boxShadow: {
-        card:  "0 1px 3px rgba(28,23,38,.05), 0 8px 24px rgba(28,23,38,.06)",
-        "card-hover": "0 1px 3px rgba(28,23,38,.07), 0 14px 34px rgba(28,23,38,.12)",
+        card:  "var(--shadow-card)",
+        "card-hover": "var(--shadow-card-hover)",
         "ring-brand": "0 0 0 3px rgba(201,63,40,.20)",
         glow: "0 12px 40px -8px rgba(201,63,40,.32)",   // warm coral glow for hero CTAs
-        "inner-sm": "inset 0 1px 2px rgba(28,23,38,.06)",
+        "inner-sm": "var(--shadow-inner)",
       },
       transitionDuration: {
         "150": "150ms",
