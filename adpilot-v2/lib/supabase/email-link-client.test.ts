@@ -6,6 +6,9 @@ const fetchMock = vi.fn();
 beforeEach(() => {
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://project.supabase.co");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "public-test-key");
+  // The production client is browser-only. GitHub CI still runs tests on Node 20,
+  // which does not provide the browser WebSocket constructor Supabase detects.
+  vi.stubGlobal("WebSocket", class TestWebSocket {});
   fetchMock.mockReset().mockResolvedValue(new Response("{}", {
     status: 200,
     headers: { "content-type": "application/json" },
