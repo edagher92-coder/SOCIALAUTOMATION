@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
 import AppShell from "@/components/AppShell";
 import type { Mode } from "@/components/mode";
-import { ensureFounderExpertPlan } from "@/lib/founder-access";
+import { ensureFounderDemoData, ensureFounderExpertPlan } from "@/lib/founder-access";
 
 // Authenticated pages depend on the current cookie-backed session and workspace.
 export const dynamic = "force-dynamic";
@@ -18,6 +18,9 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   // Founder access is a complimentary entitlement recorded in the same plan
   // ledger as paid subscriptions; it never creates or modifies a Stripe charge.
   await ensureFounderExpertPlan({ userId: user.id, email: user.email, orgId });
+  // This user explicitly asked for an interactive demo. The loader only writes
+  // to a completely empty founder workspace; existing real data is untouched.
+  await ensureFounderDemoData({ userId: user.id, email: user.email, orgId });
   const cookieStore = await cookies();
   const savedMode = cookieStore.get("adpilot_mode")?.value;
   // Advanced is the default workspace experience. An explicit Simple choice is
