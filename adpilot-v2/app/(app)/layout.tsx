@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgId, planForOrg } from "@/lib/org";
 import AppShell from "@/components/AppShell";
 import type { Mode } from "@/components/mode";
+import { ensureFounderExpertPlan } from "@/lib/founder-access";
 
 // Authenticated pages depend on the current cookie-backed session and workspace.
 export const dynamic = "force-dynamic";
@@ -14,6 +15,9 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   if (!user) redirect("/login");
 
   const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  // Founder access is a complimentary entitlement recorded in the same plan
+  // ledger as paid subscriptions; it never creates or modifies a Stripe charge.
+  await ensureFounderExpertPlan({ userId: user.id, email: user.email, orgId });
   const cookieStore = await cookies();
   const savedMode = cookieStore.get("adpilot_mode")?.value;
   // Advanced is the default workspace experience. An explicit Simple choice is
