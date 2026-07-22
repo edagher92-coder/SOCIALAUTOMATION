@@ -12,6 +12,18 @@ describe("safeAuthNext", () => {
     expect(safeAuthNext("//attacker.example", "/login")).toBe("/login");
     expect(safeAuthNext(null, "/login")).toBe("/login");
   });
+
+  it("blocks decoded slash, backslash and control-character URL parser bypasses", () => {
+    for (const encoded of ["/%2f%2fattacker.example", "/%5c%5cattacker.example", "/%09//attacker.example"]) {
+      const value = new URLSearchParams(`next=${encoded}`).get("next");
+      expect(safeAuthNext(value, "/command")).toBe("/command");
+    }
+  });
+
+  it("blocks unapproved internal destinations", () => {
+    expect(safeAuthNext("/api/health", "/command")).toBe("/command");
+    expect(safeAuthNext("/login", "/command")).toBe("/command");
+  });
 });
 
 describe("parseEmailLinkFragment", () => {

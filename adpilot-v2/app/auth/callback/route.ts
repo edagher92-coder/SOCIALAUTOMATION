@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { safeAuthNext } from "@/lib/auth/email-link";
 import { createClient } from "@/lib/supabase/server";
-
-function safeNext(value: string | null): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/command";
-  return value;
-}
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const next = safeNext(url.searchParams.get("next"));
+  const next = safeAuthNext(url.searchParams.get("next"));
 
   if (!code) {
     return NextResponse.redirect(new URL("/login?notice=recovery-expired", url.origin));
