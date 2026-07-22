@@ -1,5 +1,25 @@
 # Changelog — AdPilot OS
 
+## v7.0.0 — Explainable operations, guarded automation and release hardening (2026-07-22)
+
+- Rebuilt the product around six outcome-based destinations: Today, Fixes, Create, Automate,
+  Reports and Connect, with persistent Simple/Advanced views, command palette, operations drawer
+  and mobile navigation.
+- Rebuilt sign-in, sign-up and password recovery; corrected the nonce CSP/dynamic-rendering fault
+  that could leave authentication controls visible but unresponsive.
+- Added Automation Studio and wired saved rule definitions into scheduled scoring, recurrence,
+  stale-event resolution and escaped email output.
+- Rebuilt Connect, Create, recommendations, settings, reports and notifications around plain
+  language, evidence, freshness, break-even economics and deliberate confirmation.
+- Added viewer/editor/manager mutation enforcement, least-privilege Meta token validation,
+  protected health details and content/action archiving.
+- Removed all live paid-ad writer and write-token paths. V7 prepares reviewed drafts; operators
+  apply paid changes in the advertising platform.
+- Updated Next.js/React patch releases and pinned patched PostCSS/Sharp transitive dependencies.
+- Verified 757 tests, typecheck, lint, production build, clean production dependency audit,
+  real-browser auth interactions and Lighthouse mobile scores of 98/100/100/100.
+- Full assessment: `docs/V7-RELEASE-ASSESSMENT-2026-07-22.md`.
+
 ## Hotfix — Meta live-sync (2026-06-19)
 
 - **Live Meta sync returned 0 rows; Command Centre stayed on demo numbers** — three `lib/sync/pull.ts`

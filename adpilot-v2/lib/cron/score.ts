@@ -2,7 +2,8 @@ import "server-only";
 import { analyse } from "@/lib/engine";
 import { sendEmail } from "@/lib/email/resend";
 import { refreshOpenRecommendations } from "@/lib/proposals";
-import { evaluateAlertRules } from "@/lib/cron/alerts";
+import { evaluateRules } from "@/lib/rules/evaluator";
+import { alertRulesForOrg } from "@/lib/rules/persistence";
 import { getAudienceInsights } from "@/lib/audience/insights";
 import { buildAudienceProposals } from "@/lib/audience/proposals";
 
@@ -14,6 +15,12 @@ function breaches(result: any): string[] {
   for (const f of result.health?.findings || []) if (f.severity === "CRITICAL") a.push(f.message);
   if (result.health?.band === "Red") a.push(`Account health is RED (${Math.round(result.health.total)}/100).`);
   return Array.from(new Set(a));
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>'"]/g, (character) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
+  }[character] || character));
 }
 
 export async function scoreAndAlertOrg(
@@ -83,17 +90,36 @@ export async function scoreAndAlertOrg(
   // cron path and the CSV scoring route can never diverge.
   await refreshOpenRecommendations(admin, org.id, (result.decisions || []) as any[]);
 
-  // Threshold-alert rule library (read-only signal): evaluate the synced snapshots and upsert
-  // open hits, deduped per (org, rule+campaign). Best-effort — never blocks scoring.
-  const hits = evaluateAlertRules(snaps as any[]);
-  if (hits.length) {
-    try {
-      await admin.from("alert_events").upsert(
-        hits.map((h) => ({ organisation_id: org.id, rule_id: h.rule_id, severity: h.severity, campaign_name: h.campaign_name, metric: h.metric, value: h.value, threshold: h.threshold, message: h.message, status: "open", dedupe_key: h.dedupe_key })),
+  // Run the workspace's saved rule library (or safe presets for a new/pre-migration
+  // workspace), then keep the alert log current. Signals that no longer match are
+  // resolved; a later recurrence reopens the same deduped event.
+  const configuredRules = await alertRulesForOrg(admin, org.id);
+  const hits = evaluateRules(configuredRules, snaps as any[]);
+  try {
+    if (hits.length) {
+      const { error } = await admin.from("alert_events").upsert(
+        hits.map((hit) => ({
+          organisation_id: org.id,
+          rule_id: hit.rule_id,
+          severity: hit.severity,
+          campaign_name: hit.entity,
+          metric: hit.metric,
+          value: hit.value,
+          threshold: hit.threshold,
+          message: hit.message,
+          status: "open",
+          dedupe_key: hit.dedupe_key,
+        })),
         { onConflict: "organisation_id,dedupe_key" },
       );
-    } catch { /* alert log is best-effort */ }
-  }
+      if (error) throw error;
+    }
+    const { data: openEvents } = await admin.from("alert_events")
+      .select("id,dedupe_key").eq("organisation_id", org.id).eq("status", "open").limit(5000);
+    const currentKeys = new Set(hits.map((hit) => hit.dedupe_key));
+    const staleIds = (openEvents || []).filter((event: any) => !currentKeys.has(event.dedupe_key)).map((event: any) => event.id);
+    if (staleIds.length) await admin.from("alert_events").update({ status: "resolved" }).in("id", staleIds).eq("organisation_id", org.id);
+  } catch { /* alert lifecycle is best-effort and never blocks scoring */ }
 
   let alerted = false;
   // Fold critical rule hits into the breach list so they reach the alert email too.
@@ -101,9 +127,9 @@ export async function scoreAndAlertOrg(
   if (b.length) {
     const { data: rule } = await admin.from("notification_rules").select("email,critical_alerts").eq("organisation_id", org.id).maybeSingle();
     if (rule?.critical_alerts && rule.email) {
-      const html = `<h2 style="font-family:sans-serif">⚠ AdPilot OS alert — ${org.name ?? "your account"}</h2>
+      const html = `<h2 style="font-family:sans-serif">⚠ AdPilot OS alert — ${escapeHtml(org.name ?? "your account")}</h2>
         <p style="font-family:sans-serif">${result.health.band} · ${Math.round(result.health.total)}/100</p>
-        <ul style="font-family:sans-serif">${b.map((x) => `<li>${x}</li>`).join("")}</ul>
+        <ul style="font-family:sans-serif">${b.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
         <p style="font-family:sans-serif">Open your dashboard for the safe proposals. (Read-only — nothing was changed.)</p>`;
       try { await sendEmail(rule.email, `⚠ AdPilot alert — ${org.name ?? "your account"}`, html); alerted = true; } catch { /* email best-effort */ }
     }

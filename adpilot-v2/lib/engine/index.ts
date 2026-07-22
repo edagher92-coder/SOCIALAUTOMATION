@@ -152,6 +152,6 @@ export function analyse(rows: Row[], cfg: Cfg) {
     decisions,
     fatigue: fatigueByAd(rows),
     anomalies: anomaliesByDay(rows),
-    safety: "Read-only analysis. No live ad was changed. Budget moves need a typed YES.",
+    safety: "Read-only analysis. No live ad was changed. Budget moves are reviewed and applied manually in the advertising platform.",
   };
 }

@@ -1,12 +1,17 @@
 "use client";
-export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+
+import Link from "next/link";
+import { Icon } from "@/components/icons";
+
+export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  const reference = error.digest || "local-screen-error";
   return (
-    <div className="mx-auto max-w-md rounded-2xl border border-border-subtle bg-white p-8 text-center shadow-card">
-      <div className="text-3xl">⚠️</div>
-      <h2 className="mt-2 text-lg font-bold">Something went wrong</h2>
-      <p className="mt-1 text-sm text-muted">{error.message || "An unexpected error occurred."}</p>
-      <button onClick={reset} className="mt-4 rounded-lg bg-brand px-5 py-2.5 font-bold text-white">Try again</button>
-      <p className="mt-3 text-xs text-muted">If it persists, see the User Manual → Error reporting.</p>
+    <div className="mx-auto max-w-xl rounded-3xl border border-bad/25 bg-white p-7 text-center shadow-card sm:p-9">
+      <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-bad/10 text-bad"><Icon name="alert-triangle" size={23} /></span>
+      <h1 className="mt-4 text-2xl font-extrabold text-ink">This screen did not load</h1>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted">Your data has not been changed. Try the request again, or return to Today and check connection health.</p>
+      <div className="mt-5 flex flex-wrap justify-center gap-2"><button onClick={reset} className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-white"><Icon name="refresh" size={15} /> Try again</button><Link href="/command" className="inline-flex items-center gap-2 rounded-xl border border-border-subtle px-4 py-2.5 text-sm font-bold text-ink"><Icon name="radar" size={15} /> Go to Today</Link><Link href="/connect" className="inline-flex items-center gap-2 rounded-xl border border-border-subtle px-4 py-2.5 text-sm font-bold text-ink"><Icon name="link" size={15} /> Check connections</Link></div>
+      <p className="mt-5 text-2xs text-muted">Support reference: <code className="rounded bg-surface px-1.5 py-1 text-ink">{reference}</code></p>
     </div>
   );
 }

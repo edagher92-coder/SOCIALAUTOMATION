@@ -16,7 +16,7 @@
 | **Stripe price IDs** | Create the 3 recurring AUD products (Step 3) → paste the `price_…` IDs into Vercel env |
 | **Non‑expiring Meta token** | A System User token (`ads_read`,`read_insights`) — see `/connect/guide` in‑app + `docs/SETUP-CONNECT-PLATFORMS.md` |
 | **Legal sign‑off** | Admitted‑solicitor review of the DRAFT Terms/Privacy (`CPWORK/.../legal/`) before public launch |
-| **Approved execution** | Leave `AD_WRITE_EXECUTION_ENABLED` unset for a read-only launch. Expert live changes also require a separate `ads_management` token, manager approval, and budget guardrails. |
+| **Paid-ad change boundary** | V7 cannot write to live paid ads. Expert prepares approval-ready drafts for manual application in the platform. |
 | **Vercel plan** | The hourly + 15‑min crons (Step 5) require **Vercel Pro** (Hobby = daily‑only) |
 
 ---
@@ -24,8 +24,8 @@
 ## 2. Step 1 — Supabase (database + auth)
 1. Create a **new Supabase project** (production). Region close to your users (e.g. Sydney).
 2. Run the migrations **in numeric order** (gaps 0012–0015 are intentional — do not backfill):
-   - **Option A (CLI):** `supabase link --project-ref <ref>` then `supabase db push` (applies `supabase/migrations/0001…0023`).
-   - **Option B (Dashboard):** SQL Editor → paste each `supabase/migrations/00XX_*.sql` in order (0001 → 0023) and run.
+   - **Option A (CLI):** `supabase link --project-ref <ref>` then `supabase db push` (applies `supabase/migrations/0001…0032`).
+   - **Option B (Dashboard):** SQL Editor → paste each `supabase/migrations/00XX_*.sql` in order (0001 → 0032) and run.
 3. Enable **Email auth** (Authentication → Providers). Set the Site URL + redirect URLs to your production domain (Step 6).
 4. Copy from **Project Settings → API**: `Project URL`, `anon` key, `service_role` key → these become the three Supabase env vars.
 
@@ -56,7 +56,7 @@ In **Vercel → Project → Settings → Environment Variables**, add to **Produ
 
 **For the AI Creative Studio:** `GEMINI_API_KEY` (recommended, verified) — or `FIREFLY_CLIENT_ID` + `FIREFLY_CLIENT_SECRET`.
 
-**Optional / feature‑gated (safe to leave unset):** `RESEND_API_KEY` + `EMAIL_FROM` (email digests/alerts) · `CRM_WEBHOOK_SECRET` (lead loop) · publishing set `META_PAGE_ACCESS_TOKEN`/`META_PAGE_ID`/`IG_USER_ID`/`TIKTOK_PUBLISH_TOKEN`/`MESSENGER_VERIFY_TOKEN` · `INGEST_API_KEY` · `ADPILOT_CONTEXT_PACK_JSON` (leave UNSET for the clean build) · `ANTHROPIC_MODEL` / `GEMINI_IMAGE_MODEL` / `GEMINI_EDIT_MODEL` (defaults are fine) · approved execution: `AD_WRITE_EXECUTION_ENABLED`, `AD_WRITE_MAX_DAILY_BUDGET`, and `AD_WRITE_MAX_BUDGET_CHANGE_PCT`.
+**Optional / feature‑gated (safe to leave unset):** `RESEND_API_KEY` + `EMAIL_FROM` (email digests/alerts) · `CRM_WEBHOOK_SECRET` (lead loop) · publishing set `META_PAGE_ACCESS_TOKEN`/`META_PAGE_ID`/`IG_USER_ID`/`TIKTOK_PUBLISH_TOKEN`/`MESSENGER_VERIFY_TOKEN` · `INGEST_API_KEY` · `ADPILOT_CONTEXT_PACK_JSON` (leave UNSET for the clean build) · `ANTHROPIC_MODEL` / `GEMINI_IMAGE_MODEL` / `GEMINI_EDIT_MODEL` (defaults are fine).
 
 > Full per‑variable documentation lives in `adpilot-v2/.env.example`.
 
@@ -87,5 +87,5 @@ In **Vercel → Project → Settings → Environment Variables**, add to **Produ
 
 ### Quick reference
 - Env docs: `adpilot-v2/.env.example` · Platform‑connect help: `docs/SETUP-CONNECT-PLATFORMS.md` + in‑app `/connect/guide`
-- Migrations: `supabase/migrations/0001…0023` · Crons: `vercel.json` · CI: `.github/workflows/adpilot-v2-ci.yml`
-- Invariant: **controlled by default — AdPilot proposes and the human approves.** Keep `AD_WRITE_EXECUTION_ENABLED` unset for launch; enabling it requires Expert-manager approval, a separate write token, typed confirmation, and budget guardrails.
+- Migrations: `supabase/migrations/0001…0032` · Crons: `vercel.json` · CI: `.github/workflows/adpilot-v2-ci.yml`
+- Invariant: **AdPilot proposes and the human decides.** V7 contains no live paid-ad mutation path; an accepted Expert change draft is applied manually in the advertising platform.

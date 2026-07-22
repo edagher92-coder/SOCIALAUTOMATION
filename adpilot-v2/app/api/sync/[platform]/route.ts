@@ -18,7 +18,8 @@ export async function POST(req: Request, props: { params: Promise<{ platform: st
   if (platform !== "meta" && platform !== "tiktok") return NextResponse.json({ error: "Unknown platform" }, { status: 404 });
 
   try {
-    const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+    const orgId = await getActiveOrgId(user.id, user.email ?? undefined, "editor");
+    if (!orgId) return NextResponse.json({ error: "You have read-only access to this workspace." }, { status: 403 });
     if (!can(await planForOrg(orgId), "api_connect")) {
       return NextResponse.json({ error: "API sync is a Pro & Expert feature. Upgrade on Billing to enable it.", upgrade: true }, { status: 402 });
     }

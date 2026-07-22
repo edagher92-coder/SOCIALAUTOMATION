@@ -95,9 +95,12 @@ export async function POST(req: Request) {
           .filter((p: any) => p?.status === "granted")
           .map((p: any) => String(p?.permission || "")),
       );
-      // ads_read is the required read scope; read_insights is needed for the actual metrics pull.
-      // (ads_management would also grant reads but we never request or rely on a write scope.)
-      const hasRead = granted.has("ads_read") || granted.has("ads_management");
+      // Enforce least privilege. A token carrying ads_management can also read,
+      // but V7 has no paid-ad writer and should not retain unnecessary authority.
+      if (granted.has("ads_management")) {
+        throw new Error("This token includes ads_management (live-ad write access). Create a read-only token with ads_read and read_insights, then reconnect.");
+      }
+      const hasRead = granted.has("ads_read");
       const missing = [
         hasRead ? null : "ads_read",
         granted.has("read_insights") ? null : "read_insights",

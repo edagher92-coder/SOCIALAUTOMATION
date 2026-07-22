@@ -47,6 +47,18 @@ const PATHS = {
   scissors: <><circle cx="6.5" cy="7" r="2.5" /><circle cx="6.5" cy="17" r="2.5" /><path d="M8.6 8.4L20 18M8.6 15.6L20 6" /></>,
   hourglass: <><path d="M6.5 4h11M6.5 20h11M7.5 4c0 6 4.5 5.5 4.5 8s-4.5 2-4.5 8M16.5 4c0 6-4.5 5.5-4.5 8s4.5 2 4.5 8" /></>,
   satellite: <><rect x="9" y="9" width="6" height="6" rx="1" transform="rotate(45 12 12)" /><path d="M5 5l3.5 3.5M19 19l-3.5-3.5M16 4.5L19.5 8M4.5 16L8 19.5" /></>,
+  search: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5L21 21" /></>,
+  menu: <><path d="M4 7h16M4 12h16M4 17h16" /></>,
+  x: <><path d="M6 6l12 12M18 6L6 18" /></>,
+  "more-horizontal": <><circle cx="5" cy="12" r="1" fill="currentColor" /><circle cx="12" cy="12" r="1" fill="currentColor" /><circle cx="19" cy="12" r="1" fill="currentColor" /></>,
+  "log-out": <><path d="M10 5H5v14h5M14 8l4 4-4 4M18 12H9" /></>,
+  sliders: <><path d="M4 6h7M15 6h5M4 12h3M11 12h9M4 18h10M18 18h2" /><circle cx="13" cy="6" r="2" /><circle cx="9" cy="12" r="2" /><circle cx="16" cy="18" r="2" /></>,
+  "chevron-right": <path d="M9 5l7 7-7 7" />,
+  activity: <><path d="M3 12h4l2.2-5 4.2 10 2.1-5H21" /></>,
+  eye: <><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z" /><circle cx="12" cy="12" r="2.5" /></>,
+  upload: <><path d="M12 16V4M7.5 8.5L12 4l4.5 4.5M5 19.5h14" /></>,
+  download: <><path d="M12 4v12M7.5 11.5L12 16l4.5-4.5M5 19.5h14" /></>,
+  key: <><circle cx="8" cy="12" r="4" /><path d="M12 12h9M17 12v3M20 12v2" /></>,
 } as const;
 
 export function Icon({ name, size = 18, strokeWidth = 1.75, ...rest }: { name: IconName; size?: number; strokeWidth?: number } & Omit<SVGProps<SVGSVGElement>, "name">) {

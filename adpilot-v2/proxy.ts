@@ -9,23 +9,27 @@ import { createServerClient } from "@supabase/ssr";
 const APP_ROUTES = [
   "/command", "/proposals", "/content", "/messenger", "/actions", "/dashboard", "/ai-specialists", "/build-dashboard", "/canva-creator",
   "/claude-api", "/bobby-business-assistant", "/aria-course-creator", "/crm-maintenance",
-  "/reports", "/billing", "/connect", "/notifications", "/agency",
-  "/creative", "/settings", "/manual",
+  "/reports", "/billing", "/connect", "/notifications", "/agency", "/automate",
+  "/creative", "/settings", "/manual", "/audience", "/boost", "/policy-check",
+  "/portfolio", "/utm-builder", "/demo-guide",
 ];
 
 // script-src is nonce-based (no 'unsafe-inline' for scripts — the real XSS vector). style-src
 // keeps 'unsafe-inline' because React inline style attributes (style={{…}}) can't carry a nonce
 // and are a far lower risk. Next applies this nonce to its own framework scripts automatically.
 function cspFor(nonce: string): string {
+  const developmentEval = process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : "";
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}'`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${developmentEval}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
+    "font-src 'self' data:",
     "connect-src 'self' https://*.supabase.co https://api.stripe.com",
     "frame-src https://js.stripe.com https://checkout.stripe.com",
     "object-src 'none'",
     "base-uri 'self'",
+    "form-action 'self'",
     "frame-ancestors 'none'",
   ].join("; ");
 }

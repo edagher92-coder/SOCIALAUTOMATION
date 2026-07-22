@@ -33,7 +33,8 @@ export async function POST(req: Request) {
   const { email, weekly_digest, critical_alerts, test } = parsed.data;
   const addr = email || user.email!;
 
-  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined, "manager");
+  if (!orgId) return NextResponse.json({ error: "Only workspace owners and admins can change shared notifications." }, { status: 403 });
   const admin = createAdminClient();
   await admin.from("notification_rules").upsert(
     { organisation_id: orgId, email: addr, weekly_digest, critical_alerts },

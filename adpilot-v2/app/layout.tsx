@@ -1,26 +1,25 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { connection } from "next/server";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
-  title: { default: "AdPilot OS — Meta & TikTok Ads Health", template: "%s · AdPilot OS" },
-  description:
-    "Audit your Meta & TikTok ads, get an explainable Campaign Health Score and safe recommendations — never edits a live ad.",
+  title: { default: "AdPilot OS — Explainable advertising operations", template: "%s · AdPilot OS" },
+  description: "See what changed across Meta and TikTok, understand why, automate safe operations, and keep live paid-ad spend under human control.",
   applicationName: "AdPilot OS",
   openGraph: {
-    title: "AdPilot OS — Meta & TikTok Ads Health",
-    description: "Explainable Campaign Health Score + safe, numbers-first recommendations. Read-only.",
+    title: "AdPilot OS — Explainable advertising operations",
+    description: "One calm workspace for advertising health, creative workflows, reporting and guarded automation.",
     type: "website",
   },
-  twitter: { card: "summary_large_image", title: "AdPilot OS", description: "Meta & TikTok ads health — explainable & safe." },
+  twitter: { card: "summary_large_image", title: "AdPilot OS", description: "Know what changed, why it matters and what to do next." },
 };
 
-export const viewport = { themeColor: "#161221" };
+export const viewport: Viewport = { themeColor: "#0e1220", colorScheme: "light" };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body className="bg-surface text-ink font-sans antialiased">{children}</body>
-    </html>
-  );
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // A fresh CSP nonce is generated for every request. Next can only attach that
+  // nonce to its framework and hydration scripts during dynamic rendering.
+  await connection();
+  return <html lang="en-AU"><body className="bg-surface font-sans text-ink antialiased">{children}</body></html>;
 }

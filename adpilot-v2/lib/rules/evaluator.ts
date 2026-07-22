@@ -13,8 +13,9 @@ interface DayAgg {
 
 function entityKeyOf(scope: RuleScope, s: Snap): string {
   if (scope === "account") return "account";
-  if (scope === "campaign") return String(s.campaign_name || "(campaign)");
-  return String(s.ad_name || s.ad_id || s.campaign_name || "(ad)");
+  const platform = s.platform === "tiktok" ? "TikTok" : s.platform === "meta" ? "Meta" : "Platform";
+  if (scope === "campaign") return `${platform} · ${String(s.campaign_name || "(campaign)")}`;
+  return `${platform} · ${String(s.ad_name || s.ad_id || s.campaign_name || "(ad)")}`;
 }
 
 const num = (v: any) => (Number.isFinite(Number(v)) ? Number(v) : 0);
@@ -69,14 +70,12 @@ function fmt(v: number | null): string {
   return Math.abs(v) < 1 && v !== 0 ? v.toFixed(4) : (Math.round(v * 100) / 100).toLocaleString();
 }
 
-function buildMessage(rule: AlertRule, entity: string, value: number | null, baseline: number | null): string {
-  if (rule.message) return rule.message;
+function buildMessage(rule: AlertRule, entity: string, value: number | null, baseline: number | null, dataDays: number): string {
   const where = rule.scope === "account" ? "the account" : `"${entity}"`;
   const head = `${rule.name}: ${rule.metric} ${fmt(value)}`;
-  const tail = "Read-only proposal — investigate before acting; nothing changes without a typed YES.";
-  return baseline != null
-    ? `${head} vs baseline ${fmt(baseline)} on ${where} — ${rule.severity.toUpperCase()}. ${tail}`
-    : `${head} crossed ${fmt(rule.threshold)} on ${where} — ${rule.severity.toUpperCase()}. ${tail}`;
+  const comparison = baseline != null ? ` vs baseline ${fmt(baseline)}` : ` crossed ${fmt(rule.threshold)}`;
+  const guidance = rule.message ? ` ${rule.message}` : " Investigate the evidence before acting.";
+  return `${head}${comparison} on ${where} across ${dataDays} data day${dataDays === 1 ? "" : "s"} — ${rule.severity.toUpperCase()}.${guidance} Read-only signal; AdPilot did not change a live paid ad.`;
 }
 
 // Evaluate one rule against one entity's day series (sorted oldest→newest). Returns a hit or null.
@@ -107,11 +106,13 @@ function evalOnEntity(rule: AlertRule, entity: string, days: DayAgg[]): RuleHit 
       case "eq":  fire = value === rule.threshold; break;
     }
   } else {
+    const windowDays = Math.max(3, Math.min(90, rule.window_days ?? 7));
     const series = sorted.map((d) => metricValue(rule.metric, d)).filter((v): v is number => Number.isFinite(v as number));
     if (rule.operator === "zscore_gt" || rule.operator === "zscore_lt") {
-      if (series.length < 5) return null;          // need a baseline + the latest point
-      const latest = series[series.length - 1];
-      const hist = series.slice(0, -1);
+      const windowed = series.slice(-(windowDays + 1));
+      if (windowed.length < 5) return null;        // need a baseline + the latest point
+      const latest = windowed[windowed.length - 1];
+      const hist = windowed.slice(0, -1);
       const med = median(hist), spread = mad(hist);
       if (med == null || spread == null || spread === 0) return null; // flat → no manufactured alarm
       const z = (latest - med) / spread;           // signed
@@ -132,7 +133,7 @@ function evalOnEntity(rule: AlertRule, entity: string, days: DayAgg[]): RuleHit 
   return {
     rule_id: rule.id, rule_name: rule.name, severity: rule.severity, scope: rule.scope,
     entity, metric: rule.metric, operator: rule.operator, value, baseline, threshold: rule.threshold,
-    message: buildMessage(rule, entity, value, baseline), dedupe_key: `${rule.id}:${entity}`, proposal: true,
+    message: buildMessage(rule, entity, value, baseline, sorted.length), dedupe_key: `${rule.id}:${entity}`, proposal: true,
   };
 }
 
@@ -172,7 +173,16 @@ export function evaluateRules(rules: AlertRule[], snaps: Snap[], opts: EvaluateO
       if (hit) hits.push(hit);
     }
   }
-  return applyGroups(rules, hits);
+  const grouped = applyGroups(rules, hits);
+  // If warning and critical thresholds for the same metric both match, keep
+  // only the strongest result. Equal-severity rules remain distinct.
+  const severityRank = { info: 0, warning: 1, critical: 2 } as const;
+  const strongest = new Map<string, number>();
+  for (const hit of grouped) {
+    const key = `${hit.scope}:${hit.entity}:${hit.metric}`;
+    strongest.set(key, Math.max(strongest.get(key) ?? -1, severityRank[hit.severity]));
+  }
+  return grouped.filter((hit) => severityRank[hit.severity] === strongest.get(`${hit.scope}:${hit.entity}:${hit.metric}`));
 }
 
 // Dry-run preview: how many days in the trailing `lookbackDays` would this rule have fired at least

@@ -22,7 +22,8 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Invalid status" }, { status: 400 });
 
-  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined, "editor");
+  if (!orgId) return NextResponse.json({ error: "You have read-only access to this workspace." }, { status: 403 });
   const admin = createAdminClient();
 
   // Scope the update to the active org so a member can't touch another org's rows.

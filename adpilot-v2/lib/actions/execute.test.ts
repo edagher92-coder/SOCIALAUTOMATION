@@ -29,10 +29,10 @@ describe("ad-write safety gate", () => {
     await expect(executeAction("tok", { ...base, platform: "tiktok" })).rejects.toBeInstanceOf(WriteDisabledError);
   });
 
-  it("requires the dedicated production execution switch", () => {
+  it("cannot be enabled by any deployment switch in the V7 release", () => {
     delete process.env.ADS_WRITE_ENABLED;
     delete process.env.AD_WRITE_EXECUTION_ENABLED; expect(writeEnabled()).toBe(false);
-    process.env.AD_WRITE_EXECUTION_ENABLED = "1"; expect(writeEnabled()).toBe(true);
+    process.env.AD_WRITE_EXECUTION_ENABLED = "1"; expect(writeEnabled()).toBe(false);
   });
 
   it("does not enable a budget change when the legacy switch is set", async () => {

@@ -55,7 +55,8 @@ export async function POST(req: Request) {
   const hasCopy = [parsed.data.headline, parsed.data.primary, parsed.data.description].some((v) => (v || "").trim());
   if (!hasCopy) return NextResponse.json({ error: "Add some copy to check (headline, primary text or description)." }, { status: 400 });
 
-  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined, "editor");
+  if (!orgId) return NextResponse.json({ error: "You have read-only access to this workspace." }, { status: 403 });
   if (!can(await planForOrg(orgId), "ai_team")) {
     return NextResponse.json({ error: "The Policy Check is part of the AI specialist team — a Pro & Expert feature. Upgrade on Billing to enable it.", upgrade: true }, { status: 402 });
   }

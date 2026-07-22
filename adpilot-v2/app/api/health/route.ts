@@ -41,7 +41,7 @@ export async function GET(req: Request) {
   const detailAuthorised = cronAuthorized(req, process.env.CRON_SECRET);
   const body: Record<string, unknown> = {
     status: ready ? "ok" : "degraded",
-    version: "6.0.1",
+    version: "7.0.0",
     service: "adpilot-os",
   };
   if (detailAuthorised) {

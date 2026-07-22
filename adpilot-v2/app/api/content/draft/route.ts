@@ -27,7 +27,8 @@ export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
-  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined, "editor");
+  if (!orgId) return NextResponse.json({ error: "You have read-only access to this workspace." }, { status: 403 });
   if (!can(await planForOrg(orgId), "creative_studio")) {
     return NextResponse.json({ error: "The AI Creative Studio is a Pro & Expert feature. Upgrade on Billing.", upgrade: true }, { status: 402 });
   }

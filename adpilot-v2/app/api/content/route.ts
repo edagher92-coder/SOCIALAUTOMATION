@@ -32,7 +32,7 @@ export async function GET(req: Request) {
   const from = fromRaw && !Number.isNaN(Date.parse(fromRaw)) ? fromRaw : null;
   const to = toRaw && !Number.isNaN(Date.parse(toRaw)) ? toRaw : null;
   if (from || to) {
-    let q = supabase.from("content_posts").select(POST_COLS).eq("organisation_id", orgId);
+    let q = supabase.from("content_posts").select(POST_COLS).eq("organisation_id", orgId).neq("status", "archived");
     if (from) q = q.gte("scheduled_at", from);
     if (to) q = q.lte("scheduled_at", to);
     const { data } = await q.order("scheduled_at", { ascending: true }).limit(500);
@@ -41,7 +41,7 @@ export async function GET(req: Request) {
 
   const { data } = await supabase.from("content_posts")
     .select(POST_COLS)
-    .eq("organisation_id", orgId).order("created_at", { ascending: false }).limit(200);
+    .eq("organisation_id", orgId).neq("status", "archived").order("created_at", { ascending: false }).limit(200);
   return NextResponse.json({ posts: data || [] });
 }
 
@@ -53,7 +53,8 @@ export async function POST(req: Request) {
   const parsed = CreateBody.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
 
-  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined, "editor");
+  if (!orgId) return NextResponse.json({ error: "You have read-only access to this workspace." }, { status: 403 });
   if (!can(await planForOrg(orgId), "content_publish")) {
     return NextResponse.json({ error: "Content upload & publishing is a paid feature. Upgrade on Billing to enable it.", upgrade: true }, { status: 402 });
   }

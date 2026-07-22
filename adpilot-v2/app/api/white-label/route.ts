@@ -30,7 +30,8 @@ export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
-  const orgId = await getActiveOrgId(user.id, user.email ?? undefined);
+  const orgId = await getActiveOrgId(user.id, user.email ?? undefined, "manager");
+  if (!orgId) return NextResponse.json({ error: "Only workspace owners and admins can change white-label settings." }, { status: 403 });
   // White-label branding is an Expert-tier feature. The POST writes via the admin client
   // (which bypasses RLS), so the plan gate MUST be enforced here — not just hidden in the UI.
   if (!can(await planForOrg(orgId), "white_label")) {
