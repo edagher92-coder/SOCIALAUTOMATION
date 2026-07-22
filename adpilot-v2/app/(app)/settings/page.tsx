@@ -25,6 +25,7 @@ export default function Settings() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [demoBusy, setDemoBusy] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -62,6 +63,24 @@ export default function Settings() {
     finally { setBusy(false); }
   }
 
+  async function createDemoWorkspace() {
+    if (!window.confirm("Create a separate interactive demo workspace? If one already exists, its synthetic data will be refreshed. Your real workspace will not be changed.")) return;
+    setDemoBusy(true); setMessage(""); setError("");
+    try {
+      const response = await fetch("/api/demo/workspace", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmation: "CREATE INTERACTIVE DEMO" }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "The demo workspace could not be created.");
+      window.location.assign("/command?mode=advanced&demo=ready");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "The demo workspace could not be created.");
+      setDemoBusy(false);
+    }
+  }
+
   const cadenceLabel = cleanHours <= 0 ? "Manual only" : cleanHours === 1 ? "Every hour" : cleanHours < 24 ? `Every ${cleanHours} hours` : cleanHours === 24 ? "Daily" : cleanHours === 168 ? "Weekly" : cleanHours % 24 === 0 ? `Every ${cleanHours / 24} days` : `Every ${cleanHours} hours`;
 
   return (
@@ -83,6 +102,19 @@ export default function Settings() {
 
             <ModeAware only="advanced">
               <section className="rounded-3xl border border-border-subtle bg-white p-5 shadow-card sm:p-6"><div className="flex items-start justify-between gap-3"><div><h2 className="text-lg font-extrabold text-ink">Data cadence</h2><p className="mt-1 text-sm text-muted">Choose how often connected providers check for fresh reporting data.</p></div><span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-50 text-brand"><Icon name="refresh" size={18} /></span></div><div className="mt-5 grid gap-2 sm:grid-cols-2">{CADENCE_PRESETS.map((preset) => <button key={preset.value} type="button" onClick={() => { setSyncHours(preset.value); setCustomMode(false); }} aria-pressed={!customMode && syncHours === preset.value} className={`rounded-xl border p-3 text-left ${!customMode && syncHours === preset.value ? "border-brand bg-brand-50" : "border-border-subtle hover:border-brand-200"}`}><span className={`block text-sm font-bold ${!customMode && syncHours === preset.value ? "text-brand" : "text-ink"}`}>{preset.label}</span><span className="mt-0.5 block text-2xs text-muted">{preset.detail}</span></button>)}<button type="button" onClick={() => { setCustomMode(true); if (syncHours < 1) setSyncHours(48); }} className={`rounded-xl border p-3 text-left ${customMode ? "border-brand bg-brand-50" : "border-border-subtle hover:border-brand-200"}`}><span className={`block text-sm font-bold ${customMode ? "text-brand" : "text-ink"}`}>Custom</span><span className="mt-0.5 block text-2xs text-muted">Set a specific number of hours</span></button></div>{customMode && <label className="mt-3 block"><span className="mb-1 block text-xs font-bold text-ink">Hours between checks</span><input type="number" min={1} max={8760} value={syncHours} onChange={(event) => setSyncHours(Number(event.target.value))} className="w-40 rounded-xl border border-border-subtle bg-surface px-3 py-2.5 text-sm" /></label>}<div className="mt-4 flex items-start gap-2 rounded-xl bg-surface p-3 text-xs text-muted"><Icon name="info" size={15} className="mt-0.5 flex-shrink-0" /><span>Current selection: <b className="text-ink">{cadenceLabel}</b>. Available schedules also depend on the deployment plan. CSV imports remain manual.</span></div></section>
+            </ModeAware>
+
+            <ModeAware only="advanced">
+              <section className="overflow-hidden rounded-3xl border border-brand/30 bg-gradient-to-br from-brand-50 to-surface-raised p-5 shadow-card sm:p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div><div className="text-2xs font-extrabold uppercase tracking-[0.18em] text-brand">Safe demonstration</div><h2 className="mt-1 text-lg font-extrabold text-ink">Interactive demo workspace</h2><p className="mt-1 max-w-xl text-sm leading-relaxed text-muted">Create a separate, mature workspace with six months of synthetic Meta and TikTok reporting. Explore real charts, recommendations, approvals, CRM leads, alerts, content, messaging, and reports without connecting an ad account.</p></div>
+                  <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-brand text-white shadow-glow"><Icon name="sparkle" size={19} /></span>
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+                  {["1,440 daily rows", "54 CRM leads", "6 monthly reports", "Expert features"].map((item) => <div key={item} className="rounded-xl border border-border-subtle bg-surface-raised/80 px-3 py-2 font-bold text-ink">{item}</div>)}
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-3"><button type="button" onClick={createDemoWorkspace} disabled={demoBusy} className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-sm font-bold text-white shadow-sm disabled:opacity-60"><Icon name="rocket" size={16} />{demoBusy ? "Building the workspace…" : "Create or refresh demo"}</button><span className="text-2xs font-semibold text-muted"><Icon name="shield" size={13} className="mr-1 inline text-good" />No tokens, live writes, or real customer data.</span></div>
+              </section>
             </ModeAware>
 
             <div className="flex flex-wrap items-center gap-3"><button type="button" onClick={save} disabled={busy || !valid} className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-bold text-white shadow-glow disabled:opacity-50"><Icon name="check-circle" size={16} />{busy ? "Saving..." : "Save workspace settings"}</button>{!valid && <span className="text-xs font-semibold text-bad">Check that percentages are between 0 and 100.</span>}</div>
