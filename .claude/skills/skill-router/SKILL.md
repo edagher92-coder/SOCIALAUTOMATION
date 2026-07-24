@@ -62,4 +62,4 @@ dials — model (`haiku`→`sonnet`→`opus`→`fable`) and reasoning effort
 (`low`→`medium`→`high`→`xhigh`→`max`) — via the Agent tool's `model` and
 `effort` params. Quality-first: when torn between rungs on quality-relevant
 work, round UP; go straight to `fable + max` for clearly frontier tasks.
-The main session stays on Sonnet — drop-back needs no action.
+The main session stays on the pinned Opus 5 default — drop-back needs no action.

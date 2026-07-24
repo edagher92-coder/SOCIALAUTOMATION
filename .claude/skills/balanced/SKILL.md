@@ -1,7 +1,7 @@
 ---
 name: balanced
 description: |
-  [EFFICIENCY] Reset to balanced mode — Sonnet 5 main session, Haiku for search,
+  [EFFICIENCY] Reset to balanced mode — Opus 5 main session (the pinned default), Haiku for search,
   Opus for escalation. Use when the user says "balanced mode", "reset mode",
   "default mode", "normal mode", or types /balanced.
 ---
@@ -20,8 +20,8 @@ previous `/quick` or `/deep` override.
 When you need to spawn subagents (Agent tool), use these defaults:
 - **Tier 3 — search, grep, lookups**: `model: "haiku"`, `effort: "low"`
 - **Tier 2 — single-file edit, bug fix, repetitive/everyday work**: `model: "sonnet"`, `effort: "high"`
-- **Tier 1 — multi-file refactor, architecture, security, deep debug**: `model: "opus"`, `effort: "xhigh"` (currently Opus 4.8)
-- Main session stays on Sonnet 5 / high
+- **Tier 1 — multi-file refactor, architecture, security, deep debug**: `model: "opus"`, `effort: "xhigh"` (currently Opus 5)
+- Main session stays on Opus 5 / high (the pinned default)
 
 ## General approach
 - Read before editing, but don't over-read

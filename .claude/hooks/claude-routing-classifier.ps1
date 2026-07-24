@@ -42,7 +42,7 @@ $TimeoutSec = 3
 $IsLocalHub = $OllamaBase -match '^https?://(localhost|127\.0\.0\.1)'
 $KeepAlive  = if ($env:CLAUDE_ROUTER_CLASSIFIER_KEEPALIVE) { $env:CLAUDE_ROUTER_CLASSIFIER_KEEPALIVE }
               elseif ($IsLocalHub) { '2m' } else { $null }
-$ModelFor   = @{ STAKES = 'opus'; QUALITY = 'claude-sonnet-5'; EXTRACTION = 'claude-sonnet-5'; TRIVIAL = 'haiku' }
+$ModelFor   = @{ STAKES = 'opus'; QUALITY = 'claude-opus-5'; EXTRACTION = 'claude-sonnet-5'; TRIVIAL = 'haiku' }
 
 function Write-EngineStatus([string]$model) {
     try {
@@ -64,7 +64,7 @@ function Write-Hint([string]$verdict) {
 
     if ($verdict -eq 'QUALITY') {
         Write-Output ("ROUTING HINT (Model Routing Policy v5.1): explicit quality intent detected. " +
-            "Keep this work on the pinned claude-sonnet-5 model at high effort, use xhigh for the " +
+            "Keep this work on the pinned claude-opus-5 model at high effort, use xhigh for the " +
             "hardest bounded pass when supported, and invoke the frontier-work skill. If Elie " +
             "already selected Opus or Fable, do not demote it. Do not report completion until the " +
             "acceptance checks and important failure paths are verified.")
