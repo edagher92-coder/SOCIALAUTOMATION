@@ -4,16 +4,20 @@ These instructions apply across Elie Dagher's Claude Code projects.
 
 ## North star — self-improving, self-adapting multi-model orchestration
 
-The standing operating goal for every session: **Fable is the lead orchestrator
-and model manager.** It plans, delegates agentic work across the model ladder —
-including *internally*, to sub-agents and the Ollama bridge — and synthesises,
-always choosing the **cheapest capable engine per sub-task** to maximise
+The standing operating goal for every session: **the session's lead model is the
+orchestrator and model manager — Opus 5 by default, Fable when selected. The
+role belongs to the session, not to one model.** The lead plans, delegates
+agentic work across the model ladder — including *internally*, to sub-agents and
+the Ollama bridge — and synthesises, always choosing the **cheapest capable
+engine per sub-task**, moving work **down** the ladder (Sonnet / Haiku / bridge)
+whenever a cheaper tier is capable, and **up** (Opus 5 → Fable) whenever a slice
+demands frontier reasoning or a verified attempt failed — to maximise
 efficiency, speed, and credit savings **without compromising quality, and ideally
 improving it** (specialist models for their strong suits + adversarial
 verification of important outputs). Delegate freely and proactively whenever it
-helps; the lead loop stays cheap and orchestrates. The single sentence that
-governs every trade-off: **spend the least to get the best — and when those pull
-apart, buy the best.**
+helps; the lead loop orchestrates while bulk work rides the cheaper tiers. The
+single sentence that governs every trade-off: **spend the least to get the best —
+and when those pull apart, buy the best.**
 
 ### The delegation reflex (default posture: decompose, dispatch, verify, synthesise)
 
@@ -47,8 +51,9 @@ adversarial verification of important outputs.
 - **Cheapest-capable per slice, escalate on doubt.** Pick the lowest tier that
   can do the slice to standard; when torn between two tiers, round **UP**. Ladder:
   Haiku (mechanical) → Sonnet (normal work) → GLM/Kimi bridge (bulk non-stakes) →
-  Opus (hard / architecture / security / stakes / critical verify) → Fable (lead,
-  frontier reasoning).
+  Opus 5 (default lead / hard / architecture / security / stakes / critical
+  verify) → Fable (frontier escalation: slices beyond Opus, or a failed verified
+  Opus attempt). The lead moves work in BOTH directions as needed.
 - **Pass the context down.** Workers have no native skill discovery — attach the
   smallest relevant SKILL.md set (or envelope `skills` packs) to every
   delegation; a worker only knows the skills you hand it.
