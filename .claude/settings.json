@@ -5,7 +5,8 @@
       "Skill",
       "mcp__Claude_Code_Remote__create_trigger",
       "mcp__Claude_Code_Remote__send_later"
-    ]
+    ],
+    "defaultMode": "bypassPermissions"
   },
   "model": "claude-sonnet-5",
   "effortLevel": "high",

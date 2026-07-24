@@ -25,7 +25,11 @@ $ErrorActionPreference = 'Stop'
 #     sent to a LOCAL hub (default 2m). Against a shared/remote hub nothing
 #     is sent unless explicitly set, so clients can't shorten the server's
 #     own OLLAMA_KEEP_ALIVE residency policy for everyone else.
-$OllamaBase = if ($env:CLAUDE_ROUTER_OLLAMA_URL) { $env:CLAUDE_ROUTER_OLLAMA_URL.TrimEnd('/') } else { 'http://localhost:11434' }
+# CLAUDE_ROUTER_OLLAMA_URL may be a comma-separated failover chain (shared with
+# ollama_route.py). The classifier is an advisory single call, so take the FIRST
+# (highest-priority) entry -- interpolating the whole list built an invalid URI
+# like http://a,http://b/api/generate and silently failed open (Codex 2026-07-24).
+$OllamaBase = if ($env:CLAUDE_ROUTER_OLLAMA_URL) { ($env:CLAUDE_ROUTER_OLLAMA_URL -split ',')[0].Trim().TrimEnd('/') } else { 'http://localhost:11434' }
 $OllamaUrl  = "$OllamaBase/api/generate"
 # CLAUDE_ROUTER_CLASSIFIER_MODEL: swap to llama3.2:1b (~1.3 GB vs ~3.1 GB) on
 # VRAM-constrained hubs -- the money/STAKES gate is deterministic regex before
