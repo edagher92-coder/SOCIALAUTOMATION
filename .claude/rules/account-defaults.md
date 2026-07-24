@@ -119,7 +119,7 @@ don't replace them with guesswork:
 8. Report uncertainty and blockers plainly. Never claim a task, deployment, test, or external action succeeded without evidence.
 9. Preserve user work and secrets. Never commit credentials, private transcripts, local session data, or unredacted customer information.
 
-## Fable-grade observable behaviour on Sonnet 5 and Opus 4.8
+## Fable-grade observable behaviour on Opus 5 and Sonnet 5
 
 Claude cannot be retrained through a repository skill and must not claim to reproduce Fable's private reasoning. It can follow a rigorous, testable operating protocol that produces the behaviours Elie values.
 
@@ -136,7 +136,7 @@ The required observable standard is:
 - make honest progress claims at meaningful checkpoints;
 - finish only when the definition of done is verified.
 
-Use Sonnet 5 at high effort as the default. For the hardest bounded coding, agentic, debugging, or adversarial-review pass, use xhigh effort when the active Claude Code surface supports it. Escalate a high-stakes or failed verified attempt to Opus 4.8. Use Fable for genuinely frontier-scale work, a failed verified Opus attempt, or explicit user selection.
+Use Opus 5 at high effort as the default main-session model (Elie's decision, 2026-07-24: Opus 5 ships at the same $5/$25 per Mtok as Opus 4.8 with near-Fable capability, so the old Sonnet-first default no longer buys quality headroom for its saving). For the hardest bounded coding, agentic, debugging, or adversarial-review pass, use xhigh effort when the active Claude Code surface supports it. Sonnet 5 remains the efficiency workhorse for delegated subagent and routine fan-out work. Use Fable for genuinely frontier-scale work, a failed verified Opus attempt, or explicit user selection.
 
 ## Skills and plugins
 
@@ -148,7 +148,8 @@ Use Sonnet 5 at high effort as the default. For the hardest bounded coding, agen
 
 ## Model selection
 
-- `claude-sonnet-5` is the pinned default workhorse; do not silently replace it with an unpinned `sonnet` alias.
+- `claude-opus-5` is the pinned default main-session model (2026-07-24: same $5/$25 as Opus 4.8, near-Fable capability); do not silently replace it with an unpinned `opus` alias or demote it.
+- `claude-sonnet-5` is the pinned efficiency workhorse for delegated subagent and routine fan-out work — the main loop rides Opus 5, the fan-out stays cheap.
 - Haiku is for low-risk mechanical work and never for final high-stakes judgement.
 - GLM 5.2 (via the Ollama bridge, `ollama_route.py --route mid-tier`, or the orchestrator's `glm-5.2` worker) sits between Sonnet and Opus for heavy NON-stakes bulk reasoning, drafting, and summarising — it protects Claude quota. The NUMBERS RULE applies: never send customer-facing prices, quotes, invoices, or legal content to Ollama-routed models; if the Ollama endpoint is unreachable, fall back to Sonnet (or Opus per the rules below) rather than blocking.
 - Ollama-routed tiers are hosted off-box: heavy/mid open models run on Ollama Cloud (flat-rate plan) or the Tailscale hub, never resident on a daily-use PC's GPU. A workstation hosts at most one small local floor model (`llama3.2:3b`, shared by the routing classifier and trivial tasks); only a dedicated model-server box (`bootstrap.ps1 -DedicatedGpu`) hosts the full package.

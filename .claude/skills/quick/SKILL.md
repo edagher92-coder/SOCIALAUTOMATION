@@ -22,7 +22,7 @@ When you need to spawn subagents (Agent tool), use these overrides:
 - **Tier 3 — search, grep, lookups**: `model: "haiku"`, `effort: "low"`
 - **Tier 2 — all code edits, single-file, repetitive work**: `model: "haiku"`, `effort: "low"`
 - **Tier 1 — only multi-file architecture or security**: `model: "sonnet"`, `effort: "high"`
-- Main session stays on Sonnet 5 / high regardless of this mode
+- Main session stays on Opus 5 / high (the pinned default) regardless of this mode
 
 ## What NOT to do
 - Don't generate planning documents or analysis unless asked

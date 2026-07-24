@@ -1,6 +1,6 @@
 ---
 name: frontier-work
-description: Use when Claude Sonnet 5 or Opus 4.8 must deliver Fable-grade observable reliability on complex, ambiguous, high-stakes, quality-critical, or long-running work. Trigger for architecture decisions, hard debugging, deep audits, irreversible-change planning, failed prior attempts, or requests such as take your time, be serious, do this perfectly, best possible, deep work, do not stop until verified, or act/think/reason like Fable. Enforces an outcome contract, primary-evidence investigation, model-aware effort, checkpoints, verification, and honest completion claims without pretending to reproduce hidden reasoning.
+description: Use when Claude Sonnet 5 or Opus 5 must deliver Fable-grade observable reliability on complex, ambiguous, high-stakes, quality-critical, or long-running work. Trigger for architecture decisions, hard debugging, deep audits, irreversible-change planning, failed prior attempts, or requests such as take your time, be serious, do this perfectly, best possible, deep work, do not stop until verified, or act/think/reason like Fable. Enforces an outcome contract, primary-evidence investigation, model-aware effort, checkpoints, verification, and honest completion claims without pretending to reproduce hidden reasoning.
 ---
 
 # Frontier work
@@ -25,7 +25,7 @@ Use the active model selected by Elie. Never demote an explicit Opus or Fable se
 
 - **Sonnet 5 + high:** default for serious implementation, analysis, and multi-step work.
 - **Sonnet 5 + xhigh:** hardest bounded coding, agentic, debugging, edge-case, or adversarial-review pass when supported.
-- **Opus 4.8 + high/xhigh:** stakes, cross-system architecture, unresolved root cause, critical judgement, or a Sonnet attempt that failed verification.
+- **Opus 5 + high/xhigh:** stakes, cross-system architecture, unresolved root cause, critical judgement, or a Sonnet attempt that failed verification.
 - **Fable:** frontier-scale or long-running work, a failed verified Opus attempt, or explicit user selection.
 
 Prefer stronger context, tools, and tests over model escalation. Do not use a manual extended-thinking prompt when adaptive thinking is active; specify the outcome and constraints clearly and let the runtime allocate reasoning.
