@@ -73,10 +73,10 @@ const demoDay = (daysAgo: number) => demoIso(daysAgo).slice(0, 10);
 const demoRound = (value: number) => Math.round(value * 100) / 100;
 
 async function insertDemoRows(admin: ReturnType<typeof createAdminClient>, table: string, rows: Record<string, unknown>[], chunkSize = 400) {
-  await Promise.all(Array.from({ length: Math.ceil(rows.length / chunkSize) }, async (_, index) => {
-    const { error } = await admin.from(table).insert(rows.slice(index * chunkSize, (index + 1) * chunkSize));
+  for (let index = 0; index < rows.length; index += chunkSize) {
+    const { error } = await admin.from(table).insert(rows.slice(index, index + chunkSize));
     if (error) throw new Error(`${table}: ${error.message}`);
-  }));
+  }
 }
 
 function demoAggregate(rows: Record<string, any>[], windowEndOffset: number, days = 30) {
@@ -97,7 +97,7 @@ function demoAggregate(rows: Record<string, any>[], windowEndOffset: number, day
  * one-way safety gate: a workspace with reporting, accounts, or reports is
  * treated as real and is never modified by the demo loader.
  */
-export async function ensureFounderDemoData(input: { userId: string; email?: string | null; orgId: string }) {
+async function seedLegacyFounderDemoData(input: { userId: string; email?: string | null; orgId: string }) {
   if (!isFounderAccount(input.email)) return false;
   const admin = createAdminClient();
   const [snapshots, accounts, reports] = await Promise.all([
@@ -167,6 +167,94 @@ export async function ensureFounderDemoData(input: { userId: string; email?: str
       admin.from("connected_ad_accounts").delete().eq("organisation_id", input.orgId).like("external_account_id", "act_DEMO_%"),
       admin.from("connected_ad_accounts").delete().eq("organisation_id", input.orgId).like("external_account_id", "tt_DEMO_%"),
       admin.from("account_daily_metrics").delete().eq("organisation_id", input.orgId),
+      admin.from("health_scores").delete().eq("organisation_id", input.orgId),
+      admin.from("reports").delete().eq("organisation_id", input.orgId),
+      admin.from("recommendations").delete().eq("organisation_id", input.orgId),
+    ]);
+    throw error;
+  }
+}
+
+/**
+ * Populate the active founder workspace with the minimum complete dashboard
+ * dataset. This deliberately uses only the original reporting tables so a
+ * partly migrated production database cannot leave the command centre empty.
+ */
+export async function ensureFounderDemoData(input: { userId: string; email?: string | null; orgId: string }) {
+  if (!isFounderAccount(input.email)) return false;
+
+  const admin = createAdminClient();
+  const [snapshots, accounts, reports] = await Promise.all([
+    admin.from("campaign_snapshots").select("id", { count: "exact", head: true }).eq("organisation_id", input.orgId),
+    admin.from("connected_ad_accounts").select("id", { count: "exact", head: true }).eq("organisation_id", input.orgId),
+    admin.from("reports").select("id", { count: "exact", head: true }).eq("organisation_id", input.orgId),
+  ]);
+  if (snapshots.error || accounts.error || reports.error) {
+    throw new Error("The workspace could not be checked before loading demo data.");
+  }
+  if ((snapshots.count || 0) > 0 || (accounts.count || 0) > 0 || (reports.count || 0) > 0) return false;
+
+  const rawRows = buildInteractiveDemoSnapshots(input.orgId) as Record<string, any>[];
+  const rows = rawRows.map((row) => ({
+    organisation_id: row.organisation_id, platform: row.platform,
+    campaign_id: row.campaign_id, campaign_name: row.campaign_name,
+    adset_id: row.adset_id, adset_name: row.adset_name, ad_id: row.ad_id, ad_name: row.ad_name,
+    date: row.date, objective: row.objective, budget_type: row.budget_type,
+    spend: row.spend, impressions: row.impressions, reach: row.reach, frequency: row.frequency,
+    clicks: row.clicks, ctr: row.ctr, cpc: row.cpc, cpm: row.cpm,
+    landing_page_views: row.landing_page_views, leads: row.leads, purchases: row.purchases,
+    revenue: row.revenue, video_views: row.video_views, three_second_views: row.three_second_views,
+    thruplays: row.thruplays, hook_rate: row.hook_rate, hold_rate: row.hold_rate,
+    lead_quality_score: row.lead_quality_score, tracking_status: row.tracking_status,
+    utm_source: row.utm_source, utm_medium: row.utm_medium, utm_campaign: row.utm_campaign,
+    source: "csv",
+  }));
+  const config = { business_name: "AdPilot Growth Lab", average_sale_value: 149, gross_margin: 0.74, currency: "AUD", monthly_budget: 18000, lead_close_rate: 0.18 };
+  const analyses = Array.from({ length: 6 }, (_, month) => {
+    const offset = (5 - month) * 30;
+    return { offset, result: analyse(demoAggregate(rows, offset) as any, config) };
+  });
+  const latest = analyses[analyses.length - 1].result;
+  const pageSuffix = `${input.userId.slice(0, 8)}-${input.orgId.slice(0, 8)}`;
+
+  try {
+    // Configuration is helpful but optional: data is the priority on an older
+    // production schema, so a preference write must never stop the seed.
+    const { error: orgError } = await admin
+      .from("organisations")
+      .update({ average_sale_value: 149, gross_margin: 0.74, monthly_budget: 18000, lead_close_rate: 0.18, sync_interval_hours: 6, last_synced_at: new Date().toISOString() })
+      .eq("id", input.orgId);
+    if (orgError) console.warn("Founder demo preferences were skipped", orgError.message);
+
+    await insertDemoRows(admin, "campaign_snapshots", rows);
+    await insertDemoRows(admin, "connected_ad_accounts", [
+      { organisation_id: input.orgId, platform: "meta", external_account_id: `act_DEMO_${pageSuffix}`, display_name: "AdPilot Growth Lab Meta", status: "connected" },
+      { organisation_id: input.orgId, platform: "tiktok", external_account_id: `tt_DEMO_${pageSuffix}`, display_name: "@adpilotgrowth TikTok", status: "connected" },
+    ]);
+    await insertDemoRows(admin, "health_scores", analyses.map(({ offset, result }) => ({
+      organisation_id: input.orgId, scope: "account", total: result.health.total, band: result.health.band,
+      breakdown: result.health.breakdown, data_confidence: (result.health as any).breakdown?.data_confidence?.score ?? null,
+      period_start: demoDay(offset + 29), period_end: demoDay(offset), created_at: demoIso(offset),
+    })));
+    await insertDemoRows(admin, "reports", analyses.map(({ offset, result }) => ({
+      organisation_id: input.orgId, title: `${demoDate(offset).toLocaleString("en-AU", { month: "long", year: "numeric" })} performance review`,
+      period: demoDay(offset), payload: result, created_by: input.userId, created_at: demoIso(offset),
+    })));
+    await refreshOpenRecommendations(admin, input.orgId, latest.decisions as any[]);
+
+    const { error: auditError } = await admin.from("audit_logs").insert({
+      organisation_id: input.orgId, user_id: input.userId, action: "demo.empty_workspace_seeded",
+      detail: { records: rows.length, synthetic: true, live_ad_changes: false },
+    });
+    if (auditError) console.warn("Founder demo audit entry was skipped", auditError.message);
+    return true;
+  } catch (error) {
+    // This function only reaches here after the empty-workspace safety gate.
+    // Remove partial synthetic rows without letting cleanup hide the real error.
+    await Promise.allSettled([
+      admin.from("campaign_snapshots").delete().eq("organisation_id", input.orgId).eq("source", "csv"),
+      admin.from("connected_ad_accounts").delete().eq("organisation_id", input.orgId).like("external_account_id", "act_DEMO_%"),
+      admin.from("connected_ad_accounts").delete().eq("organisation_id", input.orgId).like("external_account_id", "tt_DEMO_%"),
       admin.from("health_scores").delete().eq("organisation_id", input.orgId),
       admin.from("reports").delete().eq("organisation_id", input.orgId),
       admin.from("recommendations").delete().eq("organisation_id", input.orgId),
