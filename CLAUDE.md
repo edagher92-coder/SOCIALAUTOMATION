@@ -99,3 +99,12 @@ runs a typecheck step + a resale-clean guard). Note: `package-lock.json` is giti
   (memo in `product/v6-governance/`). Production deploy needs Vercel env + Supabase migrations 0001–0026
   — full steps in `adpilot-v2/docs/DEPLOY-RUNBOOK.md`.
 - Full detail: `adpilot-v2/CHANGELOG.md` and `CPWORK/universal-ads-os/product/V6-*.md`.
+
+---
+
+## Model routing policy
+
+This repo follows the Claude HQ model-routing standard — see
+[`MODEL-ROUTING-POLICY.md`](./MODEL-ROUTING-POLICY.md) at the repo root
+(v4.0: Sonnet 5 default · Haiku 4.5 mechanical · Opus 4.8 high-stakes ·
+Fable 5 reserve · Mythos 5 manual-only).
