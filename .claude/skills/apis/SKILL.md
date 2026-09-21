@@ -53,7 +53,7 @@ Ladder (`router.py`): `haiku → sonnet → glm → opus → fable`. Live alloca
 
 | Server | Repo → path | Launch | Surface |
 |---|---|---|---|
-| **snowflow-quoting** | `Claude-code-` → `snowflow/mcp/` | `python -m snowflow.mcp.server` | `get_price`, `search_items`, `delivery_fee`, `build_quote_from_enquiry`, `machine_instructions`, resource `snowflow://pricing/catalogue` |
+| **snowflow-quoting** | `Claude-code-` → `snowflow/mcp/` | `python -m snowflow.mcp.server` | Quoting: `get_price`, `search_items`, `delivery_fee`, `build_quote_from_enquiry`, `machine_instructions`, resource `snowflow://pricing/catalogue`<br>Console: `ask_sam`, `list_inbox`, `ingest_email`, `draft_reply`, `approve_reply` |
 | **hq-orchestrator** | `claude-model-router` → `hq_orchestrator/` | `python -m hq_orchestrator.server` | Delegation: task envelopes, artifacts, the cheapest-capable worker ladder |
 | **snowflow-outlook** | `Claude-code-Agents` → `mcp-outlook/` | `snowflow-outlook-mcp` | `list_messages`, `get_message`, `create_draft`, `create_reply_draft`, `update_draft`, `list_drafts`, `send_draft`, `send_mail`, `move_message`, `delete_message`, `poll_inbox`, `create_event`, `find_meeting_times` |
 
@@ -132,14 +132,44 @@ unattended automation uses our own APIs (group 4) rather than a connector.
 | **ElevenLabs** | via Vapi | `ELEVENLABS_API_KEY` | Charlie voice |
 | **Resend** | `api.resend.com/emails` | `RESEND_API_KEY` | Transactional email out of the Worker + Vapi webhooks |
 | **Twilio** | `api.twilio.com` | `TWILIO_AUTH_TOKEN` | SMS path |
-| **Microsoft Graph** | `graph.microsoft.com/v1.0` | `SNOWFLOW_OUTLOOK_TENANT_ID`, `SNOWFLOW_OUTLOOK_CLIENT_ID` | Backs the self-hosted snowflow-outlook MCP + Excel workbook writes |
+| **Microsoft Graph** | `graph.microsoft.com/v1.0` | `SNOWFLOW_OUTLOOK_TENANT_ID`, `SNOWFLOW_OUTLOOK_CLIENT_ID` | Backs the self-hosted snowflow-outlook MCP + Excel workbook writes. **Needs an Azure app registration** — if you don't have one, use the Zapier Outlook route below instead |
+| **Outlook via Zapier** | `microsoft_outlook_*` actions | existing connection, no Azure app | The mailbox path that works **today** on the `sydney@snowflow.com.au` connection alone. Read with `find_email`; reply with **`create_draft_reply`** (draft only). The Sam console uses exactly this. **Never `send_email` / `send_draft_email` / `reply_to_email`** — those send |
 | **Cloudflare API** | Workers/Pages deploy | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | `deploy-sam-webhook.yml` |
 | **Stripe API** | direct (non-connector paths) | `STRIPE_SECRET_KEY` | **Money-gated** — spec-only from the reply engine; `payment.py` emits a payment-link *spec*, never calls Stripe |
 | **Ask Sam** | static `web/` + Node app | — | Brain rebuilt from the verified sources; never hand-edit `knowledge.json` |
 
 ---
 
-## 5 · Keys — where they live
+## 5 · Skill packs, plugins and agents (the Claude HQ tooling)
+
+Not APIs, but the rest of what the account can call. Source of truth for all
+plugin content is `Claude-code-Agents` → `plugins/`; `.github` carries only
+pointer JSON, and the Drive **Claude HQ** folder is the policy mirror, not
+executable truth. Change the repo, never the Drive copy.
+
+| Pack | What | Default |
+|---|---|---|
+| **snowflow-hq** | Sam reception bot + Snow Flow operations skills | enabled |
+| **hq-playbooks** | Sales / marketing / advisory agent playbooks | enabled |
+| **ai-specialists** | 73 named specialist skills + `start-70` router | enabled |
+| **community-\*** (20 packs) | 1,940 skills, risk-triaged | **installed, disabled** — enable a pack only when a task needs it, or trigger collisions and context noise follow |
+
+Six external plugins vendored from public repos (MIT/Apache-2.0, attributed):
+**watch** (video), **notebooklm**, **graphify-knowledge-graph**, **obsidian**,
+**impeccable** (frontend design — the register to read before UI work),
+**ponytail** (simplest-working-solution mode).
+
+Business subagents live in `.claude/agents/`, synced from Claude HQ →
+*06 - Agents, Playbooks & Skills*: `business-consulting-agent`,
+`marketing-content-agent`, `daily-sales-engine`, `sales-hunter` — all governed
+by `AGENTS.md` (>$500 escalation, $325 call-out, service area).
+
+The same Drive folder holds the operating rules the agents inherit
+(`SNOWFLOW-CAMPAIGN-RULES`, `-COMPLIANCE-RULES`, `-GEO-TARGETING`,
+`-CREATIVE-GUIDELINES`, `-CHECKPOINTS`, `-COUNCIL-DECISIONS`). They are mirrored
+into the repos; if the two disagree, the repo wins.
+
+## 6 · Keys — where they live
 
 **Never committed.** Env var locally; repo secret in Actions.
 
@@ -155,7 +185,7 @@ variable**, never a crash and never a fabricated result.
 
 ---
 
-## 6 · Adding one
+## 7 · Adding one
 
 New MCP server → follow `mcp-forge`: tool table first (one verb on one noun,
 typed params, enums over free strings); pure-logic module (like
