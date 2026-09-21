@@ -58,3 +58,40 @@ under each other); against localhost it sends `2m` so a single-machine setup
 releases RAM between bursts. `CLAUDE_ROUTER_DISABLE_LLM_CLASSIFIER=1` remains
 the zero-cost kill-switch either way, and the hook always fails open — hub
 down means Claude-only routing, never a blocked prompt.
+
+## `gstack-session-start.sh` — SessionStart
+
+Makes [gstack](https://github.com/garrytan/gstack) (MIT, 54 role-based skills:
+`/office-hours`, `/plan-ceo-review`, `/review`, `/qa`, `/ship`, …) available in a
+**cloud/web** session.
+
+Local machines get gstack from `bootstrap.sh --user`, which clones it once into
+`~/.claude/skills/gstack`. Cloud and web sessions never run bootstrap — they
+start from a fresh container holding only what the repo carries. Committing
+gstack per repo would be ~57MB through the fan-out **and** would freeze it at
+whatever was last pasted in, breaking its own `/gstack-upgrade`. So the session
+clones it at start: ~2s, nothing committed, container is ephemeral anyway.
+
+**This is the one hook the father wires automatically** (in
+`claude-defaults/settings.json`), which is a deliberate exception to the
+"wiring stays manual" rule above. It earns it by being unable to fail:
+
+- every failure path prints a warning and exits 0 — a missing skill pack is an
+  inconvenience, a broken SessionStart hook is a session that will not start;
+- a failed clone is deleted rather than left looking installed;
+- it returns immediately when gstack is already there, so resumed sessions pay
+  nothing;
+- the wiring is `... || true` as well, belt and braces.
+
+Verified against: git absent, clone failing, already-installed, and opt-out.
+
+**Opt out** on a machine or in a repo with `GSTACK_SKIP=1`.
+
+**Cost, measured:** ~2s clone, and ~4.4k tokens of always-loaded skill
+descriptions (54 skills). Full skill bodies load on demand only — the whole
+corpus is ~830k tokens and is never loaded at once. If that always-on cost is
+not paying for itself, set `GSTACK_SKIP=1` rather than half-removing it.
+
+**Note:** gstack ships `/review`, which shadows Claude Code's built-in
+`/review`. Its `setup` was checked and writes nothing outside its own directory
+— it does not touch `settings.json`.
