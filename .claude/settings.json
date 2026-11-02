@@ -76,7 +76,8 @@
     "notebooklm@hq-marketplace": false,
     "graphify-knowledge-graph@hq-marketplace": false,
     "obsidian@hq-marketplace": false,
-    "ponytail@hq-marketplace": false
+    "ponytail@hq-marketplace": false,
+    "superpowers@claude-plugins-official": true
   },
   "statusLine": {
     "type": "command",
@@ -90,6 +91,25 @@
         "repo": "edagher92-coder/Claude-code-Agents"
       },
       "autoUpdate": true
+    },
+    "wshobson-agents": {
+      "source": {
+        "source": "github",
+        "repo": "wshobson/agents"
+      },
+      "autoUpdate": true
     }
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/gstack-session-start.sh\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
   }
 }
